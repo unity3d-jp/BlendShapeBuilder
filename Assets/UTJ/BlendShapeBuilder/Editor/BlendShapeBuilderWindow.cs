@@ -424,7 +424,7 @@ namespace UTJ.BlendShapeBuilder
             }
             GUILayout.EndHorizontal();
 
-            GUILayout.Space(6);
+            GUILayout.Space(18);
 
             GUILayout.BeginHorizontal();
             if (GUILayout.Button("Save Settings", GUILayout.Width(100)))

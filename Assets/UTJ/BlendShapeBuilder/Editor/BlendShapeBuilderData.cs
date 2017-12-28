@@ -47,7 +47,7 @@ namespace UTJ.BlendShapeBuilder
     public class BlendShapeBuilderData : ScriptableObject
     {
         public UnityEngine.Object baseMesh;
-        public bool preserveExistingBlendShapes = true;
+        public bool preserveExistingBlendShapes = false;
         public List<BlendShapeData> blendShapeData = new List<BlendShapeData>();
     }
 }
