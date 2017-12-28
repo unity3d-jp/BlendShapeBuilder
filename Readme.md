@@ -11,6 +11,8 @@ Unity 2017.1 系以上で動作を確認しています。
 - [BlendShapeBuilder.unitypackage](https://github.com/unity3d-jp/BlendShapeBuilder/releases/download/20171228/BlendShapeBuilder.unitypackage) をプロジェクトにインポート
 - Window メニューに "Blend Shape Builder" と "Blend Shape Inspector" が追加されるので、それらでツールウィンドウを開く
 
+![](https://user-images.githubusercontent.com/1488611/34403838-0c4361ae-ebee-11e7-85e2-5e7b13d89eeb.png)
+
 Base Mesh やターゲットとなるオブジェクトは、Mesh アセットもしくは MeshRenderer か SkinnedMeshRenderer を持つ GameObject を設定します。
 
 - "Base Mesh" には元となる Mesh を指定します。  
