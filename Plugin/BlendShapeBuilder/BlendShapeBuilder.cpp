@@ -1223,9 +1223,9 @@ npAPI void npProjectVertices(
         float min_distance;
         bool hit = false;
 
-        auto gen_normal = [&soa, pnormals, pindices](const float3& pos, int ti) {
+        auto gen_normal = [&soa, &to_local, pnormals, pindices](const float3& pos, int ti) {
             if (pnormals) {
-                return triangle_interpolation(
+                float3 ret = triangle_interpolation(
                     pos,
                     { soa[0][ti], soa[1][ti], soa[2][ti] },
                     { soa[3][ti], soa[4][ti], soa[5][ti] },
@@ -1233,6 +1233,8 @@ npAPI void npProjectVertices(
                     pnormals[pindices[ti * 3 + 0]],
                     pnormals[pindices[ti * 3 + 1]],
                     pnormals[pindices[ti * 3 + 2]]);
+                ret = normalize(mul_v(to_local, ret));
+                return ret;
             }
             else {
                 return float3::zero();

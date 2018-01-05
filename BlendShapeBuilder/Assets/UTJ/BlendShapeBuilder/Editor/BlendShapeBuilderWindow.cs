@@ -631,7 +631,7 @@ namespace UTJ.BlendShapeBuilder
 
                 foreach(var frame in shape.frames)
                 {
-                    var mesh = frame.proj ? GenerateProjectedMesh(baseMesh, frame) : Utils.ExtractMesh(frame.mesh);
+                    var mesh = frame.proj ? GenerateProjectedMesh(m_data.baseMesh, frame) : Utils.ExtractMesh(frame.mesh);
                     if(mesh == null)
                     {
                         Debug.LogError("Invalid target in " + name + " at weight " + frame.weight);
@@ -710,6 +710,7 @@ namespace UTJ.BlendShapeBuilder
             if(baseMesh)
             {
                 ret = Instantiate(baseMesh);
+                ret.ClearBlendShapes();
                 if (frame.vertex) { ret.SetVertices(baseData.vertices); }
                 if (frame.normal) { ret.SetNormals(baseData.normals); }
                 if (frame.tangent) { ret.SetTangents(baseData.tangents); }
