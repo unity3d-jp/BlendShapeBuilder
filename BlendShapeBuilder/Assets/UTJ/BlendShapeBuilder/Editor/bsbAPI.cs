@@ -11,6 +11,7 @@ namespace UTJ.BlendShapeBuilder
         public PinnedList<Vector3> vertices = new PinnedList<Vector3>();
         public PinnedList<Vector3> normals = new PinnedList<Vector3>();
         public PinnedList<Vector2> uv = new PinnedList<Vector2>();
+        public PinnedList<Vector4> tangents = new PinnedList<Vector4>();
         public PinnedList<int> indices = new PinnedList<int>();
         public Matrix4x4 transform;
 
@@ -36,8 +37,15 @@ namespace UTJ.BlendShapeBuilder
 
         public bool empty { get { return vertices.Count == 0; } }
 
-        public bool Extract(GameObject go)
+        public bool Extract(UnityEngine.Object obj)
         {
+            {
+                var mesh = obj as Mesh;
+                if (mesh != null)
+                    return Extract(mesh);
+            }
+
+            var go = obj as GameObject;
             if (!go) { return false; }
 
             var terrain = go.GetComponent<Terrain>();
@@ -75,6 +83,7 @@ namespace UTJ.BlendShapeBuilder
             mesh.GetVertices(vertices);
             mesh.GetNormals(normals);
             mesh.GetUVs(0, uv);
+            mesh.GetTangents(tangents);
             indices = new PinnedList<int>(mesh.triangles);
             return true;
         }

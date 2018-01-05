@@ -2,6 +2,7 @@ using UnityEngine;
 using UnityEditor;
 using System;
 using System.Collections.Generic;
+using System.Runtime.InteropServices;
 
 namespace UTJ.BlendShapeBuilder
 {
@@ -224,22 +225,31 @@ namespace UTJ.BlendShapeBuilder
                             var pos = rect.position;
 
                             EditorGUI.BeginChangeCheck();
-                            var w = EditorGUI.FloatField(new Rect(pos, new Vector2(50, 16)), frame.weight);
+                            var w = EditorGUI.FloatField(new Rect(pos, new Vector2(36, 16)), frame.weight);
                             if (EditorGUI.EndChangeCheck())
                             {
                                 Undo.RecordObject(m_data, "BlendShapeBuilder");
                                 frame.weight = w;
                             }
 
-                            pos.x += 60;
+                            pos.x += 40;
 
                             EditorGUI.BeginChangeCheck();
-                            var m = EditorGUI.ObjectField(new Rect(pos, new Vector2(width - 65, 16)), frame.mesh, typeof(UnityEngine.Object), true);
+                            var m = EditorGUI.ObjectField(new Rect(pos, new Vector2(width - 40, 16)), frame.mesh, typeof(UnityEngine.Object), true);
                             if (EditorGUI.EndChangeCheck())
                             {
                                 Undo.RecordObject(m_data, "BlendShapeBuilder");
                                 frame.mesh = m;
                             }
+
+                            EditorGUI.BeginChangeCheck();
+                            var p = GUILayout.Toggle(frame.proj, "Projection", GUILayout.Width(75));
+                            if (EditorGUI.EndChangeCheck())
+                            {
+                                Undo.RecordObject(m_data, "BlendShapeBuilder");
+                                frame.proj = p;
+                            }
+
 
                             EditorGUI.BeginChangeCheck();
                             var v = GUILayout.Toggle(frame.vertex, "V", GUILayout.Width(25));
@@ -269,6 +279,24 @@ namespace UTJ.BlendShapeBuilder
                                 delFrame = frame;
 
                             GUILayout.EndHorizontal();
+
+                            if (frame.proj)
+                            {
+                                GUILayout.BeginHorizontal();
+                                GUILayout.Space(indentSize);
+                                GUILayout.BeginVertical("Box");
+                                frame.projMode = (npProjectVerticesMode)EditorGUILayout.EnumPopup("Projection Mode", frame.projMode);
+                                frame.projRayDir = (ProjectVerticesRayDirection)EditorGUILayout.EnumPopup("Ray Direction", frame.projRayDir);
+                                frame.projMaxRayDistance = EditorGUILayout.FloatField("Max Ray Distance", frame.projMaxRayDistance);
+                                if (GUILayout.Button("Generate Mesh", GUILayout.Width(120)))
+                                {
+                                    var pmesh = GenerateProjectedMesh(m_data.baseMesh, frame);
+                                    var go = Utils.MeshToGameObject(pmesh, Vector3.zero, Utils.ExtractMaterials(m_data.baseMesh));
+                                    Selection.activeGameObject = go;
+                                }
+                                GUILayout.EndVertical();
+                                GUILayout.EndHorizontal();
+                            }
                         }
                         if(delFrame != null)
                         {
@@ -603,7 +631,7 @@ namespace UTJ.BlendShapeBuilder
 
                 foreach(var frame in shape.frames)
                 {
-                    var mesh = Utils.ExtractMesh(frame.mesh);
+                    var mesh = frame.proj ? GenerateProjectedMesh(baseMesh, frame) : Utils.ExtractMesh(frame.mesh);
                     if(mesh == null)
                     {
                         Debug.LogError("Invalid target in " + name + " at weight " + frame.weight);
@@ -660,6 +688,46 @@ namespace UTJ.BlendShapeBuilder
             for (int i = 0; i < len; ++i)
                 dst[i] = to[i] - from[i];
         }
+
+        public static Mesh GenerateProjectedMesh(UnityEngine.Object baseMeshObj, BlendShapeFrameData frame)
+        {
+            var baseData = new MeshData();
+            var targetData = new MeshData();
+            if (frame == null || !baseData.Extract(baseMeshObj) || !targetData.Extract(frame.mesh)) { return null; }
+
+            var baseNP = (npMeshData)baseData;
+            var targetNP = (npMeshData)targetData;
+            var rayDirs = baseData.normals;
+            if (frame.projRayDir == ProjectVerticesRayDirection.BaseNomals)
+            {
+                rayDirs = new PinnedList<Vector3>();
+                npGenerateNormals(ref baseNP, rayDirs);
+            }
+            npProjectVertices(ref baseNP, ref targetNP, rayDirs, frame.projMode, frame.projMaxRayDistance);
+
+            Mesh ret;
+            var baseMesh = Utils.ExtractMesh(baseMeshObj);
+            if(baseMesh)
+            {
+                ret = Instantiate(baseMesh);
+                if (frame.vertex) { ret.SetVertices(baseData.vertices); }
+                if (frame.normal) { ret.SetNormals(baseData.normals); }
+                if (frame.tangent) { ret.SetTangents(baseData.tangents); }
+            }
+            else
+            {
+                // todo
+                ret = new Mesh();
+                ret.SetVertices(baseData.vertices);
+                ret.SetNormals(baseData.normals);
+                ret.SetTangents(baseData.tangents);
+            }
+            return ret;
+        }
+        [DllImport("BlendShapeBuilderCore")] static extern int npGenerateNormals(
+            ref npMeshData model, IntPtr dst);
+        [DllImport("BlendShapeBuilderCore")] static extern void npProjectVertices(
+            ref npMeshData model, ref npMeshData target, IntPtr ray_dir, npProjectVerticesMode mode, float max_distance);
 
         #endregion
 

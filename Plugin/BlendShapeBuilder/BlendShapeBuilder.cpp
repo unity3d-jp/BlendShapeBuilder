@@ -1180,11 +1180,13 @@ npAPI void npProjectVertices(
     auto num_vertices = model->num_vertices;
     auto vertices = model->vertices;
     auto normals = model->normals;
+    auto tangents = model->tangents;
     auto selection = model->selection;
 
     auto pnum_triangles = target->num_triangles;
     auto pvertices = target->vertices;
     auto pnormals = target->normals;
+    auto ptangents = target->tangents;
     auto pindices = target->indices;
 
     auto to_local = target->transform * invert(model->transform);
@@ -1215,9 +1217,44 @@ npAPI void npProjectVertices(
         int ti;
         float distance;
 
-        float3 rvertex, rnormal;
+        float3 rvertex;
+        float3 rnormal = float3::zero();
+        float4 rtangents = float4::zero();
         float min_distance;
         bool hit = false;
+
+        auto gen_normal = [&soa, pnormals, pindices](const float3& pos, int ti) {
+            if (pnormals) {
+                return triangle_interpolation(
+                    pos,
+                    { soa[0][ti], soa[1][ti], soa[2][ti] },
+                    { soa[3][ti], soa[4][ti], soa[5][ti] },
+                    { soa[6][ti], soa[7][ti], soa[8][ti] },
+                    pnormals[pindices[ti * 3 + 0]],
+                    pnormals[pindices[ti * 3 + 1]],
+                    pnormals[pindices[ti * 3 + 2]]);
+            }
+            else {
+                return float3::zero();
+            }
+        };
+        auto gen_tangent = [&soa, &to_local, ptangents, pindices](const float3& pos, int ti) {
+            if (ptangents) {
+                float4 ret = triangle_interpolation(
+                    pos,
+                    { soa[0][ti], soa[1][ti], soa[2][ti] },
+                    { soa[3][ti], soa[4][ti], soa[5][ti] },
+                    { soa[6][ti], soa[7][ti], soa[8][ti] },
+                    ptangents[pindices[ti * 3 + 0]],
+                    ptangents[pindices[ti * 3 + 1]],
+                    ptangents[pindices[ti * 3 + 2]]);
+                (float3&)ret = normalize(mul_v(to_local, (float3&)ret));
+                return ret;
+            }
+            else {
+                return float4::zero();
+            }
+        };
 
         if (mode == npProjectVerticesMode::Forward || mode == npProjectVerticesMode::ForwardAndBackward) {
             int num_hit = RayTrianglesIntersectionSoA(rpos, rdir,
@@ -1229,15 +1266,8 @@ npAPI void npProjectVertices(
                 hit = true;
                 min_distance = distance;
                 rvertex = rpos + rdir * distance;
-                rnormal = triangle_interpolation(
-                    rpos + rdir * distance,
-                    { soa[0][ti], soa[1][ti], soa[2][ti] },
-                    { soa[3][ti], soa[4][ti], soa[5][ti] },
-                    { soa[6][ti], soa[7][ti], soa[8][ti] },
-                    pnormals[pindices[ti * 3 + 0]],
-                    pnormals[pindices[ti * 3 + 1]],
-                    pnormals[pindices[ti * 3 + 2]]);
-                rnormal = normalize(mul_v(to_local, rnormal));
+                rnormal = gen_normal(rpos + rdir * distance, ti);
+                rtangents = gen_tangent(rpos + rdir * distance, ti);
             }
         }
         if (mode == npProjectVerticesMode::Backward || mode == npProjectVerticesMode::ForwardAndBackward) {
@@ -1250,21 +1280,14 @@ npAPI void npProjectVertices(
                 hit = true;
                 min_distance = distance;
                 rvertex = rpos + -rdir * distance;
-                rnormal = triangle_interpolation(
-                    rpos + -rdir * distance,
-                    { soa[0][ti], soa[1][ti], soa[2][ti] },
-                    { soa[3][ti], soa[4][ti], soa[5][ti] },
-                    { soa[6][ti], soa[7][ti], soa[8][ti] },
-                    pnormals[pindices[ti * 3 + 0]],
-                    pnormals[pindices[ti * 3 + 1]],
-                    pnormals[pindices[ti * 3 + 2]]);
-                rnormal = normalize(mul_v(to_local, rnormal));
+                rnormal = gen_normal(rpos + -rdir * distance, ti);
+                rtangents = gen_tangent(rpos + -rdir * distance, ti);
             }
         }
-
         if (hit) {
             vertices[vi] = rvertex;
-            normals[vi] = rnormal;
+            if (normals) normals[vi] = rnormal;
+            if (tangents) tangents[vi] = rtangents;
         }
     });
 }
