@@ -27,5 +27,5 @@ Temp/
 TestLocal/
 TestLocal.meta
 
-/*.csproj
-/*.sln
+BlendShapeBuilder/*.csproj
+BlendShapeBuilder/*.sln

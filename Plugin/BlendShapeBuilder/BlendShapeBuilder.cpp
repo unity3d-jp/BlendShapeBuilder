@@ -1165,7 +1165,108 @@ npAPI void npProjectNormals2(
         const float3& operator[](int) const { return ray_dir; }
     } ray_dirs = { ray_dir };
     ProjectNormalsImpl(model, target, ray_dirs, mask);
+}
 
+enum class npProjectVerticesMode
+{
+    Forward,
+    Backward,
+    ForwardAndBackward,
+};
+
+npAPI void npProjectVertices(
+    npMeshData *model, npMeshData *target, const float3 ray_dirs[], npProjectVerticesMode mode, float max_distance)
+{
+    auto num_vertices = model->num_vertices;
+    auto vertices = model->vertices;
+    auto normals = model->normals;
+    auto selection = model->selection;
+
+    auto pnum_triangles = target->num_triangles;
+    auto pvertices = target->vertices;
+    auto pnormals = target->normals;
+    auto pindices = target->indices;
+
+    auto to_local = target->transform * invert(model->transform);
+    RawVector<float> soa[9]; // flattened + SoA-nized vertices (faster on CPU)
+
+                             // flatten + SoA-nize
+    {
+        for (int i = 0; i < 9; ++i) {
+            soa[i].resize(pnum_triangles);
+        }
+        for (int ti = 0; ti < pnum_triangles; ++ti) {
+            for (int i = 0; i < 3; ++i) {
+                auto p = mul_p(to_local, pvertices[pindices[ti * 3 + i]]);
+                soa[i * 3 + 0][ti] = p.x;
+                soa[i * 3 + 1][ti] = p.y;
+                soa[i * 3 + 2][ti] = p.z;
+            }
+        }
+    }
+
+    parallel_for(0, num_vertices, [&](int vi) {
+        //float s = mask ? selection[vi] : 1.0f;
+        //if (s == 0.0f) { return; }
+        float s = 1.0f;
+
+        float3 rpos = vertices[vi];
+        float3 rdir = ray_dirs[vi];
+        int ti;
+        float distance;
+
+        float3 rvertex, rnormal;
+        float min_distance;
+        bool hit = false;
+
+        if (mode == npProjectVerticesMode::Forward || mode == npProjectVerticesMode::ForwardAndBackward) {
+            int num_hit = RayTrianglesIntersectionSoA(rpos, rdir,
+                soa[0].data(), soa[1].data(), soa[2].data(),
+                soa[3].data(), soa[4].data(), soa[5].data(),
+                soa[6].data(), soa[7].data(), soa[8].data(),
+                pnum_triangles, ti, distance);
+            if (num_hit > 0 && distance < max_distance) {
+                hit = true;
+                min_distance = distance;
+                rvertex = rpos + rdir * distance;
+                rnormal = triangle_interpolation(
+                    rpos + rdir * distance,
+                    { soa[0][ti], soa[1][ti], soa[2][ti] },
+                    { soa[3][ti], soa[4][ti], soa[5][ti] },
+                    { soa[6][ti], soa[7][ti], soa[8][ti] },
+                    pnormals[pindices[ti * 3 + 0]],
+                    pnormals[pindices[ti * 3 + 1]],
+                    pnormals[pindices[ti * 3 + 2]]);
+                rnormal = normalize(mul_v(to_local, rnormal));
+            }
+        }
+        if (mode == npProjectVerticesMode::Backward || mode == npProjectVerticesMode::ForwardAndBackward) {
+            int num_hit = RayTrianglesIntersectionSoA(rpos, -rdir,
+                soa[0].data(), soa[1].data(), soa[2].data(),
+                soa[3].data(), soa[4].data(), soa[5].data(),
+                soa[6].data(), soa[7].data(), soa[8].data(),
+                pnum_triangles, ti, distance);
+            if (num_hit > 0 && distance < max_distance && (!hit || distance < min_distance)) {
+                hit = true;
+                min_distance = distance;
+                rvertex = rpos + -rdir * distance;
+                rnormal = triangle_interpolation(
+                    rpos + -rdir * distance,
+                    { soa[0][ti], soa[1][ti], soa[2][ti] },
+                    { soa[3][ti], soa[4][ti], soa[5][ti] },
+                    { soa[6][ti], soa[7][ti], soa[8][ti] },
+                    pnormals[pindices[ti * 3 + 0]],
+                    pnormals[pindices[ti * 3 + 1]],
+                    pnormals[pindices[ti * 3 + 2]]);
+                rnormal = normalize(mul_v(to_local, rnormal));
+            }
+        }
+
+        if (hit) {
+            vertices[vi] = rvertex;
+            normals[vi] = rnormal;
+        }
+    });
 }
 
 template<int NumInfluence>
