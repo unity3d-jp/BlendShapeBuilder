@@ -15,18 +15,23 @@ MonoBehaviour:
   preserveExistingBlendShapes: 0
   blendShapeData:
   - fold: 1
-    name: blendShape1.MTH_SMILE1
+    name: NewBlendShape1
     frames:
+    - weight: 50
+      mesh: {fileID: 0}
+      vertex: 1
+      normal: 0
+      tangent: 0
+      proj: 1
+      projMode: 2
+      projRayDir: 0
+      projMaxRayDistance: 100
     - weight: 100
       mesh: {fileID: 0}
       vertex: 1
       normal: 1
       tangent: 1
-  - fold: 1
-    name: blendShape1.MTH_SMILE2
-    frames:
-    - weight: 100
-      mesh: {fileID: 0}
-      vertex: 1
-      normal: 1
-      tangent: 1
+      proj: 0
+      projMode: 2
+      projRayDir: 0
+      projMaxRayDistance: 10

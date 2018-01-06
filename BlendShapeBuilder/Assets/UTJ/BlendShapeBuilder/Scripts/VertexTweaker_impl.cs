@@ -12,6 +12,133 @@ namespace UTJ.BlendShapeBuilder
 {
     public partial class VertexTweaker : MonoBehaviour
     {
+        public Vector3 ToWorldVector(Vector3 v, Coordinate c)
+        {
+            switch (c)
+            {
+                case Coordinate.Local: return GetComponent<Transform>().localToWorldMatrix.MultiplyVector(v);
+                case Coordinate.Pivot: return m_settings.pivotRot * v;
+            }
+            return v;
+        }
+
+
+        public void ApplyAssign(Vector3 v, Coordinate c, bool pushUndo)
+        {
+            v = ToWorldVector(v, c).normalized;
+
+            npAssign(ref m_npModelData, v);
+            UpdateNormals();
+            if (pushUndo) PushUndo();
+        }
+
+        public void ApplyMove(Vector3 v, Coordinate c, bool pushUndo)
+        {
+            v = ToWorldVector(v, c);
+
+            npMove(ref m_npModelData, v);
+            UpdateNormals();
+            if (pushUndo) PushUndo();
+        }
+
+        public void ApplyRotate(Quaternion amount, Quaternion pivotRot, Coordinate c, bool pushUndo)
+        {
+            var backup = m_npModelData.transform;
+            var t = GetComponent<Transform>();
+            switch (c)
+            {
+                case Coordinate.World:
+                    m_npModelData.transform = t.localToWorldMatrix;
+                    pivotRot = Quaternion.identity;
+                    break;
+                case Coordinate.Local:
+                    m_npModelData.transform = Matrix4x4.identity;
+                    pivotRot = Quaternion.identity;
+                    break;
+                case Coordinate.Pivot:
+                    m_npModelData.transform = t.localToWorldMatrix;
+                    break;
+                default: return;
+            }
+
+            npRotate(ref m_npModelData, amount, pivotRot);
+            m_npModelData.transform = backup;
+
+            UpdateNormals();
+            if (pushUndo) PushUndo();
+        }
+
+        public void ApplyRotatePivot(Quaternion amount, Vector3 pivotPos, Quaternion pivotRot, Coordinate c, bool pushUndo)
+        {
+            var backup = m_npModelData.transform;
+            var t = GetComponent<Transform>();
+            switch (c)
+            {
+                case Coordinate.World:
+                    m_npModelData.transform = t.localToWorldMatrix;
+                    pivotRot = Quaternion.identity;
+                    break;
+                case Coordinate.Local:
+                    m_npModelData.transform = Matrix4x4.identity;
+                    pivotPos = t.worldToLocalMatrix.MultiplyPoint(pivotPos);
+                    pivotRot = Quaternion.identity;
+                    break;
+                case Coordinate.Pivot:
+                    m_npModelData.transform = t.localToWorldMatrix;
+                    break;
+                default: return;
+            }
+
+            npRotatePivot(ref m_npModelData, amount, pivotPos, pivotRot);
+            m_npModelData.transform = backup;
+
+            UpdateNormals();
+            if (pushUndo) PushUndo();
+        }
+
+        public void ApplyScale(Vector3 amount, Vector3 pivotPos, Quaternion pivotRot, Coordinate c, bool pushUndo)
+        {
+            var backup = m_npModelData.transform;
+            var t = GetComponent<Transform>();
+            switch (c)
+            {
+                case Coordinate.World:
+                    m_npModelData.transform = t.localToWorldMatrix;
+                    pivotRot = Quaternion.identity;
+                    break;
+                case Coordinate.Local:
+                    m_npModelData.transform = Matrix4x4.identity;
+                    pivotPos = t.worldToLocalMatrix.MultiplyPoint(pivotPos);
+                    pivotRot = Quaternion.identity;
+                    break;
+                case Coordinate.Pivot:
+                    m_npModelData.transform = t.localToWorldMatrix;
+                    break;
+                default: return;
+            }
+
+            npScale(ref m_npModelData, amount, pivotPos, pivotRot);
+            m_npModelData.transform = backup;
+
+            UpdateNormals();
+            if (pushUndo) PushUndo();
+        }
+
+        public void ResetVertices(bool useSelection, bool pushUndo)
+        {
+            if (!useSelection)
+            {
+                Array.Copy(m_pointsBase, m_points, m_points.Count);
+            }
+            else
+            {
+                for (int i = 0; i < m_points.Count; ++i)
+                    m_points[i] = Vector3.Lerp(m_points[i], m_pointsBase[i], m_selection[i]);
+            }
+            UpdateNormals();
+            if (pushUndo) PushUndo();
+        }
+
 
 
         bool UpdateBoneMatrices()
@@ -182,18 +309,6 @@ namespace UTJ.BlendShapeBuilder
             return ret;
         }
 
-        public Vector3 PickNormal(Vector3 pos, int ti)
-        {
-            return npPickNormal(ref m_npModelData, pos, ti);
-        }
-
-        public Vector3 PickBaseNormal(Vector3 pos, int ti)
-        {
-            m_npModelData.normals = m_normalsBase;
-            var ret = npPickNormal(ref m_npModelData, pos, ti);
-            m_npModelData.normals = m_normals;
-            return ret;
-        }
 
 
         public bool SelectEdge(float strength, bool clear)
@@ -373,6 +488,64 @@ namespace UTJ.BlendShapeBuilder
             UpdateNormals();
             if (pushUndo) PushUndo();
             return true;
+        }
+
+        static Rect FromToRect(Vector2 start, Vector2 end)
+        {
+            Rect r = new Rect(start.x, start.y, end.x - start.x, end.y - start.y);
+            if (r.width < 0)
+            {
+                r.x += r.width;
+                r.width = -r.width;
+            }
+            if (r.height < 0)
+            {
+                r.y += r.height;
+                r.height = -r.height;
+            }
+            return r;
+        }
+
+        public void ResetToBindpose(bool pushUndo)
+        {
+            var smr = GetComponent<SkinnedMeshRenderer>();
+            if (smr == null || smr.bones == null || smr.sharedMesh == null) { return; }
+
+            var bones = smr.bones;
+            var bindposes = smr.sharedMesh.bindposes;
+            var bindposeMap = new Dictionary<Transform, Matrix4x4>();
+
+            for (int i = 0; i < bones.Length; i++)
+            {
+                if (!bindposeMap.ContainsKey(bones[i]))
+                {
+                    bindposeMap.Add(bones[i], bindposes[i]);
+                }
+            }
+
+            if (pushUndo)
+                Undo.RecordObjects(bones, "NormalPainter: ResetToBindpose");
+
+            foreach (var kvp in bindposeMap)
+            {
+                var bone = kvp.Key;
+                var imatrix = kvp.Value;
+                var localMatrix =
+                    bindposeMap.ContainsKey(bone.parent) ? (imatrix * bindposeMap[bone.parent].inverse).inverse : imatrix.inverse;
+
+                bone.localPosition = localMatrix.MultiplyPoint(Vector3.zero);
+                bone.localRotation = Quaternion.LookRotation(localMatrix.GetColumn(2), localMatrix.GetColumn(1));
+                bone.localScale = new Vector3(localMatrix.GetColumn(0).magnitude, localMatrix.GetColumn(1).magnitude, localMatrix.GetColumn(2).magnitude);
+            }
+
+            if (pushUndo)
+                Undo.FlushUndoRecordObjects();
+        }
+
+        public void ExportSettings(string path)
+        {
+            AssetDatabase.DeleteAsset(path);
+            AssetDatabase.CreateAsset(Instantiate(m_settings), path);
         }
 
 

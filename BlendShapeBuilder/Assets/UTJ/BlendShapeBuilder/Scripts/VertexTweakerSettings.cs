@@ -8,22 +8,10 @@ namespace UTJ.BlendShapeBuilder
     public enum EditMode
     {
         Select,
-        Brush,
         Assign,
         Move,
         Rotate,
         Scale,
-        Smooth,
-        Projection,
-        Reset,
-    }
-
-    public enum BrushMode
-    {
-        Paint,
-        Replace,
-        Smooth,
-        Projection,
         Reset,
     }
 
@@ -183,15 +171,12 @@ namespace UTJ.BlendShapeBuilder
 
         // edit options
         public EditMode editMode = EditMode.Select;
-        public BrushMode brushMode = BrushMode.Paint;
         public SelectMode selectMode = SelectMode.Single;
         public MirrorMode mirrorMode = MirrorMode.None;
         public bool selectFrontSideOnly = true;
         public bool selectVertex = true;
         public bool selectTriangle = true;
         public bool rotatePivot = false;
-        public bool brushMaskWithSelection = true;
-        public int brushBlendMode = 0;
 
         public BrushData[] brushData = new BrushData[5] {
             new BrushData(),
@@ -201,40 +186,7 @@ namespace UTJ.BlendShapeBuilder
             new BrushData(),
         };
         [NonSerialized] public int brushActiveSlot = 0;
-
-        [NonSerialized] public bool pickNormal = false;
-
-        public int projectionMode;
-        public Vector3 projectionDir = new Vector3(0, -1, 0);
-        public int projectionRayDir;
-        GameObject _projectionNormalSource;
-        MeshData _projectionNormalSourceData;
-
-        public GameObject projectionNormalSource
-        {
-            get { return _projectionNormalSource; }
-            set
-            {
-                if (value != _projectionNormalSource)
-                {
-                    _projectionNormalSource = value;
-                    _projectionNormalSourceData = null;
-                }
-            }
-        }
-        public MeshData projectionNormalSourceData
-        {
-            get
-            {
-                if (_projectionNormalSourceData == null && _projectionNormalSource != null)
-                {
-                    var md = new MeshData();
-                    if (md.Extract(_projectionNormalSource))
-                        _projectionNormalSourceData = md;
-                }
-                return _projectionNormalSourceData;
-            }
-        }
+        
 
         // display options
         public bool showVertices = true;
