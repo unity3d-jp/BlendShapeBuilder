@@ -1058,6 +1058,7 @@ template<class RayDirs>
 inline void ProjectNormalsImpl(
     npMeshData *model, npMeshData *target, const RayDirs& ray_dirs, int mask)
 {
+    // per-vertex detection
     auto num_vertices = model->num_vertices;
     auto vertices = model->vertices;
     auto normals = model->normals;
@@ -1114,6 +1115,88 @@ inline void ProjectNormalsImpl(
             normals[vi] = normalize(lerp(normals[vi], result, s));
         }
     });
+
+#if 0
+    // per-triangle detection
+    auto num_triangles = model->num_triangles;
+    auto indices = model->indices;
+    auto vertices = model->vertices;
+
+    RawVector<float3> tri_normals(num_triangles);
+    RawVector<float> tri_distances(num_triangles);
+    RawVector<int> tri_relations(num_triangles);
+
+    parallel_for(0, num_triangles, [&](int ti) {
+        int i0 = indices[ti * 3 + 0];
+        int i1 = indices[ti * 3 + 1];
+        int i2 = indices[ti * 3 + 2];
+        auto v0 = vertices[i0];
+        auto v1 = vertices[i1];
+        auto v2 = vertices[i2];
+        tri_normals[ti] = normalize(cross(v1 - v0, v2 - v0));
+        float3 tri_pos = (v0 + v1 + v2) * 0.33333333333f;
+        tri_distances[ti] = plane_distance(tri_pos, plane_normal);
+    });
+
+    std::atomic_int ret{ 0 };
+    parallel_for(0, num_triangles, [&](int ti) {
+        int rel = -1;
+        float d1 = tri_distances[ti];
+        if (d1 < 0.0f) {
+            for (int i = 0; i < num_triangles; ++i) {
+                float d2 = tri_distances[i];
+                if (d2 > 0.0f && near_equal(abs(d1), d2, epsilon))
+                {
+                    float3 n1 = tri_normals[ti];
+                    float3 n2 = plane_mirror(tri_normals[i], plane_normal);
+                    if (dot(n1, n2) >= 0.99f) {
+                        rel = i;
+                        ++ret;
+                        break;
+                    }
+                }
+            }
+        }
+        tri_relations[ti] = rel;
+    });
+
+    for (int ti = 0; ti < num_triangles; ++ti) {
+        int trel = tri_relations[ti];
+        int i0 = indices[ti * 3 + 0];
+        int i1 = indices[ti * 3 + 1];
+        int i2 = indices[ti * 3 + 2];
+
+        int ri0, ri1, ri2;
+        if (trel == -1) {
+            ri0 = ri1 = ri2 = -1;
+        }
+        else {
+            auto search_nearest = [&](int vi) {
+                const float3& pos = vertices[vi];
+                int nearest_index;
+                float nearest_distance;
+                for (int ci = 0; ci < 3; ++ci) {
+                    int idx = indices[trel * 3 + ci];
+                    float3 rpos = vertices[idx];
+                    float d1 = plane_distance(pos, plane_normal);
+                    float d = length(pos - (rpos + plane_normal * (d1 * 2.0f)));
+                    if (ci == 0 || d < nearest_distance) {
+                        nearest_index = idx;;
+                        nearest_distance = d;
+                    }
+                }
+                return nearest_distance <= epsilon ? nearest_index : -1;
+            };
+            ri0 = search_nearest(i0);
+            ri1 = search_nearest(i1);
+            ri2 = search_nearest(i2);
+        }
+        relation[i0] = ri0;
+        relation[i1] = ri1;
+        relation[i2] = ri2;
+    }
+    return ret;
+#endif
 }
 
 npAPI void npProjectNormals(
