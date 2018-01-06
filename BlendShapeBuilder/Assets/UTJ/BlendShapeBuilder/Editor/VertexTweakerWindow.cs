@@ -30,7 +30,7 @@ namespace UTJ.BlendShapeBuilder
         public static void Open()
         {
             var window = EditorWindow.GetWindow<VertexTweakerWindow>();
-            window.titleContent = new GUIContent("Vertex Tweaker");
+            window.titleContent = new GUIContent("VertexTweaker");
             window.Show();
             window.OnSelectionChange();
         }
@@ -108,7 +108,7 @@ namespace UTJ.BlendShapeBuilder
                             Tools.current = Tool.Move;
                         }
                     }
-                    GUILayout.Label("Edit Normals");
+                    GUILayout.Label("Edit Vertices");
                     EditorGUILayout.EndHorizontal();
 
 
@@ -481,6 +481,14 @@ namespace UTJ.BlendShapeBuilder
                 {
                     EditorGUI.indentLevel++;
                     settings.normalMode = (NormalsUpdateMode)EditorGUILayout.EnumPopup("Update Mode", settings.normalMode);
+                    if (settings.normalMode == NormalsUpdateMode.Manual)
+                    {
+                        EditorGUILayout.BeginHorizontal();
+                        EditorGUILayout.LabelField("", GUILayout.Width(indentSize));
+                        if (GUILayout.Button("Recalculate [N]", GUILayout.Width(120)))
+                            m_target.RecalculateNormals();
+                        EditorGUILayout.EndHorizontal();
+                    }
                     EditorGUI.indentLevel--;
                 }
 
@@ -493,7 +501,7 @@ namespace UTJ.BlendShapeBuilder
                     {
                         EditorGUILayout.BeginHorizontal();
                         EditorGUILayout.LabelField("", GUILayout.Width(indentSize));
-                        if (GUILayout.Button("Recalculate [T]"))
+                        if (GUILayout.Button("Recalculate [T]", GUILayout.Width(120)))
                             m_target.RecalculateTangents();
                         EditorGUILayout.EndHorizontal();
                     }
@@ -563,27 +571,27 @@ namespace UTJ.BlendShapeBuilder
                     }
                 }
             }
-            //else if (settings.inexportIndex == 1)
-            //{
-            //    settings.objFlipHandedness = EditorGUILayout.Toggle("Flip Handedness", settings.objFlipHandedness);
-            //    settings.objFlipFaces = EditorGUILayout.Toggle("Flip Faces", settings.objFlipFaces);
-            //    settings.objMakeSubmeshes = EditorGUILayout.Toggle("Make Submeshes", settings.objMakeSubmeshes);
-            //    settings.objApplyTransform = EditorGUILayout.Toggle("Apply Transform", settings.objApplyTransform);
-            //    settings.objIncludeChildren = EditorGUILayout.Toggle("Include Children", settings.objIncludeChildren);
-            //
-            //    if (GUILayout.Button("Export .obj file"))
-            //    {
-            //        string path = EditorUtility.SaveFilePanel("Export .obj file", "", SanitizeForFileName(m_target.name), "obj");
-            //        ObjExporter.Export(m_target.gameObject, path, new ObjExporter.Settings
-            //        {
-            //            flipFaces = settings.objFlipFaces,
-            //            flipHandedness = settings.objFlipHandedness,
-            //            includeChildren = settings.objIncludeChildren,
-            //            makeSubmeshes = settings.objMakeSubmeshes,
-            //            applyTransform = settings.objApplyTransform,
-            //        });
-            //    }
-            //}
+            else if (settings.inexportIndex == 1)
+            {
+                settings.objFlipHandedness = EditorGUILayout.Toggle("Flip Handedness", settings.objFlipHandedness);
+                settings.objFlipFaces = EditorGUILayout.Toggle("Flip Faces", settings.objFlipFaces);
+                settings.objMakeSubmeshes = EditorGUILayout.Toggle("Make Submeshes", settings.objMakeSubmeshes);
+                settings.objApplyTransform = EditorGUILayout.Toggle("Apply Transform", settings.objApplyTransform);
+                settings.objIncludeChildren = EditorGUILayout.Toggle("Include Children", settings.objIncludeChildren);
+            
+                if (GUILayout.Button("Export .obj file"))
+                {
+                    string path = EditorUtility.SaveFilePanel("Export .obj file", "", SanitizeForFileName(m_target.name), "obj");
+                    ObjExporter.Export(m_target.gameObject, path, new ObjExporter.Settings
+                    {
+                        flipFaces = settings.objFlipFaces,
+                        flipHandedness = settings.objFlipHandedness,
+                        includeChildren = settings.objIncludeChildren,
+                        makeSubmeshes = settings.objMakeSubmeshes,
+                        applyTransform = settings.objApplyTransform,
+                    });
+                }
+            }
             EditorGUILayout.EndVertical();
             EditorGUILayout.EndHorizontal();
         }
@@ -677,7 +685,7 @@ namespace UTJ.BlendShapeBuilder
 
             EditorGUILayout.Space();
 
-            settings.foldInExport = EditorGUILayout.Foldout(settings.foldInExport, "Import / Export");
+            settings.foldInExport = EditorGUILayout.Foldout(settings.foldInExport, "Export");
             if (settings.foldInExport)
                 DrawInExportPanel();
 
@@ -790,6 +798,12 @@ namespace UTJ.BlendShapeBuilder
                     tips = "Clear Selection";
                     m_target.ClearSelection();
                     m_target.UpdateSelection();
+                }
+                else if (e.keyCode == KeyCode.N)
+                {
+                    handled = true;
+                    tips = "Recalculate Normals";
+                    m_target.RecalculateNormals();
                 }
                 else if (e.keyCode == KeyCode.T)
                 {

@@ -1241,7 +1241,7 @@ npAPI void npProjectVertices(
     auto to_local = target->transform * invert(model->transform);
     RawVector<float> soa[9]; // flattened + SoA-nized vertices (faster on CPU)
 
-                             // flatten + SoA-nize
+    // flatten + SoA-nize
     {
         for (int i = 0; i < 9; ++i) {
             soa[i].resize(pnum_triangles);
