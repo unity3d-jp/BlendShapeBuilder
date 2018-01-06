@@ -467,7 +467,7 @@ namespace UTJ.BlendShapeBuilder
                     var diff = move - m_prevMove;
                     m_prevMove = move;
 
-                    ApplyMove(diff * 3.0f, Coordinate.World, false);
+                    ApplyMove(diff * 1.0f, Coordinate.World, false);
                 }
             }
             else if (m_numSelected > 0 && editMode == EditMode.Rotate)
@@ -839,7 +839,7 @@ namespace UTJ.BlendShapeBuilder
             Undo.RecordObject(this, "VertexTweaker [" + m_history.index + "]");
             m_historyIndex = ++m_history.index;
 
-            if(m_history.points == null || m_history.points.Length == m_points.Count)
+            if(m_history.points == null || m_history.points.Length != m_points.Count)
             {
                 m_history.points = (Vector3[])m_points.Clone();
                 m_history.normals = (Vector3[])m_normals.Clone();

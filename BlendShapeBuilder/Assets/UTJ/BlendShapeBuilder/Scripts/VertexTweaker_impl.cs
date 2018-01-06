@@ -188,8 +188,18 @@ namespace UTJ.BlendShapeBuilder
 
             if (flushAll)
             {
-                if (m_normals.Count == m_points.Count) m_meshTarget.SetNormals(m_normals);
-                if (m_tangents.Count == m_points.Count) m_meshTarget.SetTangents(m_tangents);
+                if (m_normals.Count == m_points.Count)
+                {
+                    m_meshTarget.SetNormals(m_normals);
+                    if (m_cbNormals != null)
+                        m_cbNormals.SetData(m_normals);
+                }
+                if (m_tangents.Count == m_points.Count)
+                {
+                    m_meshTarget.SetTangents(m_tangents);
+                    if (m_cbTangents != null)
+                        m_cbTangents.SetData(m_normals);
+                }
             }
             else
             {
@@ -478,7 +488,7 @@ namespace UTJ.BlendShapeBuilder
                 npMeshData tmp = m_npModelData;
                 tmp.vertices = m_pointsBasePredeformed;
                 tmp.normals = m_normalsBasePredeformed;
-                if (npBuildMirroringRelation(ref tmp, planeNormal, 0.0001f, m_mirrorRelation) == 0)
+                if (npBuildMirroringRelation(ref tmp, planeNormal, m_settings.mirrorEpsilon, m_mirrorRelation) == 0)
                 {
                     Debug.LogWarning("NormalEditor: this mesh seems not symmetric");
                     m_mirrorRelation = null;
@@ -487,7 +497,7 @@ namespace UTJ.BlendShapeBuilder
                 }
             }
 
-            npApplyMirroring(m_normals.Count, m_mirrorRelation, planeNormal, m_normalsPredeformed);
+            npApplyMirroring(m_normals.Count, m_mirrorRelation, planeNormal, m_pointsPredeformed);
             return true;
         }
         public bool ApplyMirroring(bool pushUndo)

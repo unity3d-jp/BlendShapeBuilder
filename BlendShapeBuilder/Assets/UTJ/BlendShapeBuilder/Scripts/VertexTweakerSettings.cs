@@ -181,6 +181,7 @@ namespace UTJ.BlendShapeBuilder
         public EditMode editMode = EditMode.Select;
         public SelectMode selectMode = SelectMode.Single;
         public MirrorMode mirrorMode = MirrorMode.None;
+        public float mirrorEpsilon = 0.0001f;
         public bool selectFrontSideOnly = true;
         public bool selectVertex = true;
         public bool selectTriangle = true;
@@ -227,6 +228,7 @@ namespace UTJ.BlendShapeBuilder
         [NonSerialized] public bool foldDisplay = true;
         [NonSerialized] public int displayIndex;
         [NonSerialized] public int inexportIndex;
+        [NonSerialized] public bool foldMirror = true;
         [NonSerialized] public bool foldNormals = true;
         [NonSerialized] public bool foldTangents = true;
 

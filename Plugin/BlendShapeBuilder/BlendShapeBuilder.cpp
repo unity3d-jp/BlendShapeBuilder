@@ -1027,7 +1027,7 @@ npAPI int npBuildMirroringRelation(
             for (int i = 0; i < num_vertices; ++i) {
                 float d2 = distances[i];
                 if (d2 > 0.0f &&
-                    length(vertices[vi] - (vertices[i] - plane_normal * (d2 * 2.0f))) < npEpsilon)
+                    length(vertices[vi] - (vertices[i] - plane_normal * (d2 * 2.0f))) < epsilon)
                 {
                     float3 n1 = normals[vi];
                     float3 n2 = plane_mirror(normals[i], plane_normal);

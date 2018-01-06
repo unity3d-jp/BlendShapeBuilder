@@ -204,15 +204,6 @@ namespace UTJ.BlendShapeBuilder
             "Local",
             "Pivot",
         };
-        static readonly string[] strProjectionMode = new string[] {
-            "Directional",
-            "Use Normals As Ray",
-        };
-        static readonly string[] strRaySourcee = new string[] {
-            "Base Normals",
-            "Current Normals",
-        };
-
 
 
         void DrawBrushPanel()
@@ -472,11 +463,16 @@ namespace UTJ.BlendShapeBuilder
 
             EditorGUILayout.BeginVertical();
             {
-                var mirrorMode = settings.mirrorMode;
-                settings.mirrorMode = (MirrorMode)EditorGUILayout.EnumPopup("Mirroring", settings.mirrorMode);
-                if (mirrorMode != settings.mirrorMode)
+                settings.foldMirror = EditorGUILayout.Foldout(settings.foldMirror, "Mirroring");
+                if (settings.foldMirror)
                 {
-                    m_target.ApplyMirroring(true);
+                    EditorGUI.indentLevel++;
+                    var mirrorMode = settings.mirrorMode;
+                    settings.mirrorMode = (MirrorMode)EditorGUILayout.EnumPopup("Direction", settings.mirrorMode);
+                    settings.mirrorEpsilon = EditorGUILayout.FloatField("Epsilon", settings.mirrorEpsilon);
+                    if (mirrorMode != settings.mirrorMode)
+                        m_target.ApplyMirroring(true);
+                    EditorGUI.indentLevel--;
                 }
 
                 EditorGUILayout.Space();
@@ -484,7 +480,7 @@ namespace UTJ.BlendShapeBuilder
                 if (settings.foldNormals)
                 {
                     EditorGUI.indentLevel++;
-                    settings.normalMode = (NormalsUpdateMode)EditorGUILayout.EnumPopup("Update Mode", settings.tangentsMode);
+                    settings.normalMode = (NormalsUpdateMode)EditorGUILayout.EnumPopup("Update Mode", settings.normalMode);
                     EditorGUI.indentLevel--;
                 }
 
