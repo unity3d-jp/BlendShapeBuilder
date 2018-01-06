@@ -10,6 +10,7 @@ using UnityEditor;
 
 namespace UTJ.BlendShapeBuilder
 {
+#if UNITY_EDITOR
     public partial class VertexTweaker : MonoBehaviour
     {
         public Vector3 ToWorldVector(Vector3 v, Coordinate c)
@@ -28,7 +29,7 @@ namespace UTJ.BlendShapeBuilder
             v = ToWorldVector(v, c).normalized;
 
             npAssign(ref m_npModelData, v);
-            UpdateNormals();
+            UpdateVertices();
             if (pushUndo) PushUndo();
         }
 
@@ -36,35 +37,8 @@ namespace UTJ.BlendShapeBuilder
         {
             v = ToWorldVector(v, c);
 
-            npMove(ref m_npModelData, v);
-            UpdateNormals();
-            if (pushUndo) PushUndo();
-        }
-
-        public void ApplyRotate(Quaternion amount, Quaternion pivotRot, Coordinate c, bool pushUndo)
-        {
-            var backup = m_npModelData.transform;
-            var t = GetComponent<Transform>();
-            switch (c)
-            {
-                case Coordinate.World:
-                    m_npModelData.transform = t.localToWorldMatrix;
-                    pivotRot = Quaternion.identity;
-                    break;
-                case Coordinate.Local:
-                    m_npModelData.transform = Matrix4x4.identity;
-                    pivotRot = Quaternion.identity;
-                    break;
-                case Coordinate.Pivot:
-                    m_npModelData.transform = t.localToWorldMatrix;
-                    break;
-                default: return;
-            }
-
-            npRotate(ref m_npModelData, amount, pivotRot);
-            m_npModelData.transform = backup;
-
-            UpdateNormals();
+            npMoveVertices(ref m_npModelData, v);
+            UpdateVertices();
             if (pushUndo) PushUndo();
         }
 
@@ -89,10 +63,10 @@ namespace UTJ.BlendShapeBuilder
                 default: return;
             }
 
-            npRotatePivot(ref m_npModelData, amount, pivotPos, pivotRot);
+            npRotatePivotVertices(ref m_npModelData, amount, pivotPos, pivotRot);
             m_npModelData.transform = backup;
 
-            UpdateNormals();
+            UpdateVertices();
             if (pushUndo) PushUndo();
         }
 
@@ -117,10 +91,10 @@ namespace UTJ.BlendShapeBuilder
                 default: return;
             }
 
-            npScale(ref m_npModelData, amount, pivotPos, pivotRot);
+            npScaleVertices(ref m_npModelData, amount, pivotPos, pivotRot);
             m_npModelData.transform = backup;
 
-            UpdateNormals();
+            UpdateVertices();
             if (pushUndo) PushUndo();
         }
 
@@ -135,7 +109,7 @@ namespace UTJ.BlendShapeBuilder
                 for (int i = 0; i < m_points.Count; ++i)
                     m_points[i] = Vector3.Lerp(m_points[i], m_pointsBase[i], m_selection[i]);
             }
-            UpdateNormals();
+            UpdateVertices();
             if (pushUndo) PushUndo();
         }
 
@@ -186,7 +160,7 @@ namespace UTJ.BlendShapeBuilder
             }
         }
 
-        public void UpdateNormals(bool mirror = true)
+        public void UpdateVertices(bool mirror = true, bool flushAll = false)
         {
             if (m_meshTarget == null) return;
 
@@ -194,30 +168,42 @@ namespace UTJ.BlendShapeBuilder
             {
                 UpdateBoneMatrices();
                 npApplyReverseSkinning(ref m_npSkinData,
-                    IntPtr.Zero, m_normals, IntPtr.Zero,
-                    IntPtr.Zero, m_normalsPredeformed, IntPtr.Zero);
+                    m_points, IntPtr.Zero, IntPtr.Zero,
+                    m_pointsPredeformed, IntPtr.Zero, IntPtr.Zero);
                 if (mirror)
                 {
                     ApplyMirroringInternal();
                     npApplySkinning(ref m_npSkinData,
-                        IntPtr.Zero, m_normalsPredeformed, IntPtr.Zero,
-                        IntPtr.Zero, m_normals, IntPtr.Zero);
+                        m_pointsPredeformed, IntPtr.Zero, IntPtr.Zero,
+                        m_points, IntPtr.Zero, IntPtr.Zero);
                 }
-                m_meshTarget.SetNormals(m_normalsPredeformed);
+                m_meshTarget.SetVertices(m_pointsPredeformed);
             }
             else
             {
                 if (mirror)
                     ApplyMirroringInternal();
-                m_meshTarget.SetNormals(m_normals);
+                m_meshTarget.SetVertices(m_points);
             }
 
-            if (m_settings.tangentsMode == TangentsUpdateMode.Realtime)
-                RecalculateTangents();
+            if (flushAll)
+            {
+                if (m_normals.Count == m_points.Count) m_meshTarget.SetNormals(m_normals);
+                if (m_tangents.Count == m_points.Count) m_meshTarget.SetTangents(m_tangents);
+            }
+            else
+            {
+                if (m_settings.normalMode == NormalsUpdateMode.Realtime)
+                {
+                    RecalculateNormals();
+                    if (m_settings.tangentsMode == TangentsUpdateMode.Realtime)
+                        RecalculateTangents();
+                }
+            }
 
             m_meshTarget.UploadMeshData(false);
-            if (m_cbNormals != null)
-                m_cbNormals.SetData(m_normals);
+            if (m_cbPoints != null)
+                m_cbPoints.SetData(m_points);
         }
 
         public void UpdateSelection()
@@ -246,6 +232,28 @@ namespace UTJ.BlendShapeBuilder
             {
                 m_cbSelection.SetData(m_selection);
             }
+        }
+
+        public void RecalculateNormals()
+        {
+            if (m_skinned)
+            {
+                npMeshData tmp = m_npModelData;
+                tmp.vertices = m_pointsPredeformed;
+                tmp.normals = m_normalsPredeformed;
+                npGenerateNormals(ref tmp, m_tangentsPredeformed);
+                npApplySkinning(ref m_npSkinData,
+                    IntPtr.Zero, m_normalsPredeformed, m_tangentsPredeformed,
+                    IntPtr.Zero, m_normals, m_tangents);
+            }
+            else
+            {
+                npGenerateNormals(ref m_npModelData, m_normals);
+            }
+            m_meshTarget.SetNormals(m_normalsPredeformed);
+
+            if (m_cbNormals != null)
+                m_cbNormals.SetData(m_normals);
         }
 
         public void RecalculateTangents()
@@ -468,7 +476,7 @@ namespace UTJ.BlendShapeBuilder
             if (needsSetup)
             {
                 npMeshData tmp = m_npModelData;
-                tmp.vertices = m_pointsPredeformed;
+                tmp.vertices = m_pointsBasePredeformed;
                 tmp.normals = m_normalsBasePredeformed;
                 if (npBuildMirroringRelation(ref tmp, planeNormal, 0.0001f, m_mirrorRelation) == 0)
                 {
@@ -485,7 +493,7 @@ namespace UTJ.BlendShapeBuilder
         public bool ApplyMirroring(bool pushUndo)
         {
             ApplyMirroringInternal();
-            UpdateNormals();
+            UpdateVertices();
             if (pushUndo) PushUndo();
             return true;
         }
@@ -613,16 +621,16 @@ namespace UTJ.BlendShapeBuilder
         [DllImport("BlendShapeBuilderCore")] static extern int npAssign(
             ref npMeshData model, Vector3 value);
         
-        [DllImport("BlendShapeBuilderCore")] static extern int npMove(
+        [DllImport("BlendShapeBuilderCore")] static extern int npMoveVertices(
             ref npMeshData model, Vector3 amount);
         
         [DllImport("BlendShapeBuilderCore")] static extern int npRotate(
             ref npMeshData model, Quaternion amount, Quaternion pivotRot);
 
-        [DllImport("BlendShapeBuilderCore")] static extern int npRotatePivot(
+        [DllImport("BlendShapeBuilderCore")] static extern int npRotatePivotVertices(
             ref npMeshData model, Quaternion amount, Vector3 pivotPos, Quaternion pivotRot);
 
-        [DllImport("BlendShapeBuilderCore")] static extern int npScale(
+        [DllImport("BlendShapeBuilderCore")] static extern int npScaleVertices(
             ref npMeshData model, Vector3 amount, Vector3 pivotPos, Quaternion pivotRot);
 
         [DllImport("BlendShapeBuilderCore")] static extern int npSmooth(
@@ -664,4 +672,5 @@ namespace UTJ.BlendShapeBuilder
 
         [DllImport("BlendShapeBuilderCore")] static extern void npInitializePenInput();
     }
+#endif
 }

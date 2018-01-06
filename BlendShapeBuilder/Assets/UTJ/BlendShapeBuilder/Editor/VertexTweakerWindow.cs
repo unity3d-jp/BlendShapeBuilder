@@ -407,20 +407,13 @@ namespace UTJ.BlendShapeBuilder
                 GUILayout.EndHorizontal();
 
                 EditorGUILayout.Space();
-                settings.rotatePivot = EditorGUILayout.Toggle("Rotate Around Pivot", settings.rotatePivot);
-                if (settings.coordinate == Coordinate.Pivot || settings.rotatePivot)
-                {
-                    settings.pivotPos = EditorGUILayout.Vector3Field("Pivot Position", settings.pivotPos);
-                    settings.pivotRot = Quaternion.Euler(EditorGUILayout.Vector3Field("Pivot Rotation", settings.pivotRot.eulerAngles));
-                }
+                settings.pivotPos = EditorGUILayout.Vector3Field("Pivot Position", settings.pivotPos);
+                settings.pivotRot = Quaternion.Euler(EditorGUILayout.Vector3Field("Pivot Rotation", settings.pivotRot.eulerAngles));
                 EditorGUILayout.Space();
                 if (GUILayout.Button("Apply Rotate"))
                 {
-                    if (settings.rotatePivot)
-                        m_target.ApplyRotatePivot(
-                            Quaternion.Euler(settings.rotateAmount), settings.pivotPos, settings.pivotRot, settings.coordinate, true);
-                    else
-                        m_target.ApplyRotate(Quaternion.Euler(settings.rotateAmount), settings.pivotRot, settings.coordinate, true);
+                    m_target.ApplyRotatePivot(
+                        Quaternion.Euler(settings.rotateAmount), settings.pivotPos, settings.pivotRot, settings.coordinate, true);
                 }
             }
             else if (settings.editMode == EditMode.Scale)
@@ -487,6 +480,14 @@ namespace UTJ.BlendShapeBuilder
                 }
 
                 EditorGUILayout.Space();
+                settings.foldNormals = EditorGUILayout.Foldout(settings.foldNormals, "Normals");
+                if (settings.foldNormals)
+                {
+                    EditorGUI.indentLevel++;
+                    settings.normalMode = (NormalsUpdateMode)EditorGUILayout.EnumPopup("Update Mode", settings.tangentsMode);
+                    EditorGUI.indentLevel--;
+                }
+
                 settings.foldTangents = EditorGUILayout.Foldout(settings.foldTangents, "Tangents");
                 if (settings.foldTangents)
                 {

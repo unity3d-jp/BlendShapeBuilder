@@ -5,6 +5,7 @@ using UnityEditor;
 
 namespace UTJ.BlendShapeBuilder
 {
+#if UNITY_EDITOR
     public enum EditMode
     {
         Select,
@@ -34,6 +35,12 @@ namespace UTJ.BlendShapeBuilder
         DownToUp,
     }
 
+    public enum NormalsUpdateMode
+    {
+        Manual,
+        Auto,
+        Realtime,
+    }
     public enum TangentsUpdateMode
     {
         Manual,
@@ -166,7 +173,8 @@ namespace UTJ.BlendShapeBuilder
             public float[] selection;
         }
 
-        public TangentsUpdateMode tangentsMode = TangentsUpdateMode.Auto;
+        public NormalsUpdateMode normalMode = NormalsUpdateMode.Manual;
+        public TangentsUpdateMode tangentsMode = TangentsUpdateMode.Manual;
         public TangentsPrecision tangentsPrecision = TangentsPrecision.Fast;
 
         // edit options
@@ -176,7 +184,6 @@ namespace UTJ.BlendShapeBuilder
         public bool selectFrontSideOnly = true;
         public bool selectVertex = true;
         public bool selectTriangle = true;
-        public bool rotatePivot = false;
 
         public BrushData[] brushData = new BrushData[5] {
             new BrushData(),
@@ -220,6 +227,7 @@ namespace UTJ.BlendShapeBuilder
         [NonSerialized] public bool foldDisplay = true;
         [NonSerialized] public int displayIndex;
         [NonSerialized] public int inexportIndex;
+        [NonSerialized] public bool foldNormals = true;
         [NonSerialized] public bool foldTangents = true;
 
         [NonSerialized] public Coordinate coordinate = Coordinate.World;
@@ -297,4 +305,5 @@ namespace UTJ.BlendShapeBuilder
             }
         }
     }
+#endif
 }

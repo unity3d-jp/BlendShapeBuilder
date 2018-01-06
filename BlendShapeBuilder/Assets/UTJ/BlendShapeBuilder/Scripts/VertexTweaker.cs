@@ -13,13 +13,13 @@ namespace UTJ.BlendShapeBuilder
     [ExecuteInEditMode]
     public partial class VertexTweaker : MonoBehaviour
     {
-        
+#if UNITY_EDITOR
         [Serializable]
         public class History
         {
             public int index;
             public Mesh mesh;
-            public Vector3[] vertices;
+            public Vector3[] points;
             public Vector3[] normals;
             public Vector4[] tangents;
         }
@@ -323,7 +323,7 @@ namespace UTJ.BlendShapeBuilder
             m_settings.InitializeBrushData();
 
             UpdateTransform();
-            UpdateNormals();
+            UpdateVertices();
             PushUndo();
             m_editing = true;
         }
@@ -493,11 +493,7 @@ namespace UTJ.BlendShapeBuilder
                     handled = true;
                     var diff = Quaternion.Inverse(m_prevRot) * rot;
                     m_prevRot = rot;
-
-                    if (m_settings.rotatePivot)
-                        ApplyRotatePivot(diff, m_settings.pivotPos, pivotRot, Coordinate.Pivot, false);
-                    else
-                        ApplyRotate(diff, pivotRot, Coordinate.Pivot, false);
+                    ApplyRotatePivot(diff, m_settings.pivotPos, pivotRot, Coordinate.Pivot, false);
                 }
             }
             else if (m_numSelected > 0 && editMode == EditMode.Scale)
@@ -832,28 +828,28 @@ namespace UTJ.BlendShapeBuilder
 
         void PushUndo()
         {
-            PushUndo(m_normals);
-        }
+            if (m_settings.normalMode == NormalsUpdateMode.Auto)
+            {
+                RecalculateNormals();
+                if (m_settings.tangentsMode == TangentsUpdateMode.Auto)
+                    RecalculateTangents();
+            }
 
-        void PushUndo(Vector3[] normals)
-        {
             Undo.IncrementCurrentGroup();
-            Undo.RecordObject(this, "NormalEditor [" + m_history.index + "]");
+            Undo.RecordObject(this, "VertexTweaker [" + m_history.index + "]");
             m_historyIndex = ++m_history.index;
 
-            if (normals == null)
+            if(m_history.points == null || m_history.points.Length == m_points.Count)
             {
-                m_history.normals = null;
+                m_history.points = (Vector3[])m_points.Clone();
+                m_history.normals = (Vector3[])m_normals.Clone();
+                m_history.tangents = (Vector4[])m_tangents.Clone();
             }
             else
             {
-                if (m_history.normals != null && m_history.normals.Length == normals.Length)
-                    Array.Copy(normals, m_history.normals, normals.Length);
-                else
-                    m_history.normals = (Vector3[])normals.Clone();
-
-                if (m_settings.tangentsMode == TangentsUpdateMode.Auto)
-                    RecalculateTangents();
+                Array.Copy(m_points, m_history.points, m_points.Count);
+                Array.Copy(m_normals, m_history.normals, m_normals.Count);
+                Array.Copy(m_tangents, m_history.tangents, m_tangents.Count);
             }
             m_history.mesh = m_meshTarget;
 
@@ -874,14 +870,14 @@ namespace UTJ.BlendShapeBuilder
                 UpdateTransform();
                 if (m_history.normals != null && m_normals != null && m_history.normals.Length == m_normals.Count)
                 {
-                    Array.Copy(m_history.normals, m_normals, m_normals.Count);
-                    UpdateNormals(false);
+                    Array.Copy(m_history.points, m_points, m_points.Count);
+                    UpdateVertices(false, true);
 
                     if (m_settings.tangentsMode == TangentsUpdateMode.Auto)
                         RecalculateTangents();
                 }
             }
         }
+#endif
     }
-
 }

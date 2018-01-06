@@ -530,11 +530,11 @@ npAPI void npAssign(
     }
 }
 
-npAPI void npMove(
+npAPI void npMoveVertices(
     npMeshData *model, float3 value)
 {
     auto num_vertices = model->num_vertices;
-    auto normals = model->normals;
+    auto vertices = model->vertices;
     auto selection = model->selection;
 
     value = mul_v(invert(model->transform), value);
@@ -542,43 +542,11 @@ npAPI void npMove(
         float s = selection[vi];
         if (s == 0.0f) continue;
 
-        normals[vi] = normalize(normals[vi] + value * s);
+        vertices[vi] = (vertices[vi] + value * s);
     }
 }
 
-npAPI void npRotate(
-    npMeshData *model, quatf value, quatf pivot_rot)
-{
-    float3 axis;
-    float angle;
-    to_axis_angle(value, axis, angle);
-    if (near_equal(angle, 0.0f) || std::isnan(angle)) {
-        return;
-    }
-
-    auto num_vertices = model->num_vertices;
-    auto normals = model->normals;
-    auto selection = model->selection;
-
-    auto ptrans = to_mat4x4(invert(pivot_rot));
-    auto iptrans = invert(ptrans);
-    auto trans = model->transform;
-    auto itrans = invert(trans);
-    auto rot = to_mat4x4(invert(value));
-
-    auto to_lspace = trans * iptrans * rot * ptrans * itrans;
-
-    for (int vi = 0; vi < num_vertices; ++vi) {
-        float s = selection[vi];
-        if (s == 0.0f) continue;
-
-        float3 n = normals[vi];
-        float3 v = normalize(mul_v(to_lspace, n));
-        normals[vi] = normalize(lerp(n, v, s));
-    }
-}
-
-npAPI void npRotatePivot(
+npAPI void npRotatePivotVertices(
     npMeshData *model, quatf value, float3 pivot_pos, quatf pivot_rot)
 {
     float3 axis;
@@ -596,7 +564,6 @@ npAPI void npRotatePivot(
 
     auto num_vertices = model->num_vertices;
     auto vertices = model->vertices;
-    auto normals = model->normals;
     auto selection = model->selection;
 
     auto ptrans = to_mat4x4(invert(pivot_rot)) * translate(pivot_pos);
@@ -617,11 +584,11 @@ npAPI void npRotatePivot(
         float3 v = vpos - (rot * vpos);
         if(near_equal(length(v), 0.0f)) { continue; }
         v = normalize(mul_v(to_lspace, v));
-        normals[vi] = normalize(normals[vi] + v * (d / furthest * angle * s));
+        vertices[vi] = (vertices[vi] + v * (d / furthest * angle * s));
     }
 }
 
-npAPI void npScale(
+npAPI void npScaleVertices(
     npMeshData *model, float3 value, float3 pivot_pos, quatf pivot_rot)
 {
     float furthest;
@@ -632,7 +599,6 @@ npAPI void npScale(
 
     auto num_vertices = model->num_vertices;
     auto vertices = model->vertices;
-    auto normals = model->normals;
     auto selection = model->selection;
 
     auto ptrans = to_mat4x4(invert(pivot_rot)) * translate(pivot_pos);
@@ -650,7 +616,7 @@ npAPI void npScale(
         float3 vpos = mul_p(to_pspace, vertices[vi]);
         float d = length(vpos);
         float3 v = mul_v(to_lspace, (vpos / d) * value);
-        normals[vi] = normalize(normals[vi] + v * (d / furthest * s));
+        vertices[vi] = (vertices[vi] + v * (d / furthest * s));
     }
 }
 
