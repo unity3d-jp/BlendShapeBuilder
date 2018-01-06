@@ -701,6 +701,7 @@ namespace UTJ.BlendShapeBuilder
             if (frame.projRayDir == ProjectVerticesRayDirection.BaseNomals)
             {
                 rayDirs = new PinnedList<Vector3>();
+                rayDirs.Resize(baseData.vertexCount);
                 npGenerateNormals(ref baseNP, rayDirs);
             }
             npProjectVertices(ref baseNP, ref targetNP, rayDirs, frame.projMode, frame.projMaxRayDistance);
