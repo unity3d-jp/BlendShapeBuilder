@@ -70,7 +70,6 @@ namespace UTJ.BlendShapeBuilder
         Vector2 m_rectStartPoint;
         Vector2 m_rectEndPoint;
         List<Vector2> m_lassoPoints = new List<Vector2>();
-        int m_brushNumPainted = 0;
 
         [SerializeField] History m_history = new History();
         int m_historyIndex = 0;
@@ -197,7 +196,7 @@ namespace UTJ.BlendShapeBuilder
             }
 
             if (m_matVisualize == null)
-                m_matVisualize = new Material(AssetDatabase.LoadAssetAtPath<Shader>(AssetDatabase.GUIDToAssetPath("03871fa9be0375f4c91cb4842f15b890")));
+                m_matVisualize = new Material(AssetDatabase.LoadAssetAtPath<Shader>(AssetDatabase.GUIDToAssetPath("5786f144ee220ce4ea056f3f5ef4af19")));
 
             if (m_meshTarget == null ||
                 m_meshTarget != tmesh ||
@@ -553,7 +552,6 @@ namespace UTJ.BlendShapeBuilder
             if (e.alt) return 0;
 
             int ret = 0;
-            var editMode = m_settings.editMode;
             bool handled = false;
 
             {

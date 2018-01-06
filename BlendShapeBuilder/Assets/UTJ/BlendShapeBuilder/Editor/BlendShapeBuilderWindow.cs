@@ -286,7 +286,7 @@ namespace UTJ.BlendShapeBuilder
                                 GUILayout.Space(indentSize);
                                 GUILayout.BeginVertical("Box");
                                 frame.projMode = (npProjectVerticesMode)EditorGUILayout.EnumPopup("Projection Mode", frame.projMode);
-                                frame.projRayDir = (ProjectVerticesRayDirection)EditorGUILayout.EnumPopup("Ray Direction", frame.projRayDir);
+                                frame.projRayDir = (ProjectionRayDirection)EditorGUILayout.EnumPopup("Ray Direction", frame.projRayDir);
                                 frame.projMaxRayDistance = EditorGUILayout.FloatField("Max Ray Distance", frame.projMaxRayDistance);
                                 if (GUILayout.Button("Generate Mesh", GUILayout.Width(120)))
                                 {
@@ -698,7 +698,7 @@ namespace UTJ.BlendShapeBuilder
             var baseNP = (npMeshData)baseData;
             var targetNP = (npMeshData)targetData;
             var rayDirs = baseData.normals;
-            if (frame.projRayDir == ProjectVerticesRayDirection.BaseNomals)
+            if (frame.projRayDir == ProjectionRayDirection.BaseNomals)
             {
                 rayDirs = new PinnedList<Vector3>();
                 rayDirs.Resize(baseData.vertexCount);

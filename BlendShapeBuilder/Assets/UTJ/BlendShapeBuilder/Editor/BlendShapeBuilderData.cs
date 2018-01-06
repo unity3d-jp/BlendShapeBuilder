@@ -5,12 +5,6 @@ using System.Collections.Generic;
 
 namespace UTJ.BlendShapeBuilder
 {
-    public enum ProjectVerticesRayDirection
-    {
-        CurrentNormals,
-        BaseNomals,
-    }
-
     [Serializable]
     public class BlendShapeFrameData
     {
@@ -22,7 +16,7 @@ namespace UTJ.BlendShapeBuilder
 
         public bool proj = false;
         public npProjectVerticesMode projMode = npProjectVerticesMode.ForwardAndBackward;
-        public ProjectVerticesRayDirection projRayDir = ProjectVerticesRayDirection.CurrentNormals;
+        public ProjectionRayDirection projRayDir = ProjectionRayDirection.CurrentNormals;
         public float projMaxRayDistance = 10.0f;
     }
 

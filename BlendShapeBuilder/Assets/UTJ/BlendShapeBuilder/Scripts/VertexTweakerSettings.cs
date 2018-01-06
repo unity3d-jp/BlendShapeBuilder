@@ -53,12 +53,6 @@ namespace UTJ.BlendShapeBuilder
         Precise,
     }
 
-    public enum ImageFormat
-    {
-        PNG,
-        EXR,
-    }
-
     public enum ModelOverlay
     {
         None,
@@ -75,6 +69,12 @@ namespace UTJ.BlendShapeBuilder
         World,
         Local,
         Pivot,
+    }
+
+    public enum ProjectionRayDirection
+    {
+        CurrentNormals,
+        BaseNomals,
     }
 
     public enum SceneGUIState
@@ -128,7 +128,7 @@ namespace UTJ.BlendShapeBuilder
             // update image
             if (s_mat == null)
             {
-                s_mat = new Material(AssetDatabase.LoadAssetAtPath<Shader>(AssetDatabase.GUIDToAssetPath("a19852f0736178441b093ba995baff4a")));
+                s_mat = new Material(AssetDatabase.LoadAssetAtPath<Shader>(AssetDatabase.GUIDToAssetPath("61546cd539a41814d8e0869a726a8c00")));
             }
             if (s_quad == null)
             {
@@ -198,7 +198,7 @@ namespace UTJ.BlendShapeBuilder
 
         // display options
         public bool showVertices = true;
-        public bool showNormals = true;
+        public bool showNormals = false;
         public bool showTangents = false;
         public bool showBinormals = false;
         public bool visualize = true;
@@ -238,6 +238,9 @@ namespace UTJ.BlendShapeBuilder
         [NonSerialized] public Vector3 rotateAmount;
         [NonSerialized] public Vector3 scaleAmount;
 
+        [NonSerialized] public npProjectVerticesMode projMode = npProjectVerticesMode.ForwardAndBackward;
+        [NonSerialized] public ProjectionRayDirection projRayDir = ProjectionRayDirection.CurrentNormals;
+
         [NonSerialized] public int smoothMode = 0;
         [NonSerialized] public float smoothRadius = 0.5f;
         [NonSerialized] public float smoothAmount = 1.0f;
@@ -245,14 +248,6 @@ namespace UTJ.BlendShapeBuilder
         [NonSerialized] public bool weldWithSmoothing = true;
         [NonSerialized] public int weldTargetsMode = 2;
         [NonSerialized] public GameObject[] weldTargets = new GameObject[1];
-
-        [NonSerialized] public ImageFormat bakeFormat = ImageFormat.PNG;
-        [NonSerialized] public int bakeWidth = 1024;
-        [NonSerialized] public int bakeHeight = 1024;
-        [NonSerialized] public bool bakeSeparateSubmeshes = true;
-        [NonSerialized] public bool bakeVertexColor01 = true;
-
-        [NonSerialized] public Texture bakeSource;
 
         [NonSerialized] public bool objFlipHandedness = true;
         [NonSerialized] public bool objFlipFaces = false;
