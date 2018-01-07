@@ -152,8 +152,4 @@ namespace UTJ.BlendShapeBuilder
         public int num_bones;
         public Matrix4x4 root;
     }
-
-    public static class bsbAPI
-    {
-    }
 }

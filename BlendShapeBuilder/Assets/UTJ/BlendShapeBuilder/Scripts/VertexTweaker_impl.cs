@@ -98,6 +98,24 @@ namespace UTJ.BlendShapeBuilder
             if (pushUndo) PushUndo();
         }
 
+        public void ApplyProjection(bool pushUndo)
+        {
+            var target = m_settings.projTarget;
+            var targetData = new MeshData();
+            if (target == null || !targetData.Extract(target)) { return; }
+
+            var targetNP = (npMeshData)targetData;
+            var rayDirs = m_normals;
+            if (m_settings.projRayDir == ProjectionRayDirection.BaseNomals)
+            {
+                rayDirs = m_normalsBase;
+            }
+            npProjectVertices(ref m_npModelData, ref targetNP, rayDirs, m_settings.projMode, m_settings.projMaxRayDistance);
+
+            UpdateVertices(false, true);
+            if (pushUndo) PushUndo();
+        }
+
         public void ResetVertices(bool useSelection, bool pushUndo)
         {
             if (!useSelection)
@@ -244,7 +262,7 @@ namespace UTJ.BlendShapeBuilder
             }
         }
 
-        public void RecalculateNormals()
+        public void RecalculateNormals(bool updateMesh = true)
         {
             if (m_skinned)
             {
@@ -260,17 +278,19 @@ namespace UTJ.BlendShapeBuilder
             {
                 npGenerateNormals(ref m_npModelData, m_normals);
             }
-            m_meshTarget.SetNormals(m_normalsPredeformed);
+
+            if (updateMesh)
+                m_meshTarget.SetNormals(m_normalsPredeformed);
 
             if (m_cbNormals != null)
                 m_cbNormals.SetData(m_normals);
         }
 
-        public void RecalculateTangents()
+        public void RecalculateTangents(bool updateMesh = true)
         {
             RecalculateTangents(m_settings.tangentsPrecision);
         }
-        public void RecalculateTangents(TangentsPrecision precision)
+        public void RecalculateTangents(TangentsPrecision precision, bool updateMesh = true)
         {
             if (precision == TangentsPrecision.Precise)
             {
@@ -301,8 +321,10 @@ namespace UTJ.BlendShapeBuilder
                 {
                     npGenerateTangents(ref m_npModelData, m_tangents);
                 }
-                m_meshTarget.SetTangents(m_tangentsPredeformed);
             }
+
+            if(updateMesh)
+                m_meshTarget.SetTangents(m_tangentsPredeformed);
 
             if (m_cbTangents != null)
                 m_cbTangents.SetData(m_tangents);

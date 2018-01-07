@@ -866,14 +866,14 @@ namespace UTJ.BlendShapeBuilder
                     BeginEdit();
                 }
                 UpdateTransform();
-                if (m_history.normals != null && m_normals != null && m_history.normals.Length == m_normals.Count)
-                {
-                    Array.Copy(m_history.points, m_points, m_points.Count);
-                    UpdateVertices(false, true);
 
-                    if (m_settings.tangentsMode == TangentsUpdateMode.Auto)
-                        RecalculateTangents();
-                }
+                if (m_history.points != null && m_points != null && m_history.points.Length == m_points.Count)
+                    Array.Copy(m_history.points, m_points, m_points.Count);
+                if (m_history.normals != null && m_normals != null && m_history.normals.Length == m_normals.Count)
+                    Array.Copy(m_history.normals, m_normals, m_normals.Count);
+                if (m_history.tangents != null && m_tangents != null && m_history.tangents.Length == m_tangents.Count)
+                    Array.Copy(m_history.tangents, m_tangents, m_tangents.Count);
+                UpdateVertices(false, true);
             }
         }
 #endif

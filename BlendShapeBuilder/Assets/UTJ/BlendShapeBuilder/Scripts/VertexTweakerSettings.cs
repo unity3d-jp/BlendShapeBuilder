@@ -13,6 +13,7 @@ namespace UTJ.BlendShapeBuilder
         Move,
         Rotate,
         Scale,
+        Projection,
         Reset,
     }
 
@@ -240,14 +241,8 @@ namespace UTJ.BlendShapeBuilder
 
         [NonSerialized] public npProjectVerticesMode projMode = npProjectVerticesMode.ForwardAndBackward;
         [NonSerialized] public ProjectionRayDirection projRayDir = ProjectionRayDirection.CurrentNormals;
-
-        [NonSerialized] public int smoothMode = 0;
-        [NonSerialized] public float smoothRadius = 0.5f;
-        [NonSerialized] public float smoothAmount = 1.0f;
-        [NonSerialized] public float weldAngle = 60.0f;
-        [NonSerialized] public bool weldWithSmoothing = true;
-        [NonSerialized] public int weldTargetsMode = 2;
-        [NonSerialized] public GameObject[] weldTargets = new GameObject[1];
+        [NonSerialized] public float projMaxRayDistance = 10.0f;
+        [NonSerialized] public GameObject projTarget = null;
 
         [NonSerialized] public bool objFlipHandedness = true;
         [NonSerialized] public bool objFlipFaces = false;

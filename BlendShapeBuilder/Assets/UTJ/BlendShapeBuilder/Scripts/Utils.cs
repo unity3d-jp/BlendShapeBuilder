@@ -5,7 +5,7 @@ using System.Collections.Generic;
 
 namespace UTJ.BlendShapeBuilder
 {
-    static class Utils
+    public static class Utils
     {
         public static GameObject MeshToGameObject(Mesh mesh, Vector3 pos, Material[] materials = null)
         {

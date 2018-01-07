@@ -191,7 +191,8 @@ namespace UTJ.BlendShapeBuilder
             "Move [F3]",
             "Rotate [F4]",
             "Scale [F5]",
-            "Reset [F6]",
+            "Projection [F6]",
+            "Reset [F7]",
         };
         static readonly string[] strSelectMode = new string[] {
             "Single [1]",
@@ -424,6 +425,20 @@ namespace UTJ.BlendShapeBuilder
                 if (GUILayout.Button("Apply Scale"))
                 {
                     m_target.ApplyScale(settings.scaleAmount, settings.pivotPos, settings.pivotRot, settings.coordinate, true);
+                }
+            }
+            else if (settings.editMode == EditMode.Projection)
+            {
+                settings.projMode = (npProjectVerticesMode)EditorGUILayout.EnumPopup("Projection Mode", settings.projMode);
+                settings.projRayDir = (ProjectionRayDirection)EditorGUILayout.EnumPopup("Ray Direction", settings.projRayDir);
+                settings.projMaxRayDistance = EditorGUILayout.FloatField("Max Ray Distance", settings.projMaxRayDistance);
+                settings.projTarget =
+                    (GameObject)EditorGUILayout.ObjectField("Projection Target", settings.projTarget, typeof(GameObject), true);
+                EditorGUILayout.Space();
+
+                if (GUILayout.Button("Apply Projection"))
+                {
+                    m_target.ApplyProjection(true);
                 }
             }
             else if (settings.editMode == EditMode.Reset)
@@ -719,7 +734,8 @@ namespace UTJ.BlendShapeBuilder
                     case KeyCode.F3: settings.editMode = EditMode.Move; break;
                     case KeyCode.F4: settings.editMode = EditMode.Rotate; break;
                     case KeyCode.F5: settings.editMode = EditMode.Scale; break;
-                    case KeyCode.F6: settings.editMode = EditMode.Reset; break;
+                    case KeyCode.F6: settings.editMode = EditMode.Projection; break;
+                    case KeyCode.F7: settings.editMode = EditMode.Reset; break;
                 }
                 if (settings.editMode != prevEditMode)
                     handled = true;
