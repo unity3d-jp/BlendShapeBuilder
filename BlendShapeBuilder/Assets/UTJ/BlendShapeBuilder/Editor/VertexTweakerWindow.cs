@@ -511,6 +511,7 @@ namespace UTJ.BlendShapeBuilder
                 if (settings.foldTangents)
                 {
                     EditorGUI.indentLevel++;
+                    settings.tangentsPrecision = (TangentsPrecision)EditorGUILayout.EnumPopup("Precision", settings.tangentsPrecision);
                     settings.tangentsMode = (TangentsUpdateMode)EditorGUILayout.EnumPopup("Update Mode", settings.tangentsMode);
                     if (settings.tangentsMode == TangentsUpdateMode.Manual)
                     {
@@ -520,7 +521,6 @@ namespace UTJ.BlendShapeBuilder
                             m_target.RecalculateTangents();
                         EditorGUILayout.EndHorizontal();
                     }
-                    settings.tangentsPrecision = (TangentsPrecision)EditorGUILayout.EnumPopup("Precision", settings.tangentsPrecision);
                     EditorGUI.indentLevel--;
                 }
 
@@ -542,6 +542,7 @@ namespace UTJ.BlendShapeBuilder
 
 
         static readonly string[] strInExport = new string[] {
+            "Duplicate",
             "Export .asset",
             "Export .obj",
         };
@@ -567,6 +568,14 @@ namespace UTJ.BlendShapeBuilder
 
             if (settings.inexportIndex == 0)
             {
+                if (GUILayout.Button("Duplicate"))
+                {
+                    var dup = Instantiate(m_target.mesh);
+                    Utils.MeshToGameObject(dup, Vector3.zero, Utils.ExtractMaterials(m_target.gameObject));
+                }
+            }
+            if (settings.inexportIndex == 1)
+            {
                 if (GUILayout.Button("Export .asset file"))
                 {
                     string path = EditorUtility.SaveFilePanel("Export .asset file", "Assets", SanitizeForFileName(m_target.name), "asset");
@@ -586,7 +595,7 @@ namespace UTJ.BlendShapeBuilder
                     }
                 }
             }
-            else if (settings.inexportIndex == 1)
+            else if (settings.inexportIndex == 2)
             {
                 settings.objFlipHandedness = EditorGUILayout.Toggle("Flip Handedness", settings.objFlipHandedness);
                 settings.objFlipFaces = EditorGUILayout.Toggle("Flip Faces", settings.objFlipFaces);

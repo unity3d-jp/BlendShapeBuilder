@@ -18,7 +18,6 @@ namespace UTJ.BlendShapeBuilder
             smr.sharedMaterials = materials;
             go.GetComponent<Transform>().position = pos;
             return go;
-
         }
 
         public static Mesh ExtractMesh(UnityEngine.Object obj)
