@@ -264,7 +264,7 @@ namespace UTJ.BlendShapeBuilder
                 m_npModelData.selection = m_selection;
 
                 var smr = GetComponent<SkinnedMeshRenderer>();
-                if (smr != null)
+                if (smr != null && smr.bones.Length > 0)
                 {
                     m_skinned = true;
 
@@ -553,7 +553,21 @@ namespace UTJ.BlendShapeBuilder
 
             int ret = 0;
             bool handled = false;
+            bool pickVertex = false;
 
+            var editMode = m_settings.editMode;
+            if (et == EventType.MouseDown &&
+                (editMode == EditMode.Move || editMode == EditMode.Rotate || editMode == EditMode.Scale))
+            {
+                if (settings.selectVertex && SelectVertex(e, 1, settings.selectFrontSideOnly))
+                    pickVertex = true;
+                if (pickVertex)
+                {
+                    handled = true;
+                    UpdateSelection();
+                }
+            }
+            if (!pickVertex)
             {
                 var selectMode = m_settings.selectMode;
                 float selectSign = e.control ? -1.0f : 1.0f;
@@ -564,17 +578,11 @@ namespace UTJ.BlendShapeBuilder
                         System.Array.Clear(m_selection, 0, m_selection.Count);
 
                     if (settings.selectVertex && SelectVertex(e, selectSign, settings.selectFrontSideOnly))
-                    {
                         handled = true;
-                    }
                     else if (settings.selectTriangle && SelectTriangle(e, selectSign))
-                    {
                         handled = true;
-                    }
                     else if (m_rayHit)
-                    {
                         handled = true;
-                    }
                 }
                 else if (selectMode == SelectMode.Rect)
                 {
@@ -675,6 +683,7 @@ namespace UTJ.BlendShapeBuilder
             }
             else if (et == EventType.MouseUp)
             {
+                pickVertex = false;
                 if (GUIUtility.hotControl == id && e.button == 0)
                     GUIUtility.hotControl = 0;
             }

@@ -269,10 +269,10 @@ namespace UTJ.BlendShapeBuilder
                 npMeshData tmp = m_npModelData;
                 tmp.vertices = m_pointsPredeformed;
                 tmp.normals = m_normalsPredeformed;
-                npGenerateNormals(ref tmp, m_tangentsPredeformed);
+                npGenerateNormals(ref tmp, m_normalsPredeformed);
                 npApplySkinning(ref m_npSkinData,
-                    IntPtr.Zero, m_normalsPredeformed, m_tangentsPredeformed,
-                    IntPtr.Zero, m_normals, m_tangents);
+                    IntPtr.Zero, m_normalsPredeformed, IntPtr.Zero,
+                    IntPtr.Zero, m_normals, IntPtr.Zero);
             }
             else
             {
@@ -398,6 +398,32 @@ namespace UTJ.BlendShapeBuilder
             return new Vector2(
                     v.x / pixelRect.width * rect.width * 2.0f - 1.0f,
                     (v.y / pixelRect.height * rect.height * 2.0f - 1.0f) * -1.0f);
+        }
+
+        // return vertex index. -1 if not hit
+        public int PickVertex(Event e, float strength, bool frontFaceOnly)
+        {
+            var center = e.mousePosition;
+            var size = new Vector2(15.0f, 15.0f);
+            var r1 = center - size;
+            var r2 = center + size;
+            return PickVertex(r1, r2, strength, frontFaceOnly);
+        }
+        // return vertex index. -1 if not hit
+        public int PickVertex(Vector2 r1, Vector2 r2, float strength, bool frontFaceOnly)
+        {
+            var cam = SceneView.lastActiveSceneView.camera;
+            if (cam == null) { return -1; }
+
+            var campos = cam.GetComponent<Transform>().position;
+            var trans = GetComponent<Transform>().localToWorldMatrix;
+            var mvp = GL.GetGPUProjectionMatrix(cam.projectionMatrix, false) * cam.worldToCameraMatrix * trans;
+            r1 = ScreenCoord11(r1);
+            r2 = ScreenCoord11(r2);
+            var rmin = new Vector2(Math.Min(r1.x, r2.x), Math.Min(r1.y, r2.y));
+            var rmax = new Vector2(Math.Max(r1.x, r2.x), Math.Max(r1.y, r2.y));
+
+            return npPickVertex(ref m_npModelData, ref mvp, rmin, rmax, campos, frontFaceOnly);
         }
 
         public bool SelectVertex(Event e, float strength, bool frontFaceOnly)
@@ -594,6 +620,8 @@ namespace UTJ.BlendShapeBuilder
 
         [DllImport("BlendShapeBuilderCore")] static extern Vector3 npPickNormal(
             ref npMeshData model, Vector3 pos, int ti);
+        [DllImport("BlendShapeBuilderCore")] static extern int npPickVertex(
+            ref npMeshData model, ref Matrix4x4 viewproj, Vector2 rmin, Vector2 rmax, Vector3 campos, bool frontfaceOnly);
 
         [DllImport("BlendShapeBuilderCore")] static extern int npSelectSingle(
             ref npMeshData model, ref Matrix4x4 viewproj, Vector2 rmin, Vector2 rmax, Vector3 campos, float strength, bool frontfaceOnly);

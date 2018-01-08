@@ -185,7 +185,7 @@ namespace UTJ.BlendShapeBuilder
         public float mirrorEpsilon = 0.0001f;
         public bool selectFrontSideOnly = true;
         public bool selectVertex = true;
-        public bool selectTriangle = true;
+        public bool selectTriangle = false;
 
         public BrushData[] brushData = new BrushData[5] {
             new BrushData(),

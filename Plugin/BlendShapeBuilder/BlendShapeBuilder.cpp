@@ -156,8 +156,8 @@ npAPI float3 npPickNormal(
     return normalize(mul_v(model->transform, r));
 }
 
-npAPI int npSelectSingle(
-    npMeshData *model, const float4x4 *mvp_, float2 rmin, float2 rmax, float3 campos, float strength, int frontface_only)
+static bool npSelectNearestImpl(npMeshData *model, const float4x4 *mvp_, float2 rmin, float2 rmax, float3 campos, int frontface_only,
+    int& pick_index)
 {
     auto num_vertices = model->num_vertices;
     auto vertices = model->vertices;
@@ -220,7 +220,7 @@ npAPI int npSelectSingle(
             int vi = insider[ii].first;
             float distance = insider[ii].second;
             float3 dir = normalize(vertices[vi] - lcampos);
-            
+
             // if there are vertices with identical position, pick most camera-facing one 
             if (near_equal(distance, nearest_distance, npEpsilon)) {
                 float facing = dot(normals[vi], dir);
@@ -237,7 +237,27 @@ npAPI int npSelectSingle(
             }
         }
 
-        selection[nearest_index] = clamp01(selection[nearest_index] + strength);
+        pick_index = nearest_index;
+        return true;
+    }
+    return false;
+}
+
+npAPI int npPickVertex(
+    npMeshData *model, const float4x4 *mvp_, float2 rmin, float2 rmax, float3 campos, int frontface_only)
+{
+    int pick_index = -1;
+    npSelectNearestImpl(model, mvp_, rmin, rmax, campos, frontface_only, pick_index);
+    return pick_index;
+}
+
+npAPI int npSelectSingle(
+    npMeshData *model, const float4x4 *mvp_, float2 rmin, float2 rmax, float3 campos, float strength, int frontface_only)
+{
+    int pick_index;
+    if (npSelectNearestImpl(model, mvp_, rmin, rmax, campos, frontface_only, pick_index)) {
+        auto selection = model->selection;
+        selection[pick_index] = clamp01(selection[pick_index] + strength);
         return 1;
     }
     return 0;
