@@ -17,6 +17,7 @@ namespace UTJ.BlendShapeBuilder
         public bool proj = false;
         public npProjectVerticesMode projMode = npProjectVerticesMode.ForwardAndBackward;
         public ProjectionRayDirection projRayDir = ProjectionRayDirection.CurrentNormals;
+        public Vector3 projRadialCenter;
         public float projMaxRayDistance = 10.0f;
     }
 

@@ -14,6 +14,7 @@ namespace UTJ.BlendShapeBuilder
         Vector2 m_scrollPos;
         bool m_foldBlendShapes = true;
         BlendShapeBuilderData m_data;
+        BlendShapeFrameData m_radialCenterHandle;
 
         static readonly int indentSize = 16;
         static readonly string dataPath = "Assets/UTJ/BlendShapeBuilder/Data/BlendShapeBuilderSettings.asset";
@@ -37,6 +38,7 @@ namespace UTJ.BlendShapeBuilder
             isOpen = true;
 
             Undo.undoRedoPerformed += OnUndoRedo;
+            SceneView.onSceneGUIDelegate += OnSceneGUI;
             var ds = AssetDatabase.LoadAssetAtPath<BlendShapeBuilderData>(dataPath);
             if (ds != null)
                 m_data = Instantiate(ds);
@@ -49,6 +51,7 @@ namespace UTJ.BlendShapeBuilder
             isOpen = false;
 
             Undo.undoRedoPerformed -= OnUndoRedo;
+            SceneView.onSceneGUIDelegate -= OnSceneGUI;
             if (m_data != null)
             {
                 AssetDatabase.DeleteAsset(dataPath);
@@ -66,6 +69,25 @@ namespace UTJ.BlendShapeBuilder
             GUILayout.EndVertical();
             EditorGUILayout.EndScrollView();
         }
+
+        private void OnSceneGUI(SceneView sceneView)
+        {
+            bool repaint = false;
+            if (m_radialCenterHandle != null && m_radialCenterHandle.projRayDir == ProjectionRayDirection.Radial)
+            {
+                EditorGUI.BeginChangeCheck();
+                var move = Handles.PositionHandle(m_radialCenterHandle.projRadialCenter, Quaternion.identity);
+                if (EditorGUI.EndChangeCheck())
+                {
+                    m_radialCenterHandle.projRadialCenter = move;
+                    repaint = true;
+                }
+            }
+
+            if (repaint)
+                Repaint();
+        }
+
 
         private void OnUndoRedo()
         {
@@ -88,6 +110,8 @@ namespace UTJ.BlendShapeBuilder
 
         public void DrawBlendShapeBuilder()
         {
+            bool repaint = false;
+
             GUILayout.BeginHorizontal();
             {
                 GUILayout.Label("Base Mesh", GUILayout.Width(70));
@@ -287,6 +311,30 @@ namespace UTJ.BlendShapeBuilder
                                 GUILayout.BeginVertical("Box");
                                 frame.projMode = (npProjectVerticesMode)EditorGUILayout.EnumPopup("Projection Mode", frame.projMode);
                                 frame.projRayDir = (ProjectionRayDirection)EditorGUILayout.EnumPopup("Ray Direction", frame.projRayDir);
+                                if (frame.projRayDir == ProjectionRayDirection.Radial)
+                                {
+                                    GUILayout.BeginHorizontal();
+                                    GUILayout.Space(indentSize);
+                                    GUILayout.BeginVertical();
+
+                                    EditorGUI.BeginChangeCheck();
+                                    frame.projRadialCenter = EditorGUILayout.Vector3Field("Radial Center", frame.projRadialCenter);
+                                    if (EditorGUI.EndChangeCheck())
+                                        repaint = true;
+
+                                    EditorGUI.BeginChangeCheck();
+                                    bool h = GUILayout.Toggle(m_radialCenterHandle == frame, "Show Handle", "Button", GUILayout.Width(120));
+                                    if(EditorGUI.EndChangeCheck())
+                                    {
+                                        repaint = true;
+                                        if (h)
+                                            m_radialCenterHandle = frame;
+                                        else if (m_radialCenterHandle == frame)
+                                            m_radialCenterHandle = null;
+                                    }
+                                    GUILayout.EndVertical();
+                                    GUILayout.EndHorizontal();
+                                }
                                 frame.projMaxRayDistance = EditorGUILayout.FloatField("Max Ray Distance", frame.projMaxRayDistance);
                                 if (GUILayout.Button("Generate Mesh", GUILayout.Width(120)))
                                 {
@@ -497,6 +545,9 @@ namespace UTJ.BlendShapeBuilder
 
             }
             GUILayout.EndHorizontal();
+
+            if (repaint)
+                RepaintAllViews();
         }
 
         public void FindValidTargets()
@@ -667,6 +718,11 @@ namespace UTJ.BlendShapeBuilder
             return ret;
         }
 
+        void RepaintAllViews()
+        {
+            UnityEditorInternal.InternalEditorUtility.RepaintAllViews();
+        }
+
         private static void ZeroClear(Vector3[] dst)
         {
             int len = dst.Length;
@@ -697,14 +753,21 @@ namespace UTJ.BlendShapeBuilder
 
             var baseNP = (npMeshData)baseData;
             var targetNP = (npMeshData)targetData;
-            var rayDirs = baseData.normals;
-            if (frame.projRayDir == ProjectionRayDirection.BaseNomals)
+            if (frame.projRayDir == ProjectionRayDirection.CurrentNormals)
             {
-                rayDirs = new PinnedList<Vector3>();
+                npProjectVertices(ref baseNP, ref targetNP, baseData.normals, frame.projMode, frame.projMaxRayDistance);
+            }
+            else if (frame.projRayDir == ProjectionRayDirection.BaseNomals)
+            {
+                var rayDirs = new PinnedList<Vector3>();
                 rayDirs.Resize(baseData.vertexCount);
                 npGenerateNormals(ref baseNP, rayDirs);
+                npProjectVertices(ref baseNP, ref targetNP, rayDirs, frame.projMode, frame.projMaxRayDistance);
             }
-            npProjectVertices(ref baseNP, ref targetNP, rayDirs, frame.projMode, frame.projMaxRayDistance);
+            else if (frame.projRayDir == ProjectionRayDirection.Radial)
+            {
+                npProjectVerticesRadial(ref baseNP, ref targetNP, frame.projRadialCenter, frame.projMode, frame.projMaxRayDistance);
+            }
 
             Mesh ret;
             var baseMesh = Utils.ExtractMesh(baseMeshObj);
@@ -730,6 +793,8 @@ namespace UTJ.BlendShapeBuilder
             ref npMeshData model, IntPtr dst);
         [DllImport("BlendShapeBuilderCore")] static extern void npProjectVertices(
             ref npMeshData model, ref npMeshData target, IntPtr ray_dir, npProjectVerticesMode mode, float max_distance);
+        [DllImport("BlendShapeBuilderCore")] static extern void npProjectVerticesRadial(
+            ref npMeshData model, ref npMeshData target, Vector3 center, npProjectVerticesMode mode, float max_distance);
 
         #endregion
 
