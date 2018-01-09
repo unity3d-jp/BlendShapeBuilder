@@ -1373,6 +1373,8 @@ npAPI void npProjectVertices(
 npAPI void npProjectVerticesRadial(
     npMeshData *model, npMeshData *target, const float3 center, npProjectVerticesMode mode, float max_distance)
 {
+    auto to_local = target->transform * invert(model->transform);
+
     struct RayDir
     {
         const float3 *vertices;
@@ -1381,7 +1383,7 @@ npAPI void npProjectVerticesRadial(
         {
             return normalize(vertices[vi] - center);
         }
-    } ray_dirs = { model->vertices, center };
+    } ray_dirs = { model->vertices, mul_p(to_local, center) };
     npProjectVerticesImpl(model, target, ray_dirs, mode, max_distance);
 }
 

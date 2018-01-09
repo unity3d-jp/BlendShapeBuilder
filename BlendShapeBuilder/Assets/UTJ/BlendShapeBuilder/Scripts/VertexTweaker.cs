@@ -428,22 +428,7 @@ namespace UTJ.BlendShapeBuilder
                     ret |= (int)SceneGUIState.Repaint;
             }
 
-            if (m_numSelected > 0 && editMode == EditMode.Assign)
-            {
-                var pivotRot = Quaternion.identity;
-                switch (m_settings.coordinate)
-                {
-                    case Coordinate.Pivot:
-                        pivotRot = m_settings.pivotRot;
-                        break;
-                    case Coordinate.Local:
-                        pivotRot = t.rotation;
-                        break;
-                }
-
-                Handles.PositionHandle(m_settings.pivotPos, pivotRot);
-            }
-            else if (m_numSelected > 0 && editMode == EditMode.Move)
+            if (m_numSelected > 0 && editMode == EditMode.Move)
             {
                 var pivotRot = Quaternion.identity;
                 switch (m_settings.coordinate)
@@ -521,6 +506,19 @@ namespace UTJ.BlendShapeBuilder
                     m_prevScale = scale;
 
                     ApplyScale(diff, m_settings.pivotPos, pivotRot, Coordinate.Pivot, false);
+                }
+            }
+            else if (editMode == EditMode.Projection)
+            {
+                if(m_settings.projRayDir == ProjectionRayDirection.Radial)
+                {
+                    EditorGUI.BeginChangeCheck();
+                    var move = Handles.PositionHandle(m_settings.projRadialCenter, t.rotation);
+                    if (EditorGUI.EndChangeCheck())
+                    {
+                        handled = true;
+                        m_settings.projRadialCenter = move;
+                    }
                 }
             }
 

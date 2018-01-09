@@ -76,6 +76,7 @@ namespace UTJ.BlendShapeBuilder
     {
         CurrentNormals,
         BaseNomals,
+        Radial,
     }
 
     public enum SceneGUIState
@@ -179,8 +180,8 @@ namespace UTJ.BlendShapeBuilder
         public TangentsPrecision tangentsPrecision = TangentsPrecision.Fast;
 
         // edit options
-        public EditMode editMode = EditMode.Select;
-        public SelectMode selectMode = SelectMode.Single;
+        public EditMode editMode = EditMode.Move;
+        public SelectMode selectMode = SelectMode.Rect;
         public MirrorMode mirrorMode = MirrorMode.None;
         public float mirrorEpsilon = 0.0001f;
         public bool selectFrontSideOnly = true;
@@ -239,10 +240,11 @@ namespace UTJ.BlendShapeBuilder
         [NonSerialized] public Vector3 rotateAmount;
         [NonSerialized] public Vector3 scaleAmount;
 
+        [NonSerialized] public GameObject projTarget = null;
         [NonSerialized] public npProjectVerticesMode projMode = npProjectVerticesMode.ForwardAndBackward;
         [NonSerialized] public ProjectionRayDirection projRayDir = ProjectionRayDirection.CurrentNormals;
         [NonSerialized] public float projMaxRayDistance = 10.0f;
-        [NonSerialized] public GameObject projTarget = null;
+        [NonSerialized] public Vector3 projRadialCenter;
 
         [NonSerialized] public bool objFlipHandedness = true;
         [NonSerialized] public bool objFlipFaces = false;

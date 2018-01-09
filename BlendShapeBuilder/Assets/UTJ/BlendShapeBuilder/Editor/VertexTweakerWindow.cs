@@ -419,11 +419,17 @@ namespace UTJ.BlendShapeBuilder
             }
             else if (settings.editMode == EditMode.Projection)
             {
-                settings.projMode = (npProjectVerticesMode)EditorGUILayout.EnumPopup("Projection Mode", settings.projMode);
-                settings.projRayDir = (ProjectionRayDirection)EditorGUILayout.EnumPopup("Ray Direction", settings.projRayDir);
-                settings.projMaxRayDistance = EditorGUILayout.FloatField("Max Ray Distance", settings.projMaxRayDistance);
                 settings.projTarget =
                     (GameObject)EditorGUILayout.ObjectField("Projection Target", settings.projTarget, typeof(GameObject), true);
+                settings.projMode = (npProjectVerticesMode)EditorGUILayout.EnumPopup("Projection Mode", settings.projMode);
+                settings.projRayDir = (ProjectionRayDirection)EditorGUILayout.EnumPopup("Ray Direction", settings.projRayDir);
+                if (settings.projRayDir == ProjectionRayDirection.Radial)
+                {
+                    EditorGUI.indentLevel++;
+                    settings.projRadialCenter = EditorGUILayout.Vector3Field("Center", settings.projRadialCenter);
+                    EditorGUI.indentLevel--;
+                }
+                settings.projMaxRayDistance = EditorGUILayout.FloatField("Max Ray Distance", settings.projMaxRayDistance);
                 EditorGUILayout.Space();
 
                 if (GUILayout.Button("Apply Projection"))

@@ -105,12 +105,18 @@ namespace UTJ.BlendShapeBuilder
             if (target == null || !targetData.Extract(target)) { return; }
 
             var targetNP = (npMeshData)targetData;
-            var rayDirs = m_normals;
-            if (m_settings.projRayDir == ProjectionRayDirection.BaseNomals)
+            if(m_settings.projRayDir == ProjectionRayDirection.CurrentNormals)
             {
-                rayDirs = m_normalsBase;
+                npProjectVertices(ref m_npModelData, ref targetNP, m_normals, m_settings.projMode, m_settings.projMaxRayDistance);
             }
-            npProjectVertices(ref m_npModelData, ref targetNP, rayDirs, m_settings.projMode, m_settings.projMaxRayDistance);
+            else if(m_settings.projRayDir == ProjectionRayDirection.BaseNomals)
+            {
+                npProjectVertices(ref m_npModelData, ref targetNP, m_normalsBase, m_settings.projMode, m_settings.projMaxRayDistance);
+            }
+            else if (m_settings.projRayDir == ProjectionRayDirection.Radial)
+            {
+                npProjectVerticesRadial(ref m_npModelData, ref targetNP, m_settings.projRadialCenter, m_settings.projMode, m_settings.projMaxRayDistance);
+            }
 
             UpdateVertices(false, true);
             if (pushUndo) PushUndo();
