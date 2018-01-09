@@ -15,23 +15,25 @@ MonoBehaviour:
   preserveExistingBlendShapes: 0
   blendShapeData:
   - fold: 1
-    name: NewBlendShape1
+    name: NewBlendShape0
     frames:
     - weight: 50
       mesh: {fileID: 0}
       vertex: 1
-      normal: 0
-      tangent: 0
+      normal: 1
+      tangent: 1
       proj: 1
       projMode: 2
-      projRayDir: 0
-      projMaxRayDistance: 100
+      projRayDir: 2
+      projRadialCenter: {x: 0, y: -0.2413572, z: 0}
+      projMaxRayDistance: 10
     - weight: 100
       mesh: {fileID: 0}
       vertex: 1
       normal: 1
       tangent: 1
-      proj: 0
+      proj: 1
       projMode: 2
-      projRayDir: 0
+      projRayDir: 2
+      projRadialCenter: {x: 0, y: -0.4307028, z: 0}
       projMaxRayDistance: 10

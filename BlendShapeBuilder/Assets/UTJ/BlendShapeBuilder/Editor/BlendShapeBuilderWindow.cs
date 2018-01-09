@@ -11,10 +11,13 @@ namespace UTJ.BlendShapeBuilder
         #region fields
         public static bool isOpen;
 
+        BlendShapeBuilder m_target;
+        GameObject m_active;
+
         Vector2 m_scrollPos;
         bool m_foldBlendShapes = true;
-        BlendShapeBuilderData m_data;
         BlendShapeFrameData m_radialCenterHandle;
+        BlendShapeFrameData m_copySource;
 
         static readonly int indentSize = 16;
         static readonly string dataPath = "Assets/UTJ/BlendShapeBuilder/Data/BlendShapeBuilderSettings.asset";
@@ -30,8 +33,8 @@ namespace UTJ.BlendShapeBuilder
             var window = EditorWindow.GetWindow<BlendShapeBuilderWindow>();
             window.titleContent = new GUIContent("BS Builder");
             window.Show();
+            window.OnSelectionChange();
         }
-
 
         private void OnEnable()
         {
@@ -39,11 +42,6 @@ namespace UTJ.BlendShapeBuilder
 
             Undo.undoRedoPerformed += OnUndoRedo;
             SceneView.onSceneGUIDelegate += OnSceneGUI;
-            var ds = AssetDatabase.LoadAssetAtPath<BlendShapeBuilderData>(dataPath);
-            if (ds != null)
-                m_data = Instantiate(ds);
-            if (m_data == null)
-                m_data = ScriptableObject.CreateInstance<BlendShapeBuilderData>();
         }
 
         private void OnDisable()
@@ -52,22 +50,61 @@ namespace UTJ.BlendShapeBuilder
 
             Undo.undoRedoPerformed -= OnUndoRedo;
             SceneView.onSceneGUIDelegate -= OnSceneGUI;
-            if (m_data != null)
-            {
-                AssetDatabase.DeleteAsset(dataPath);
-                AssetDatabase.CreateAsset(Instantiate(m_data), dataPath);
-            }
         }
+
+        private void OnSelectionChange()
+        {
+            if (m_target != null)
+            {
+            }
+
+            m_target = null;
+            if (Selection.activeGameObject != null)
+            {
+                m_target = Selection.activeGameObject.GetComponent<BlendShapeBuilder>();
+                if (m_target)
+                {
+                }
+                else
+                {
+                    var activeGameObject = Selection.activeGameObject;
+                    if (Selection.activeGameObject.GetComponent<MeshRenderer>() != null ||
+                         Selection.activeGameObject.GetComponent<SkinnedMeshRenderer>() != null)
+                    {
+                        m_active = activeGameObject;
+                    }
+                }
+            }
+            Repaint();
+        }
+
 
         private void OnGUI()
         {
-            if (m_data == null) return;
 
-            m_scrollPos = EditorGUILayout.BeginScrollView(m_scrollPos);
-            GUILayout.BeginVertical();
-            DrawBlendShapeBuilder();
-            GUILayout.EndVertical();
-            EditorGUILayout.EndScrollView();
+            if (m_target != null)
+            {
+                if (!m_target.isActiveAndEnabled)
+                {
+                    EditorGUILayout.LabelField("(Enable " + m_target.name + " to show Vertex Tweaker)");
+                }
+                else
+                {
+                    m_scrollPos = EditorGUILayout.BeginScrollView(m_scrollPos);
+                    GUILayout.BeginVertical();
+                    DrawBlendShapeBuilder();
+                    GUILayout.EndVertical();
+                    EditorGUILayout.EndScrollView();
+                }
+            }
+            else if (m_active != null)
+            {
+                if (GUILayout.Button("Add BlendShapeBuilder to " + m_active.name))
+                {
+                    m_active.AddComponent<BlendShapeBuilder>();
+                    OnSelectionChange();
+                }
+            }
         }
 
         private void OnSceneGUI(SceneView sceneView)
@@ -100,9 +137,11 @@ namespace UTJ.BlendShapeBuilder
 
         public void ModifyBlendShapeData(Action<BlendShapeBuilderData> op)
         {
+            if (m_target == null) { return; }
+            var m_data = m_target.data;
             if (m_data != null)
             {
-                Undo.RecordObject(m_data, "BlendShapeBuilder");
+                Undo.RecordObject(m_target, "BlendShapeBuilder");
                 op(m_data);
             }
         }
@@ -110,6 +149,9 @@ namespace UTJ.BlendShapeBuilder
 
         public void DrawBlendShapeBuilder()
         {
+            if (m_target == null) { return; }
+            var m_data = m_target.data;
+
             bool repaint = false;
 
             GUILayout.BeginHorizontal();
@@ -146,7 +188,7 @@ namespace UTJ.BlendShapeBuilder
                         if (evt.type == EventType.DragPerform)
                         {
                             DragAndDrop.AcceptDrag();
-                            Undo.RecordObject(m_data, "BlendShapeBuilder");
+                            Undo.RecordObject(m_target, "BlendShapeBuilder");
                             foreach (var obj in DragAndDrop.objectReferences)
                             {
                                 var mesh = Utils.ExtractMesh(obj);
@@ -174,7 +216,7 @@ namespace UTJ.BlendShapeBuilder
                     data.fold = EditorGUILayout.Foldout(data.fold, data.name);
                     if (GUILayout.Button("-", GUILayout.Width(20)))
                     {
-                        Undo.RecordObject(m_data, "BlendShapeBuilder");
+                        Undo.RecordObject(m_target, "BlendShapeBuilder");
                         delBS = data;
                     }
 
@@ -192,7 +234,7 @@ namespace UTJ.BlendShapeBuilder
                                 if (evt.type == EventType.DragPerform)
                                 {
                                     DragAndDrop.AcceptDrag();
-                                    Undo.RecordObject(m_data, "BlendShapeBuilder");
+                                    Undo.RecordObject(m_target, "BlendShapeBuilder");
                                     data.ClearInvalidFrames();
                                     foreach (var obj in DragAndDrop.objectReferences)
                                     {
@@ -222,7 +264,7 @@ namespace UTJ.BlendShapeBuilder
                             var name = EditorGUI.TextField(new Rect(pos, new Vector2(width, 16)), data.name);
                             if (EditorGUI.EndChangeCheck())
                             {
-                                Undo.RecordObject(m_data, "BlendShapeBuilder");
+                                Undo.RecordObject(m_target, "BlendShapeBuilder");
                                 data.name = name;
                             }
                         }
@@ -252,7 +294,7 @@ namespace UTJ.BlendShapeBuilder
                             var w = EditorGUI.FloatField(new Rect(pos, new Vector2(36, 16)), frame.weight);
                             if (EditorGUI.EndChangeCheck())
                             {
-                                Undo.RecordObject(m_data, "BlendShapeBuilder");
+                                Undo.RecordObject(m_target, "BlendShapeBuilder");
                                 frame.weight = w;
                             }
 
@@ -262,7 +304,7 @@ namespace UTJ.BlendShapeBuilder
                             var m = EditorGUI.ObjectField(new Rect(pos, new Vector2(width - 40, 16)), frame.mesh, typeof(UnityEngine.Object), true);
                             if (EditorGUI.EndChangeCheck())
                             {
-                                Undo.RecordObject(m_data, "BlendShapeBuilder");
+                                Undo.RecordObject(m_target, "BlendShapeBuilder");
                                 frame.mesh = m;
                             }
 
@@ -270,7 +312,7 @@ namespace UTJ.BlendShapeBuilder
                             var p = GUILayout.Toggle(frame.proj, "Projection", GUILayout.Width(75));
                             if (EditorGUI.EndChangeCheck())
                             {
-                                Undo.RecordObject(m_data, "BlendShapeBuilder");
+                                Undo.RecordObject(m_target, "BlendShapeBuilder");
                                 frame.proj = p;
                             }
 
@@ -279,7 +321,7 @@ namespace UTJ.BlendShapeBuilder
                             var v = GUILayout.Toggle(frame.vertex, "V", GUILayout.Width(25));
                             if (EditorGUI.EndChangeCheck())
                             {
-                                Undo.RecordObject(m_data, "BlendShapeBuilder");
+                                Undo.RecordObject(m_target, "BlendShapeBuilder");
                                 frame.vertex = v;
                             }
 
@@ -287,7 +329,7 @@ namespace UTJ.BlendShapeBuilder
                             var n = GUILayout.Toggle(frame.normal, "N", GUILayout.Width(25));
                             if (EditorGUI.EndChangeCheck())
                             {
-                                Undo.RecordObject(m_data, "BlendShapeBuilder");
+                                Undo.RecordObject(m_target, "BlendShapeBuilder");
                                 frame.normal = n;
                             }
 
@@ -295,7 +337,7 @@ namespace UTJ.BlendShapeBuilder
                             var t = GUILayout.Toggle(frame.tangent, "T", GUILayout.Width(25));
                             if (EditorGUI.EndChangeCheck())
                             {
-                                Undo.RecordObject(m_data, "BlendShapeBuilder");
+                                Undo.RecordObject(m_target, "BlendShapeBuilder");
                                 frame.tangent = t;
                             }
 
@@ -328,7 +370,10 @@ namespace UTJ.BlendShapeBuilder
                                     {
                                         repaint = true;
                                         if (h)
+                                        {
                                             m_radialCenterHandle = frame;
+                                            Tools.current = Tool.None;
+                                        }
                                         else if (m_radialCenterHandle == frame)
                                             m_radialCenterHandle = null;
                                     }
@@ -336,20 +381,37 @@ namespace UTJ.BlendShapeBuilder
                                     GUILayout.EndHorizontal();
                                 }
                                 frame.projMaxRayDistance = EditorGUILayout.FloatField("Max Ray Distance", frame.projMaxRayDistance);
+
+                                GUILayout.BeginHorizontal();
+                                if (GUILayout.Button("Copy", GUILayout.Width(60)))
+                                {
+                                    m_copySource = frame;
+                                }
+                                if (GUILayout.Button("Paste", GUILayout.Width(60)) && m_copySource != null)
+                                {
+                                    frame.projMode = m_copySource.projMode;
+                                    frame.projRayDir = m_copySource.projRayDir;
+                                    frame.projRadialCenter = m_copySource.projRadialCenter;
+                                    frame.projMaxRayDistance = m_copySource.projMaxRayDistance;
+                                }
+                                GUILayout.Space(10);
                                 if (GUILayout.Button("Generate Mesh", GUILayout.Width(120)))
                                 {
                                     var pmesh = GenerateProjectedMesh(m_data.baseMesh, frame);
                                     var go = Utils.MeshToGameObject(pmesh, Vector3.zero, Utils.ExtractMaterials(m_data.baseMesh));
                                     Selection.activeGameObject = go;
                                 }
+                                GUILayout.EndHorizontal();
+
                                 GUILayout.EndVertical();
                                 GUILayout.EndHorizontal();
                             }
                         }
                         if(delFrame != null)
                         {
-                            Undo.RecordObject(m_data, "BlendShapeBuilder");
+                            Undo.RecordObject(m_target, "BlendShapeBuilder");
                             data.frames.Remove(delFrame);
+                            data.NormalizeWeights();
                         }
 
                         GUILayout.BeginHorizontal();
@@ -364,7 +426,7 @@ namespace UTJ.BlendShapeBuilder
                                 v = GUILayout.Toggle(numV == numFrames, "V", "ToggleMixed", GUILayout.Width(25));
                             if (EditorGUI.EndChangeCheck())
                             {
-                                Undo.RecordObject(m_data, "BlendShapeBuilder");
+                                Undo.RecordObject(m_target, "BlendShapeBuilder");
                                 foreach (var frame in data.frames)
                                     frame.vertex = v;
                             }
@@ -376,7 +438,7 @@ namespace UTJ.BlendShapeBuilder
                                 v = GUILayout.Toggle(numN == numFrames, "N", "ToggleMixed", GUILayout.Width(25));
                             if (EditorGUI.EndChangeCheck())
                             {
-                                Undo.RecordObject(m_data, "BlendShapeBuilder");
+                                Undo.RecordObject(m_target, "BlendShapeBuilder");
                                 foreach (var frame in data.frames)
                                     frame.normal = v;
                             }
@@ -388,32 +450,33 @@ namespace UTJ.BlendShapeBuilder
                                 v = GUILayout.Toggle(numT == numFrames, "T", "ToggleMixed", GUILayout.Width(25));
                             if (EditorGUI.EndChangeCheck())
                             {
-                                Undo.RecordObject(m_data, "BlendShapeBuilder");
+                                Undo.RecordObject(m_target, "BlendShapeBuilder");
                                 foreach (var frame in data.frames)
                                     frame.tangent = v;
                             }
                         }
                         if (GUILayout.Button("+", GUILayout.Width(20)))
                         {
-                            Undo.RecordObject(m_data, "BlendShapeBuilder");
+                            Undo.RecordObject(m_target, "BlendShapeBuilder");
                             data.frames.Add(new BlendShapeFrameData());
+                            data.NormalizeWeights();
                         }
                         GUILayout.EndHorizontal();
 
                         GUILayout.BeginHorizontal();
                         if (GUILayout.Button("Normalize Weights", GUILayout.Width(120)))
                         {
-                            Undo.RecordObject(m_data, "BlendShapeBuilder");
+                            Undo.RecordObject(m_target, "BlendShapeBuilder");
                             data.NormalizeWeights();
                         }
                         if (GUILayout.Button("Sort By Weights", GUILayout.Width(110)))
                         {
-                            Undo.RecordObject(m_data, "BlendShapeBuilder");
+                            Undo.RecordObject(m_target, "BlendShapeBuilder");
                             data.SortByWeights();
                         }
                         if (GUILayout.Button("Clear", GUILayout.Width(60)))
                         {
-                            Undo.RecordObject(m_data, "BlendShapeBuilder");
+                            Undo.RecordObject(m_target, "BlendShapeBuilder");
                             data.frames.Clear();
                         }
                         GUILayout.EndHorizontal();
@@ -439,7 +502,7 @@ namespace UTJ.BlendShapeBuilder
                 GUILayout.FlexibleSpace();
                 if (GUILayout.Button("+", GUILayout.Width(20)))
                 {
-                    Undo.RecordObject(m_data, "BlendShapeBuilder");
+                    Undo.RecordObject(m_target, "BlendShapeBuilder");
                     var tmp = new BlendShapeData();
                     tmp.name = "NewBlendShape" + bsData.Count;
                     tmp.frames.Add(new BlendShapeFrameData());
@@ -461,7 +524,7 @@ namespace UTJ.BlendShapeBuilder
                 var v = GUILayout.Toggle(m_data.preserveExistingBlendShapes, "Preserve Existing BlendShapes");
                 if (EditorGUI.EndChangeCheck())
                 {
-                    Undo.RecordObject(m_data, "BlendShapeBuilder");
+                    Undo.RecordObject(m_target, "BlendShapeBuilder");
                     m_data.preserveExistingBlendShapes = v;
                 }
             }
@@ -500,58 +563,13 @@ namespace UTJ.BlendShapeBuilder
             }
             GUILayout.EndHorizontal();
 
-            GUILayout.Space(18);
-
-            GUILayout.BeginHorizontal();
-            if (GUILayout.Button("Save Settings", GUILayout.Width(100)))
-            {
-                string name = m_data.baseMesh != null ? m_data.baseMesh.name : "BlendShapeBuilderSettings";
-                string path = EditorUtility.SaveFilePanel("Save settings", "Assets/UTJ/BlendShapeBuilder/Data", name, "asset");
-                if (path.Length > 0)
-                {
-                    var dataPath = Application.dataPath;
-                    if (!path.StartsWith(dataPath))
-                    {
-                        Debug.LogError("Invalid path: Path must be under " + dataPath);
-                    }
-                    else
-                    {
-                        path = path.Replace(dataPath, "Assets");
-                        AssetDatabase.DeleteAsset(path);
-                        AssetDatabase.CreateAsset(Instantiate(m_data), path);
-                    }
-                }
-            }
-            if (GUILayout.Button("Load Settings", GUILayout.Width(100)))
-            {
-                string path = EditorUtility.OpenFilePanel("Load settings", "Assets/UTJ/BlendShapeBuilder/Data", "asset");
-                if (path.Length > 0)
-                {
-                    var dataPath = Application.dataPath;
-                    if (!path.StartsWith(dataPath))
-                    {
-                        Debug.LogError("Invalid path: Path must be under " + dataPath);
-                    }
-                    else
-                    {
-                        path = path.Replace(dataPath, "Assets");
-                        var ds = AssetDatabase.LoadAssetAtPath<BlendShapeBuilderData>(path);
-                        if (ds != null)
-                            m_data = Instantiate(ds);
-                        else
-                            Debug.LogError("Invalid path or asset");
-                    }
-                }
-
-            }
-            GUILayout.EndHorizontal();
-
             if (repaint)
                 RepaintAllViews();
         }
 
         public void FindValidTargets()
         {
+            var m_data = m_target.data;
             if (m_data.baseMesh == null)
             {
                 Debug.LogWarning("Base mesh is not set");
@@ -597,6 +615,7 @@ namespace UTJ.BlendShapeBuilder
 
         public Mesh Build(bool updateExistingMesh = false)
         {
+            var m_data = m_target.data;
             if (m_data.baseMesh == null)
             {
                 Debug.LogError("Base mesh is not set");

@@ -4,6 +4,7 @@ using System;
 using System.Collections.Generic;
 using System.Runtime.InteropServices;
 
+#if UNITY_EDITOR
 namespace UTJ.BlendShapeBuilder
 {
     public class MeshData
@@ -152,4 +153,57 @@ namespace UTJ.BlendShapeBuilder
         public int num_bones;
         public Matrix4x4 root;
     }
+
+    [Serializable]
+    public class BlendShapeFrameData
+    {
+        public float weight = 100.0f;
+        public UnityEngine.Object mesh;
+        public bool vertex = true;
+        public bool normal = true;
+        public bool tangent = true;
+
+        public bool proj = false;
+        public npProjectVerticesMode projMode = npProjectVerticesMode.ForwardAndBackward;
+        public ProjectionRayDirection projRayDir = ProjectionRayDirection.CurrentNormals;
+        public Vector3 projRadialCenter;
+        public float projMaxRayDistance = 10.0f;
+    }
+
+    [Serializable]
+    public class BlendShapeData
+    {
+        public bool fold = true;
+        public string name = "";
+        public List<BlendShapeFrameData> frames = new List<BlendShapeFrameData>();
+
+        public void ClearInvalidFrames()
+        {
+            frames.RemoveAll(item => { return item.mesh == null; });
+        }
+
+        public void NormalizeWeights()
+        {
+            int n = frames.Count;
+            float step = 100.0f / n;
+            for (int i = 0; i < n; ++i)
+            {
+                frames[i].weight = step * (i + 1);
+            }
+        }
+
+        public void SortByWeights()
+        {
+            frames.Sort((x, y) => x.weight.CompareTo(y.weight));
+        }
+    }
+
+    [Serializable]
+    public class BlendShapeBuilderData
+    {
+        public UnityEngine.Object baseMesh;
+        public bool preserveExistingBlendShapes = false;
+        public List<BlendShapeData> blendShapeData = new List<BlendShapeData>();
+    }
 }
+#endif
