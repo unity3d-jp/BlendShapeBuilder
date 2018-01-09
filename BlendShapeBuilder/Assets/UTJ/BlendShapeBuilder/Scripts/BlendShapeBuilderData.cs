@@ -38,7 +38,7 @@ namespace UTJ.BlendShapeBuilder
 
         public bool empty { get { return vertices.Count == 0; } }
 
-        public bool Extract(UnityEngine.Object obj)
+        public bool Extract(UnityEngine.Object obj, bool bake = true)
         {
             {
                 var mesh = obj as Mesh;
@@ -59,12 +59,19 @@ namespace UTJ.BlendShapeBuilder
 
             transform = go.GetComponent<Transform>().localToWorldMatrix;
 
-            var smi = go.GetComponent<SkinnedMeshRenderer>();
-            if (smi != null)
+            var smr = go.GetComponent<SkinnedMeshRenderer>();
+            if (smr != null)
             {
-                var mesh = new Mesh();
-                smi.BakeMesh(mesh);
-                return Extract(mesh);
+                if (bake)
+                {
+                    var mesh = new Mesh();
+                    smr.BakeMesh(mesh);
+                    return Extract(mesh);
+                }
+                else
+                {
+                    return Extract(smr.sharedMesh);
+                }
             }
 
             var mf = go.GetComponent<MeshFilter>();
@@ -168,6 +175,24 @@ namespace UTJ.BlendShapeBuilder
         public ProjectionRayDirection projRayDir = ProjectionRayDirection.CurrentNormals;
         public Vector3 projRadialCenter;
         public float projMaxRayDistance = 10.0f;
+
+        public Vector3[] deltaVertices;
+        public Vector3[] deltaNormals;
+        public Vector3[] deltaTangents;
+
+        public void AllocateDelta(int size)
+        {
+            deltaVertices = new Vector3[size];
+            deltaNormals = new Vector3[size];
+            deltaTangents = new Vector3[size];
+        }
+
+        public void ReleaseDelta()
+        {
+            deltaVertices = null;
+            deltaNormals = null;
+            deltaTangents = null;
+        }
     }
 
     [Serializable]

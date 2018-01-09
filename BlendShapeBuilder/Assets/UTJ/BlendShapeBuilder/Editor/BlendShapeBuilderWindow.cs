@@ -645,11 +645,36 @@ namespace UTJ.BlendShapeBuilder
             var baseNormals = baseMesh.normals;
             var baseTangents = baseMesh.tangents;
 
-            var deltaVertices = new Vector3[baseMesh.vertexCount];
-            var deltaNormals = new Vector3[baseMesh.vertexCount];
-            var deltaTangents = new Vector3[baseMesh.vertexCount];
+            // generate delta. * this must be before delete existing blend shapes *
+            foreach (var shape in m_data.blendShapeData)
+            {
+                var name = shape.name;
 
-            // delete existing blend shapes if needed
+                foreach(var frame in shape.frames)
+                {
+                    var mesh = frame.proj ? GenerateProjectedMesh(m_data.baseMesh, frame) : Utils.ExtractMesh(frame.mesh);
+                    if(mesh == null)
+                    {
+                        Debug.LogError("Invalid target in " + name + " at weight " + frame.weight);
+                    }
+                    else if (mesh.vertexCount != baseMesh.vertexCount)
+                    {
+                        Debug.LogError("Invalid target (vertex count doesn't match) in " + name + " at weight " + frame.weight);
+                    }
+                    else
+                    {
+                        frame.AllocateDelta(baseMesh.vertexCount);
+                        if (frame.vertex)
+                            GenerateDelta(baseVertices, mesh.vertices, frame.deltaVertices);
+                        if (frame.normal)
+                            GenerateDelta(baseNormals, mesh.normals, frame.deltaNormals);
+                        if (frame.tangent)
+                            GenerateDelta(baseTangents, mesh.tangents, frame.deltaTangents);
+                    }
+                }
+            }
+
+            // delete or copy existing blend shapes
             if (m_data.preserveExistingBlendShapes)
             {
                 var del = new List<string>();
@@ -669,6 +694,10 @@ namespace UTJ.BlendShapeBuilder
 
                 if (del.Count > 0)
                 {
+                    var deltaVertices = new Vector3[baseMesh.vertexCount];
+                    var deltaNormals = new Vector3[baseMesh.vertexCount];
+                    var deltaTangents = new Vector3[baseMesh.vertexCount];
+
                     var src = Instantiate(ret);
                     ret.ClearBlendShapes();
                     for (int si = 0; si < numBS; ++si)
@@ -693,41 +722,17 @@ namespace UTJ.BlendShapeBuilder
                 ret.ClearBlendShapes();
             }
 
+            // add new blend shapes
             int numAdded = 0;
-            // add blend shape data
             foreach (var shape in m_data.blendShapeData)
             {
                 var name = shape.name;
-
-                foreach(var frame in shape.frames)
+                foreach (var frame in shape.frames)
                 {
-                    var mesh = frame.proj ? GenerateProjectedMesh(m_data.baseMesh, frame) : Utils.ExtractMesh(frame.mesh);
-                    if(mesh == null)
+                    if (frame.deltaVertices != null)
                     {
-                        Debug.LogError("Invalid target in " + name + " at weight " + frame.weight);
-                    }
-                    else if (mesh.vertexCount != baseMesh.vertexCount)
-                    {
-                        Debug.LogError("Invalid target (vertex count doesn't match) in " + name + " at weight " + frame.weight);
-                    }
-                    else
-                    {
-                        if (frame.vertex)
-                            GenerateDelta(baseVertices, mesh.vertices, deltaVertices);
-                        else
-                            ZeroClear(deltaVertices);
-
-                        if (frame.normal)
-                            GenerateDelta(baseNormals, mesh.normals, deltaNormals);
-                        else
-                            ZeroClear(deltaNormals);
-
-                        if (frame.tangent)
-                            GenerateDelta(baseTangents, mesh.tangents, deltaTangents);
-                        else
-                            ZeroClear(deltaTangents);
-
-                        ret.AddBlendShapeFrame(name, frame.weight, deltaVertices, deltaNormals, deltaTangents);
+                        ret.AddBlendShapeFrame(name, frame.weight, frame.deltaVertices, frame.deltaNormals, frame.deltaTangents);
+                        frame.ReleaseDelta();
                         ++numAdded;
                     }
                 }
