@@ -26,9 +26,9 @@ namespace UTJ.BlendShapeBuilder
 
         public void ApplyAssign(Vector3 v, Coordinate c, bool pushUndo)
         {
-            v = ToWorldVector(v, c).normalized;
+            v = ToWorldVector(v, c);
 
-            npAssign(ref m_npModelData, v);
+            npAssignVertices(ref m_npModelData, v);
             UpdateVertices();
             if (pushUndo) PushUndo();
         }
@@ -678,29 +678,17 @@ namespace UTJ.BlendShapeBuilder
             ref npMeshData model,
             Vector3 pos, float radius, float strength, int num_bsamples, IntPtr bsamples, IntPtr baseNormals, IntPtr normals, bool mask);
 
-        [DllImport("BlendShapeBuilderCore")] static extern int npAssign(
+        [DllImport("BlendShapeBuilderCore")] static extern int npAssignVertices(
             ref npMeshData model, Vector3 value);
         
         [DllImport("BlendShapeBuilderCore")] static extern int npMoveVertices(
             ref npMeshData model, Vector3 amount);
         
-        [DllImport("BlendShapeBuilderCore")] static extern int npRotate(
-            ref npMeshData model, Quaternion amount, Quaternion pivotRot);
-
         [DllImport("BlendShapeBuilderCore")] static extern int npRotatePivotVertices(
             ref npMeshData model, Quaternion amount, Vector3 pivotPos, Quaternion pivotRot);
 
         [DllImport("BlendShapeBuilderCore")] static extern int npScaleVertices(
             ref npMeshData model, Vector3 amount, Vector3 pivotPos, Quaternion pivotRot);
-
-        [DllImport("BlendShapeBuilderCore")] static extern int npSmooth(
-            ref npMeshData model, float radius, float strength, bool mask);
-
-        [DllImport("BlendShapeBuilderCore")] static extern int npWeld(
-            ref npMeshData model, bool smoothing, float weldAngle, bool mask);
-        [DllImport("BlendShapeBuilderCore")] static extern int npWeld2(
-            ref npMeshData model, int num_targets, npMeshData[] targets,
-            int weldMode, float weldAngle, bool mask);
 
         [DllImport("BlendShapeBuilderCore")] static extern int npBuildMirroringRelation(
             ref npMeshData model, Vector3 plane_normal, float epsilon, IntPtr relation);
@@ -708,12 +696,10 @@ namespace UTJ.BlendShapeBuilder
         [DllImport("BlendShapeBuilderCore")] static extern void npApplyMirroring(
             int num_vertices, IntPtr relation, Vector3 plane_normal, IntPtr normals);
 
-        [DllImport("BlendShapeBuilderCore")] static extern void npProjectNormals(
-            ref npMeshData model, ref npMeshData target, IntPtr ray_dir, bool mask);
-        [DllImport("BlendShapeBuilderCore")] static extern void npProjectNormals2(
-            ref npMeshData model, ref npMeshData target, Vector3 ray_dir, bool mask);
         [DllImport("BlendShapeBuilderCore")] static extern void npProjectVertices(
             ref npMeshData model, ref npMeshData target, IntPtr ray_dir, npProjectVerticesMode mode, float max_distance);
+        [DllImport("BlendShapeBuilderCore")] static extern void npProjectVerticesRadial(
+            ref npMeshData model, ref npMeshData target, Vector3 center, npProjectVerticesMode mode, float max_distance);
 
         [DllImport("BlendShapeBuilderCore")] static extern void npApplySkinning(
             ref npSkinData skin,

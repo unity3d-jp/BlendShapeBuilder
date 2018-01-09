@@ -534,11 +534,11 @@ npAPI int npUpdateSelection(
 }
 
 
-npAPI void npAssign(
+npAPI void npAssignVertices(
     npMeshData *model, float3 value)
 {
     auto num_vertices = model->num_vertices;
-    auto normals = model->normals;
+    auto vertices = model->vertices;
     auto selection = model->selection;
 
     value = mul_v(invert(model->transform), value);
@@ -546,7 +546,7 @@ npAPI void npAssign(
         float s = selection[vi];
         if (s == 0.0f) continue;
 
-        normals[vi] = normalize(lerp(normals[vi], value, s));
+        vertices[vi] = lerp(vertices[vi], value, s);
     }
 }
 
@@ -1243,8 +1243,9 @@ enum class npProjectVerticesMode
     ForwardAndBackward,
 };
 
-npAPI void npProjectVertices(
-    npMeshData *model, npMeshData *target, const float3 ray_dirs[], npProjectVerticesMode mode, float max_distance)
+template<class RayDirs>
+void npProjectVerticesImpl(
+    npMeshData *model, npMeshData *target, const RayDirs& ray_dirs, npProjectVerticesMode mode, float max_distance)
 {
     auto num_vertices = model->num_vertices;
     auto vertices = model->vertices;
@@ -1261,7 +1262,7 @@ npAPI void npProjectVertices(
     auto to_local = target->transform * invert(model->transform);
     RawVector<float> soa[9]; // flattened + SoA-nized vertices (faster on CPU)
 
-    // flatten + SoA-nize
+                             // flatten + SoA-nize
     {
         for (int i = 0; i < 9; ++i) {
             soa[i].resize(pnum_triangles);
@@ -1361,6 +1362,27 @@ npAPI void npProjectVertices(
             if (tangents) tangents[vi] = rtangents;
         }
     });
+}
+
+npAPI void npProjectVertices(
+    npMeshData *model, npMeshData *target, const float3 ray_dirs[], npProjectVerticesMode mode, float max_distance)
+{
+    npProjectVerticesImpl(model, target, ray_dirs, mode, max_distance);
+}
+
+npAPI void npProjectVerticesRadial(
+    npMeshData *model, npMeshData *target, const float3 center, npProjectVerticesMode mode, float max_distance)
+{
+    struct RayDir
+    {
+        const float3 *vertices;
+        float3 center;
+        float3 operator[](int vi) const
+        {
+            return normalize(vertices[vi] - center);
+        }
+    } ray_dirs = { model->vertices, center };
+    npProjectVerticesImpl(model, target, ray_dirs, mode, max_distance);
 }
 
 template<int NumInfluence>

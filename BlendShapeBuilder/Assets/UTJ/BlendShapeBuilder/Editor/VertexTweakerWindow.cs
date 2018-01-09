@@ -350,21 +350,11 @@ namespace UTJ.BlendShapeBuilder
             {
                 settings.assignValue = EditorGUILayout.Vector3Field("Value", settings.assignValue);
                 GUILayout.BeginHorizontal();
-                if (GUILayout.Button("Copy Selected Normal [Shift+C]", GUILayout.Width(200)))
-                    settings.assignValue = m_target.selectionNormal;
+                if (GUILayout.Button("Copy Selected Position [Shift+C]", GUILayout.Width(200)))
+                    settings.assignValue = m_target.selectionPosition;
                 GUILayout.EndHorizontal();
 
                 EditorGUILayout.Space();
-
-                GUILayout.BeginHorizontal();
-                EditorGUILayout.LabelField("Coordinate", GUILayout.Width(EditorGUIUtility.labelWidth));
-                settings.coordinate = (Coordinate)GUILayout.SelectionGrid((int)settings.coordinate, strCoodinate, strCoodinate.Length);
-                GUILayout.EndHorizontal();
-                if (settings.coordinate == Coordinate.Pivot)
-                {
-                    EditorGUILayout.Space();
-                    settings.pivotRot = Quaternion.Euler(EditorGUILayout.Vector3Field("Pivot Rotation", settings.pivotRot.eulerAngles));
-                }
 
                 if (GUILayout.Button("Assign [Shift+V]"))
                 {
@@ -767,7 +757,7 @@ namespace UTJ.BlendShapeBuilder
                 {
                     handled = true;
                     tips = "Copy";
-                    settings.assignValue = m_target.selectionNormal;
+                    settings.assignValue = m_target.selectionPosition;
                 }
                 else if (e.keyCode == KeyCode.V && e.shift)
                 {

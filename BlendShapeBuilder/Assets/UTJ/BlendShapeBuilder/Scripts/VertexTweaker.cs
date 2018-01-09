@@ -94,6 +94,7 @@ namespace UTJ.BlendShapeBuilder
 
         public VertexTweakerSettings settings { get { return m_settings; } }
         public Mesh mesh { get { return m_meshTarget; } }
+        public Vector3 selectionPosition { get { return m_selectionPos; } }
         public Vector3 selectionNormal { get { return m_selectionNormal; } }
 
         public float[] selection
