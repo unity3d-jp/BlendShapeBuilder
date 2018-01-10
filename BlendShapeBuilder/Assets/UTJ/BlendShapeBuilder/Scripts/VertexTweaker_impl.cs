@@ -234,20 +234,18 @@ namespace UTJ.BlendShapeBuilder
                         RecalculateTangents();
                 }
             }
-            UpdateSelectionPos();
             m_meshTarget.UploadMeshData(false);
             if (m_cbPoints != null)
                 m_cbPoints.SetData(m_points);
+            UpdateSelectionPos();
         }
 
         public void UpdateSelectionPos()
         {
-            m_numSelected = npUpdateSelection(ref m_npModelData, ref m_selectionPos, ref m_selectionNormal);
+            var n = npUpdateSelection(ref m_npModelData, ref m_selectionPos, ref m_selectionNormal);
             m_selectionRot = Quaternion.identity;
-            if (m_numSelected > 0)
-            {
+            if (n > 0)
                 m_selectionRot = Quaternion.LookRotation(m_selectionNormal);
-            }
         }
 
         public void UpdateSelection()

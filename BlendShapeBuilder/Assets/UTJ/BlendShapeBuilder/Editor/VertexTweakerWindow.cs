@@ -402,7 +402,6 @@ namespace UTJ.BlendShapeBuilder
                 EditorGUILayout.Space();
 
                 settings.pivotPos = EditorGUILayout.Vector3Field("Pivot Position", settings.pivotPos);
-                settings.pivotRot = Quaternion.Euler(EditorGUILayout.Vector3Field("Pivot Rotation", settings.pivotRot.eulerAngles));
                 EditorGUILayout.Space();
 
                 settings.rotateAmount = EditorGUILayout.Vector3Field("Rotate Amount", settings.rotateAmount);
@@ -419,18 +418,18 @@ namespace UTJ.BlendShapeBuilder
                 EditorGUILayout.LabelField("Coordinate", GUILayout.Width(EditorGUIUtility.labelWidth));
                 settings.coordinate = (Coordinate)GUILayout.SelectionGrid((int)settings.coordinate, strCoodinate, strCoodinate.Length);
                 GUILayout.EndHorizontal();
-                if (settings.coordinate == Coordinate.Pivot)
-                {
-                    EditorGUILayout.Space();
-                    settings.pivotPos = EditorGUILayout.Vector3Field("Pivot Position", settings.pivotPos);
-                    settings.pivotRot = Quaternion.Euler(EditorGUILayout.Vector3Field("Pivot Rotation", settings.pivotRot.eulerAngles));
-                }
                 EditorGUILayout.Space();
 
-                settings.scaleAmount = EditorGUILayout.Vector3Field("Scale Amount", settings.scaleAmount);
-                if (GUILayout.Button("Apply Scale"))
+                if(!settings.softOp)
                 {
-                    m_target.ApplyScale(settings.scaleAmount, settings.pivotPos, settings.pivotRot, settings.coordinate, true);
+                    settings.pivotPos = EditorGUILayout.Vector3Field("Pivot Position", settings.pivotPos);
+                    EditorGUILayout.Space();
+
+                    settings.scaleAmount = EditorGUILayout.Vector3Field("Scale Amount", settings.scaleAmount);
+                    if (GUILayout.Button("Apply Scale"))
+                    {
+                        m_target.ApplyScale(settings.scaleAmount, settings.pivotPos, settings.pivotRot, settings.coordinate, true);
+                    }
                 }
             }
             else if (settings.editMode == EditMode.Projection)

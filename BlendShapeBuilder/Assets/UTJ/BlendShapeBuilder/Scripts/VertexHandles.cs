@@ -58,30 +58,17 @@ namespace UTJ.BlendShapeBuilder
         }
 
 
-        #region impl
-        static int s_xRotateHandleHash = "xRotateHandleHash".GetHashCode();
-        static int s_yRotateHandleHash = "yRotateHandleHash".GetHashCode();
-        static int s_zRotateHandleHash = "zRotateHandleHash".GetHashCode();
-        static int s_cameraAxisRotateHandleHash = "cameraAxisRotateHandleHash".GetHashCode();
-        static int s_xyzRotateHandleHash = "xyzRotateHandleHash".GetHashCode();
-        #endregion
-
         public static bool rotationHandleControling;
         public static Quaternion RotationHandle(Quaternion rot, Vector3 pos)
         {
+            var size = HandleUtility.GetHandleSize(pos);
             var hc = GUIUtility.hotControl;
             rot = Handles.RotationHandle(rot, pos);
+            //rot = Handles.FreeRotateHandle(rot, pos, size);
             rotationHandleControling = GUIUtility.hotControl != hc;
             return rot;
         }
 
-
-        #region impl
-        static int s_xScaleHandleHash = "xScaleHandleHash".GetHashCode();
-        static int s_yScaleHandleHash = "yScaleHandleHash".GetHashCode();
-        static int s_zScaleHandleHash = "zScaleHandleHash".GetHashCode();
-        static int s_xyzScaleHandleHash = "xyzScaleHandleHash".GetHashCode();
-        #endregion
 
         public static bool scaleHandleControling;
         public static Vector3 ScaleHandle(Vector3 scale, Vector3 pos, Quaternion rot)
@@ -89,7 +76,7 @@ namespace UTJ.BlendShapeBuilder
             var hc = GUIUtility.hotControl;
             var size = HandleUtility.GetHandleSize(pos);
             scale = Handles.ScaleHandle(scale, pos, rot, size);
-            rotationHandleControling = GUIUtility.hotControl != hc;
+            scaleHandleControling = GUIUtility.hotControl != hc;
             return scale;
         }
     }
