@@ -482,11 +482,16 @@ inline static tvec4<T> mul4(const tmat4x4<T>& m, const tvec3<T>& v)
 
 template<class T> inline T dot(const tvec2<T>& l, const tvec2<T>& r) { return l.x*r.x + l.y*r.y; }
 template<class T> inline T dot(const tvec3<T>& l, const tvec3<T>& r) { return l.x*r.x + l.y*r.y + l.z*r.z; }
+template<class T> inline T dot(const tvec4<T>& l, const tvec4<T>& r) { return l.x*r.x + l.y*r.y + l.z*r.z + l.w*r.w; }
 template<class T> inline T length_sq(const tvec2<T>& v) { return dot(v, v); }
 template<class T> inline T length_sq(const tvec3<T>& v) { return dot(v, v); }
+template<class T> inline T length_sq(const tvec4<T>& v) { return dot(v, v); }
 template<class T> inline T length(const tvec2<T>& v) { return sqrt(length_sq(v)); }
 template<class T> inline T length(const tvec3<T>& v) { return sqrt(length_sq(v)); }
+template<class T> inline T length(const tvec4<T>& v) { return sqrt(length_sq(v)); }
 template<class T> inline tvec3<T> normalize(const tvec3<T>& v) { return v / length(v); }
+template<class T> inline tvec4<T> normalize(const tvec4<T>& v) { return v / length(v); }
+template<class T> inline tquat<T> normalize(const tquat<T>& v) { return (const tquat<T>&)((const tvec4<T>&)v / length((const tvec4<T>&)v)); }
 template<class T> inline tvec3<T> cross(const tvec3<T>& l, const tvec3<T>& r)
 {
     return{

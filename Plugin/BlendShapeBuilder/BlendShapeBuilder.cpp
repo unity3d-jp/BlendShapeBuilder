@@ -580,12 +580,6 @@ npAPI void npRotatePivotVertices(
         return;
     }
 
-    float furthest;
-    int furthest_idx;
-    if (!GetFurthestDistance(*model, pivot_pos, true, furthest_idx, furthest)) {
-        return;
-    }
-
     auto num_vertices = model->num_vertices;
     auto vertices = model->vertices;
     auto selection = model->selection;
@@ -595,32 +589,20 @@ npAPI void npRotatePivotVertices(
     auto trans = model->transform;
     auto itrans = invert(trans);
 
-    auto to_pspace = trans * iptrans;
-    auto to_lspace = ptrans * itrans;
-    auto rot = to_mat3x3(value);
+    auto to_pivot_space = trans * iptrans;
+    auto to_local_space = ptrans * itrans;
+    auto rotation = to_pivot_space * to_mat4x4(value) * to_local_space;
 
     for (int vi = 0; vi < num_vertices; ++vi) {
         float s = selection[vi];
         if (s == 0.0f) continue;
-
-        float3 vpos = mul_p(to_pspace, vertices[vi]);
-        float d = length(vpos);
-        float3 v = vpos - (rot * vpos);
-        if(near_equal(length(v), 0.0f)) { continue; }
-        v = normalize(mul_v(to_lspace, v));
-        vertices[vi] = (vertices[vi] + v * (d / furthest * angle * s));
+        vertices[vi] = lerp(vertices[vi], mul_p(rotation, vertices[vi]), s);
     }
 }
 
 npAPI void npScaleVertices(
     npMeshData *model, float3 value, float3 pivot_pos, quatf pivot_rot)
 {
-    float furthest;
-    int furthest_idx;
-    if (!GetFurthestDistance(*model, pivot_pos, true, furthest_idx, furthest)) {
-        return;
-    }
-
     auto num_vertices = model->num_vertices;
     auto vertices = model->vertices;
     auto selection = model->selection;
@@ -630,17 +612,14 @@ npAPI void npScaleVertices(
     auto trans = model->transform;
     auto itrans = invert(trans);
 
-    auto to_pspace = trans * iptrans;
-    auto to_lspace = ptrans * itrans;
+    auto to_pivot_space = trans * iptrans;
+    auto to_local_space = ptrans * itrans;
+    auto scale = to_pivot_space * scale44(value) * to_local_space;
 
     for (int vi = 0; vi < num_vertices; ++vi) {
         float s = selection[vi];
         if (s == 0.0f) continue;
-
-        float3 vpos = mul_p(to_pspace, vertices[vi]);
-        float d = length(vpos);
-        float3 v = mul_v(to_lspace, (vpos / d) * value);
-        vertices[vi] = (vertices[vi] + v * (d / furthest * s));
+        vertices[vi] = lerp(vertices[vi], mul_p(scale, vertices[vi]), s);
     }
 }
 

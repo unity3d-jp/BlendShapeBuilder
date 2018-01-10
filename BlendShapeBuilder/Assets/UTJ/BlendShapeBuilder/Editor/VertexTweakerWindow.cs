@@ -210,10 +210,6 @@ namespace UTJ.BlendShapeBuilder
             "World",
             "Local",
         };
-        static readonly string[] strMoveMode = new string[] {
-            "Free Style",
-            "Axis",
-        };
 
 
         void DrawBrushPanel()
@@ -373,10 +369,6 @@ namespace UTJ.BlendShapeBuilder
             else if (settings.editMode == EditMode.Move)
             {
                 settings.softOp = GUILayout.Toggle(settings.softOp, "Soft Move", "Button", GUILayout.Width(120));
-                GUILayout.BeginHorizontal();
-                EditorGUILayout.LabelField("Manipulator Style", GUILayout.Width(EditorGUIUtility.labelWidth));
-                settings.manipulatorStyle = (ManipulatorStyle)GUILayout.SelectionGrid((int)settings.manipulatorStyle, strMoveMode, strMoveMode.Length);
-                GUILayout.EndHorizontal();
                 EditorGUILayout.Space();
 
                 GUILayout.BeginHorizontal();
@@ -400,10 +392,6 @@ namespace UTJ.BlendShapeBuilder
             else if (settings.editMode == EditMode.Rotate)
             {
                 settings.softOp = GUILayout.Toggle(settings.softOp, "Soft Rotate", "Button", GUILayout.Width(120));
-                GUILayout.BeginHorizontal();
-                EditorGUILayout.LabelField("Manipulator Style", GUILayout.Width(EditorGUIUtility.labelWidth));
-                settings.manipulatorStyle = (ManipulatorStyle)GUILayout.SelectionGrid((int)settings.manipulatorStyle, strMoveMode, strMoveMode.Length);
-                GUILayout.EndHorizontal();
                 EditorGUILayout.Space();
 
 

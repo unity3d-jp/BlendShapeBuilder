@@ -234,10 +234,20 @@ namespace UTJ.BlendShapeBuilder
                         RecalculateTangents();
                 }
             }
-
+            UpdateSelectionPos();
             m_meshTarget.UploadMeshData(false);
             if (m_cbPoints != null)
                 m_cbPoints.SetData(m_points);
+        }
+
+        public void UpdateSelectionPos()
+        {
+            m_numSelected = npUpdateSelection(ref m_npModelData, ref m_selectionPos, ref m_selectionNormal);
+            m_selectionRot = Quaternion.identity;
+            if (m_numSelected > 0)
+            {
+                m_selectionRot = Quaternion.LookRotation(m_selectionNormal);
+            }
         }
 
         public void UpdateSelection()
@@ -623,7 +633,7 @@ namespace UTJ.BlendShapeBuilder
 
 
 
-
+        #region impl
         [DllImport("BlendShapeBuilderCore")] static extern int npRaycast(
             ref npMeshData model, Vector3 pos, Vector3 dir, ref int tindex, ref float distance);
 
@@ -726,6 +736,7 @@ namespace UTJ.BlendShapeBuilder
             ref npMeshData model, IntPtr dst);
 
         [DllImport("BlendShapeBuilderCore")] static extern void npInitializePenInput();
+        #endregion
     }
 #endif
 }

@@ -72,12 +72,6 @@ namespace UTJ.BlendShapeBuilder
         Pivot,
     }
 
-    public enum ManipulatorStyle
-    {
-        FreeStyle,
-        Axis,
-    }
-
     public enum ProjectionRayDirection
     {
         CurrentNormals,
@@ -242,10 +236,9 @@ namespace UTJ.BlendShapeBuilder
 
         [NonSerialized] public Coordinate coordinate = Coordinate.World;
         [NonSerialized] public Vector3 assignValue = Vector3.up;
-        [NonSerialized] public ManipulatorStyle manipulatorStyle = ManipulatorStyle.FreeStyle;
         [NonSerialized] public Vector3 moveAmount;
         [NonSerialized] public Vector3 rotateAmount;
-        [NonSerialized] public Vector3 scaleAmount;
+        [NonSerialized] public Vector3 scaleAmount = Vector3.one;
         [NonSerialized] public bool softOp = false;
 
         [NonSerialized] public GameObject projTarget = null;

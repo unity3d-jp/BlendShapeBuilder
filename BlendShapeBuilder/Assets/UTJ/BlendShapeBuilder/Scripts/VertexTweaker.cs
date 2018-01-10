@@ -403,11 +403,21 @@ namespace UTJ.BlendShapeBuilder
         Quaternion m_prevRot;
         Vector3 m_prevScale;
         bool m_toolHanding = false;
-        bool m_axisMoveDragging = false;
-        bool m_freeMoveDragging = false;
+
+        enum ToolState
+        {
+            Neutral,
+            AxisMoveDragging,
+            FreeMoveDragging,
+            RotationDragging,
+            ScaleDragging,
+        }
+        ToolState m_toolState = ToolState.Neutral;
 
         public int HandleEditTools()
         {
+            float pickRectSize = 15.0f;
+
             // check if model has been changed
             if (m_meshTarget != GetTargetMesh())
             {
@@ -425,7 +435,7 @@ namespace UTJ.BlendShapeBuilder
 
             if (et == EventType.MouseMove || et == EventType.MouseDrag)
             {
-                if(PickVertex(e, 15.0f, true, ref m_rayHitVertex, ref m_rayVertexPos)) {}
+                if(PickVertex(e, pickRectSize, true, ref m_rayHitVertex, ref m_rayVertexPos)) {}
                 else { m_rayHitVertex = -1; }
 
                 bool prevRayHit = m_rayHit;
@@ -438,42 +448,42 @@ namespace UTJ.BlendShapeBuilder
             {
                 var move = Vector3.zero;
 
-                var pivotRot = Quaternion.identity;
-                switch (m_settings.coordinate)
+                // 3 axis handles
+                if (m_numSelected > 0 && (m_toolState == ToolState.Neutral || m_toolState == ToolState.AxisMoveDragging))
                 {
-                    case Coordinate.Pivot:
-                        pivotRot = m_settings.pivotRot;
-                        break;
-                    case Coordinate.Local:
-                        pivotRot = t.rotation;
-                        break;
-                }
-
-                {
-                    if(m_numSelected > 0 && !m_freeMoveDragging)
+                    var pivotRot = Quaternion.identity;
+                    switch (m_settings.coordinate)
                     {
-                        if (et == EventType.MouseDown)
-                            m_prevMove = m_selectionPos;
-
-                        EditorGUI.BeginChangeCheck();
-                        move = VertexHandles.PositionHandle(m_selectionPos, pivotRot);
-                        if (EditorGUI.EndChangeCheck())
-                            handled = true;
-                        if (et == EventType.MouseDown && VertexHandles.positionHandleControling)
-                            m_axisMoveDragging = true;
+                        case Coordinate.Pivot:
+                            pivotRot = m_settings.pivotRot;
+                            break;
+                        case Coordinate.Local:
+                            pivotRot = t.rotation;
+                            break;
                     }
+
+                    if (et == EventType.MouseDown)
+                        m_prevMove = m_selectionPos;
+
+                    EditorGUI.BeginChangeCheck();
+                    move = VertexHandles.PositionHandle(m_selectionPos, pivotRot);
+                    if (EditorGUI.EndChangeCheck())
+                        handled = true;
+                    if (et == EventType.MouseDown && VertexHandles.positionHandleControling)
+                        m_toolState = ToolState.AxisMoveDragging;
                 }
 
+                // pick vertex
                 bool pickedVertex = false;
-                if (et == EventType.MouseDown && e.button == 0 && !m_axisMoveDragging)
+                if (et == EventType.MouseDown && e.button == 0 && m_toolState == ToolState.Neutral)
                 {
                     if (m_settings.softOp)
                     {
                         ClearSelection();
-                        if (m_rayHit)
+                        if (m_rayHitVertex != -1)
                         {
                             var bd = m_settings.activeBrush;
-                            SelectBrush(m_rayPos, bd.radius, bd.strength, bd.samples);
+                            SelectBrush(m_rayVertexPos, bd.radius, bd.strength, bd.samples);
                         }
                         UpdateSelection();
                     }
@@ -500,27 +510,27 @@ namespace UTJ.BlendShapeBuilder
                     }
                 }
 
-                if(!m_axisMoveDragging) {
-                    if (m_rayHitVertex != -1 && et == EventType.MouseDown)
-                        m_prevMove = m_rayVertexPos;
-                    if(m_rayHitVertex != -1 || m_freeMoveDragging)
+                // free move handle
+                if(m_toolState == ToolState.Neutral || m_toolState == ToolState.FreeMoveDragging)
+                {
+                    if((m_rayHitVertex != -1 || m_settings.softOp) || m_toolState == ToolState.FreeMoveDragging)
                     {
+                        if (m_rayHitVertex != -1 && et == EventType.MouseDown)
+                            m_prevMove = m_rayVertexPos;
+
                         EditorGUI.BeginChangeCheck();
-                        move = VertexHandles.FreeMoveHandle(m_rayVertexPos);
+                        move = VertexHandles.FreeMoveHandle(m_rayVertexPos, pickRectSize);
                         if (EditorGUI.EndChangeCheck())
                             handled = true;
                         if (et == EventType.MouseDown && VertexHandles.freeMoveHandleControling)
-                            m_freeMoveDragging = true;
+                            m_toolState = ToolState.FreeMoveDragging;
                     }
                 }
 
                 if (pickedVertex)
                     e.Use();
                 if (et == EventType.MouseUp)
-                {
-                    m_axisMoveDragging = false;
-                    m_freeMoveDragging = false;
-                }
+                    m_toolState = ToolState.Neutral;
                 if (handled)
                 {
                     var diff = move - m_prevMove;
@@ -528,57 +538,92 @@ namespace UTJ.BlendShapeBuilder
                     ApplyMove(diff * 1.0f, Coordinate.World, false); // push undo only when mouse up
                 }
             }
-            else if (m_numSelected > 0 && editMode == EditMode.Rotate)
+            else if (editMode == EditMode.Rotate)
             {
-                var pivotRot = Quaternion.identity;
-                switch (m_settings.coordinate)
+                if (et == EventType.MouseDown && e.button == 0 && m_toolState == ToolState.Neutral)
                 {
-                    case Coordinate.Pivot:
-                        pivotRot = m_settings.pivotRot;
-                        break;
-                    case Coordinate.Local:
-                        pivotRot = t.rotation;
-                        break;
+                    if (m_settings.softOp)
+                    {
+                        ClearSelection();
+                        if (m_rayHitVertex != -1)
+                        {
+                            var bd = m_settings.activeBrush;
+                            SelectBrush(m_rayVertexPos, bd.radius, bd.strength, bd.samples);
+                        }
+                        UpdateSelection();
+                    }
                 }
-
-                if (et == EventType.MouseDown)
-                    m_prevRot = pivotRot;
-
-                EditorGUI.BeginChangeCheck();
-                var rot = Handles.RotationHandle(pivotRot, m_settings.pivotPos);
-                if (EditorGUI.EndChangeCheck())
+                if (m_numSelected > 0)
                 {
-                    handled = true;
-                    var diff = Quaternion.Inverse(m_prevRot) * rot;
-                    m_prevRot = rot;
-                    ApplyRotatePivot(diff, m_settings.pivotPos, pivotRot, Coordinate.Pivot, false);
+                    var pivotRot = Quaternion.identity;
+                    switch (m_settings.coordinate)
+                    {
+                        case Coordinate.Pivot:
+                            pivotRot = m_settings.pivotRot;
+                            break;
+                        case Coordinate.Local:
+                            pivotRot = t.rotation;
+                            break;
+                    }
+
+                    if (et == EventType.MouseDown)
+                        m_prevRot = pivotRot;
+
+                    EditorGUI.BeginChangeCheck();
+                    var rot = VertexHandles.RotationHandle(pivotRot, m_settings.pivotPos);
+                    if (EditorGUI.EndChangeCheck())
+                    {
+                        handled = true;
+                        var diff = (Quaternion.Inverse(m_prevRot) * rot);
+                        m_prevRot = rot;
+                        ApplyRotatePivot(Quaternion.Inverse(diff), m_settings.pivotPos, pivotRot, Coordinate.Pivot, false);
+                    }
+                    if (et == EventType.MouseDown && VertexHandles.rotationHandleControling)
+                        m_toolState = ToolState.RotationDragging;
                 }
             }
-            else if (m_numSelected > 0 && editMode == EditMode.Scale)
+            else if (editMode == EditMode.Scale)
             {
-                var pivotRot = Quaternion.identity;
-                switch (m_settings.coordinate)
+                if (et == EventType.MouseDown && e.button == 0 && m_toolState == ToolState.Neutral)
                 {
-                    case Coordinate.Pivot:
-                        pivotRot = m_settings.pivotRot;
-                        break;
-                    case Coordinate.Local:
-                        pivotRot = t.rotation;
-                        break;
+                    if (m_settings.softOp)
+                    {
+                        ClearSelection();
+                        if (m_rayHitVertex != -1)
+                        {
+                            var bd = m_settings.activeBrush;
+                            SelectBrush(m_rayVertexPos, bd.radius, bd.strength, bd.samples);
+                        }
+                        UpdateSelection();
+                    }
                 }
-                if (et == EventType.MouseDown)
-                    m_prevScale = Vector3.one;
-
-                EditorGUI.BeginChangeCheck();
-                var scale = Handles.ScaleHandle(Vector3.one, m_settings.pivotPos,
-                    pivotRot, HandleUtility.GetHandleSize(m_settings.pivotPos));
-                if (EditorGUI.EndChangeCheck())
+                if(m_numSelected > 0)
                 {
-                    handled = true;
-                    var diff = scale - m_prevScale;
-                    m_prevScale = scale;
+                    var pivotRot = Quaternion.identity;
+                    switch (m_settings.coordinate)
+                    {
+                        case Coordinate.Pivot:
+                            pivotRot = m_settings.pivotRot;
+                            break;
+                        case Coordinate.Local:
+                            pivotRot = t.rotation;
+                            break;
+                    }
+                    if (et == EventType.MouseDown)
+                        m_prevScale = Vector3.one;
 
-                    ApplyScale(diff, m_settings.pivotPos, pivotRot, Coordinate.Pivot, false);
+                    EditorGUI.BeginChangeCheck();
+                    var scale = VertexHandles.ScaleHandle(Vector3.one, m_settings.pivotPos, pivotRot);
+                    if (EditorGUI.EndChangeCheck())
+                    {
+                        handled = true;
+                        var diff = scale - m_prevScale;
+                        m_prevScale = scale;
+                        ApplyScale(Vector3.one + diff, m_settings.pivotPos, pivotRot, Coordinate.Pivot, false);
+                    }
+                    if (et == EventType.MouseDown && VertexHandles.rotationHandleControling)
+                        m_toolState = ToolState.RotationDragging;
+
                 }
             }
             else if (editMode == EditMode.Projection)
@@ -781,8 +826,10 @@ namespace UTJ.BlendShapeBuilder
                 return;
             }
 
-            bool brushMode = (m_settings.editMode == EditMode.Select && m_settings.selectMode == SelectMode.Brush) ||
-                (m_settings.softOp && (m_settings.editMode == EditMode.Move || m_settings.editMode == EditMode.Rotate || m_settings.editMode == EditMode.Scale));
+            bool softOp = (m_settings.softOp && (m_settings.editMode == EditMode.Move || m_settings.editMode == EditMode.Rotate || m_settings.editMode == EditMode.Scale));
+            bool brushMode = (m_settings.editMode == EditMode.Select && m_settings.selectMode == SelectMode.Brush) || softOp;
+            var brushPos = softOp ? m_rayVertexPos : m_rayPos;
+
             var trans = GetComponent<Transform>();
             var matrix = trans.localToWorldMatrix;
             var renderer = GetComponent<Renderer>();
@@ -810,13 +857,13 @@ namespace UTJ.BlendShapeBuilder
                         m_cbBrushSamples = new ComputeBuffer(bd.samples.Length, 4);
                     }
                     m_cbBrushSamples.SetData(bd.samples);
-                    m_matVisualize.SetVector("_BrushPos", new Vector4(m_rayPos.x, m_rayPos.y, m_rayPos.z, bd.radius));
+                    m_matVisualize.SetVector("_BrushPos", new Vector4(brushPos.x, brushPos.y, brushPos.z, bd.radius));
                     m_matVisualize.SetInt("_NumBrushSamples", bd.samples.Length);
                     m_matVisualize.SetBuffer("_BrushSamples", m_cbBrushSamples);
                 }
                 else
                 {
-                    m_matVisualize.SetVector("_BrushPos", m_rayPos);
+                    m_matVisualize.SetVector("_BrushPos", brushPos);
                 }
             }
             else

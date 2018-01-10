@@ -8,21 +8,14 @@ namespace UTJ.BlendShapeBuilder
 {
     public static class VertexHandles
     {
+        #region impl
         static int s_xVertexHandleHash = "xAxisVertexHandleHash".GetHashCode();
         static int s_yVertexHandleHash = "yAxisVertexHandleHash".GetHashCode();
         static int s_zVertexHandleHash = "zAxisVertexHandleHash".GetHashCode();
-        static int s_xzVertexHandleHash = "xzAxisVertexHandleHash".GetHashCode();
-        static int s_xyVertexHandleHash = "xyAxisVertexHandleHash".GetHashCode();
-        static int s_yzVertexHandleHash = "yzAxisVertexHandleHash".GetHashCode();
         static int s_FreeMoveVertexHandleHash = "FreeMoveVertexHandleHash".GetHashCode();
-        static int s_FreeMoveVertexHandle2Hash = "FreeMoveVertexHandle2Hash".GetHashCode();
-        static bool s_positionHandleControling;
-        static bool s_freeMoveHandleControling;
+        #endregion
 
-
-        public static bool positionHandleControling { get { return s_positionHandleControling; } }
-        public static bool freeMoveHandleControling { get { return s_freeMoveHandleControling; } }
-
+        public static bool positionHandleControling;
         public static Vector3 PositionHandle(Vector3 pos, Quaternion rot)
         {
             var size = HandleUtility.GetHandleSize(pos);
@@ -43,19 +36,61 @@ namespace UTJ.BlendShapeBuilder
             pos = Handles.Slider(cidZ, pos, rot * Vector3.forward, size, Handles.ArrowHandleCap, snap);
 
             var cid = GUIUtility.hotControl;
-            s_positionHandleControling = cid == cidF || cid == cidX || cid == cidY || cid == cidZ;
+            positionHandleControling = cid == cidF || cid == cidX || cid == cidY || cid == cidZ;
             return pos;
         }
 
-        public static Vector3 FreeMoveHandle(Vector3 pos)
+
+        #region impl
+        static int s_FreeMoveVertexHandle2Hash = "FreeMoveVertexHandle2Hash".GetHashCode();
+        #endregion
+
+        public static bool freeMoveHandleControling;
+        public static Vector3 FreeMoveHandle(Vector3 pos, float rectSize)
         {
-            var size = HandleUtility.GetHandleSize(pos) * 0.15f;
+            var size = HandleUtility.GetHandleSize(pos) * (rectSize * 0.01f);
             Vector3 snap = Vector3.one * 0.5f;
 
             int cidF = GUIUtility.GetControlID(s_FreeMoveVertexHandle2Hash, FocusType.Passive);
             pos = Handles.FreeMoveHandle(cidF, pos, Quaternion.identity, size, snap, Handles.RectangleHandleCap);
-            s_freeMoveHandleControling = GUIUtility.hotControl == cidF;
+            freeMoveHandleControling = GUIUtility.hotControl == cidF;
             return pos;
+        }
+
+
+        #region impl
+        static int s_xRotateHandleHash = "xRotateHandleHash".GetHashCode();
+        static int s_yRotateHandleHash = "yRotateHandleHash".GetHashCode();
+        static int s_zRotateHandleHash = "zRotateHandleHash".GetHashCode();
+        static int s_cameraAxisRotateHandleHash = "cameraAxisRotateHandleHash".GetHashCode();
+        static int s_xyzRotateHandleHash = "xyzRotateHandleHash".GetHashCode();
+        #endregion
+
+        public static bool rotationHandleControling;
+        public static Quaternion RotationHandle(Quaternion rot, Vector3 pos)
+        {
+            var hc = GUIUtility.hotControl;
+            rot = Handles.RotationHandle(rot, pos);
+            rotationHandleControling = GUIUtility.hotControl != hc;
+            return rot;
+        }
+
+
+        #region impl
+        static int s_xScaleHandleHash = "xScaleHandleHash".GetHashCode();
+        static int s_yScaleHandleHash = "yScaleHandleHash".GetHashCode();
+        static int s_zScaleHandleHash = "zScaleHandleHash".GetHashCode();
+        static int s_xyzScaleHandleHash = "xyzScaleHandleHash".GetHashCode();
+        #endregion
+
+        public static bool scaleHandleControling;
+        public static Vector3 ScaleHandle(Vector3 scale, Vector3 pos, Quaternion rot)
+        {
+            var hc = GUIUtility.hotControl;
+            var size = HandleUtility.GetHandleSize(pos);
+            scale = Handles.ScaleHandle(scale, pos, rot, size);
+            rotationHandleControling = GUIUtility.hotControl != hc;
+            return scale;
         }
     }
 
