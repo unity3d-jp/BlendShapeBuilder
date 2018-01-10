@@ -1010,7 +1010,7 @@ npAPI int npBrushProjection2(
 
 
 npAPI int npBuildMirroringRelation(
-    npMeshData *model, float3 plane_normal, float epsilon, int relation[])
+    npMeshData *model, float3 mirror_plane, float epsilon, int relation[])
 {
     auto num_vertices = model->num_vertices;
     auto vertices = model->vertices;
@@ -1019,7 +1019,7 @@ npAPI int npBuildMirroringRelation(
     RawVector<float> distances;
     distances.resize(num_vertices);
     parallel_for(0, num_vertices, [&](int vi) {
-        distances[vi] = plane_distance(vertices[vi], plane_normal);
+        distances[vi] = plane_distance(vertices[vi], mirror_plane);
     });
 
     std::atomic_int ret{ 0 };
@@ -1030,10 +1030,10 @@ npAPI int npBuildMirroringRelation(
             for (int i = 0; i < num_vertices; ++i) {
                 float d2 = distances[i];
                 if (d2 > 0.0f &&
-                    length(vertices[vi] - (vertices[i] - plane_normal * (d2 * 2.0f))) < epsilon)
+                    length(vertices[vi] - (vertices[i] - mirror_plane * (d2 * 2.0f))) < epsilon)
                 {
                     float3 n1 = normals[vi];
-                    float3 n2 = plane_mirror(normals[i], plane_normal);
+                    float3 n2 = plane_mirror(normals[i], mirror_plane);
                     if (dot(n1, n2) >= 0.99f) {
                         rel = i;
                         ++ret;
@@ -1042,16 +1042,34 @@ npAPI int npBuildMirroringRelation(
                 }
             }
         }
+        else if (near_equal(d1, 0.0f)) {
+            rel = -2; // -2: on mirror plane
+        }
         relation[vi] = rel;
     });
     return ret;
 }
 
-npAPI void npApplyMirroring(int num_vertices, const int relation[], float3 plane_normal, float3 normals[])
+npAPI void npApplyMirroring(
+    npMeshData *model, const int relation[], float3 mirror_plane)
 {
+    auto num_vertices = model->num_vertices;
+    auto vertices = model->vertices;
+    auto normals = model->normals;
+    auto tangents = model->tangents;
+
     parallel_for(0, num_vertices, [&](int vi) {
-        if (relation[vi] != -1) {
-            normals[relation[vi]] = plane_mirror(normals[vi], plane_normal);
+        int ri = relation[vi];
+        if (ri >= 0) {
+            vertices[ri] = plane_mirror(vertices[vi], mirror_plane);
+            normals[ri] = plane_mirror(normals[vi], mirror_plane);
+            (float3&)tangents[ri] = plane_mirror((float3&)tangents[vi], mirror_plane);
+        }
+        else if (ri == -2) {
+            // project to mirror plane
+            float3 v = vertices[vi];
+            float d = plane_distance(v, mirror_plane);
+            vertices[vi] = v - (mirror_plane * d);
         }
     });
 }

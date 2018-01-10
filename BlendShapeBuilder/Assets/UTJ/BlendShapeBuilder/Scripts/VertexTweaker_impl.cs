@@ -552,14 +552,28 @@ namespace UTJ.BlendShapeBuilder
                 tmp.normals = m_normalsBasePredeformed;
                 if (npBuildMirroringRelation(ref tmp, planeNormal, m_settings.mirrorEpsilon, m_mirrorRelation) == 0)
                 {
-                    Debug.LogWarning("NormalEditor: this mesh seems not symmetric");
+                    Debug.LogWarning("This mesh seems not symmetric");
                     m_mirrorRelation = null;
                     m_settings.mirrorMode = MirrorMode.None;
                     return false;
                 }
             }
 
-            npApplyMirroring(m_normals.Count, m_mirrorRelation, planeNormal, m_pointsPredeformed);
+            if(m_skinned)
+            {
+                npMeshData tmp = m_npModelData;
+                tmp.vertices = m_pointsPredeformed;
+                tmp.normals = m_normalsPredeformed;
+                tmp.tangents = m_tangentsPredeformed;
+                npApplyMirroring(ref m_npModelData, m_mirrorRelation, planeNormal);
+                npApplySkinning(ref m_npSkinData,
+                    m_pointsPredeformed, m_normalsPredeformed, m_tangentsPredeformed,
+                    m_points, m_normals, m_tangents);
+            }
+            else
+            {
+                npApplyMirroring(ref m_npModelData, m_mirrorRelation, planeNormal);
+            }
             return true;
         }
         public bool ApplyMirroring(bool pushUndo)
@@ -669,32 +683,6 @@ namespace UTJ.BlendShapeBuilder
             ref npMeshData model,
             ref Vector3 selection_pos, ref Vector3 selection_normal);
 
-
-        [DllImport("BlendShapeBuilderCore")] static extern int npBrushReplace(
-            ref npMeshData model,
-            Vector3 pos, float radius, float strength, int num_bsamples, IntPtr bsamples, Vector3 amount, bool mask);
-
-        [DllImport("BlendShapeBuilderCore")] static extern int npBrushPaint(
-            ref npMeshData model,
-            Vector3 pos, float radius, float strength, int num_bsamples, IntPtr bsamples, Vector3 baseNormal, int blend_mode, bool mask);
-
-        [DllImport("BlendShapeBuilderCore")] static extern int npBrushSmooth(
-            ref npMeshData model,
-            Vector3 pos, float radius, float strength, int num_bsamples, IntPtr bsamples, bool mask);
-
-        [DllImport("BlendShapeBuilderCore")] static extern int npBrushProjection(
-            ref npMeshData model,
-            Vector3 pos, float radius, float strength, int num_bsamples, IntPtr bsamples, bool mask,
-            ref npMeshData normal_source, IntPtr ray_dirs);
-        [DllImport("BlendShapeBuilderCore")] static extern int npBrushProjection2(
-            ref npMeshData model,
-            Vector3 pos, float radius, float strength, int num_bsamples, IntPtr bsamples, bool mask,
-            ref npMeshData normal_source, Vector3 ray_dir);
-
-        [DllImport("BlendShapeBuilderCore")] static extern int npBrushLerp(
-            ref npMeshData model,
-            Vector3 pos, float radius, float strength, int num_bsamples, IntPtr bsamples, IntPtr baseNormals, IntPtr normals, bool mask);
-
         [DllImport("BlendShapeBuilderCore")] static extern int npAssignVertices(
             ref npMeshData model, Vector3 value);
         
@@ -711,7 +699,7 @@ namespace UTJ.BlendShapeBuilder
             ref npMeshData model, Vector3 plane_normal, float epsilon, IntPtr relation);
 
         [DllImport("BlendShapeBuilderCore")] static extern void npApplyMirroring(
-            int num_vertices, IntPtr relation, Vector3 plane_normal, IntPtr normals);
+            ref npMeshData model, IntPtr relation, Vector3 plane_normal);
 
         [DllImport("BlendShapeBuilderCore")] static extern void npProjectVertices(
             ref npMeshData model, ref npMeshData target, IntPtr ray_dir, npProjectVerticesMode mode, float max_distance);
