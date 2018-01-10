@@ -235,6 +235,8 @@ namespace UTJ.BlendShapeBuilder
                 }
             }
 
+            UpdateSelection();
+
             m_meshTarget.UploadMeshData(false);
             if (m_cbPoints != null)
                 m_cbPoints.SetData(m_points);
@@ -407,19 +409,19 @@ namespace UTJ.BlendShapeBuilder
         }
 
         // return vertex index. -1 if not hit
-        public int PickVertex(Event e, float strength, bool frontFaceOnly)
+        public bool PickVertex(Event e, bool frontFaceOnly, ref int vi, ref Vector3 vpos)
         {
             var center = e.mousePosition;
             var size = new Vector2(15.0f, 15.0f);
             var r1 = center - size;
             var r2 = center + size;
-            return PickVertex(r1, r2, strength, frontFaceOnly);
+            return PickVertex(r1, r2, frontFaceOnly, ref vi, ref vpos);
         }
         // return vertex index. -1 if not hit
-        public int PickVertex(Vector2 r1, Vector2 r2, float strength, bool frontFaceOnly)
+        public bool PickVertex(Vector2 r1, Vector2 r2, bool frontFaceOnly, ref int vi, ref Vector3 vpos)
         {
             var cam = SceneView.lastActiveSceneView.camera;
-            if (cam == null) { return -1; }
+            if (cam == null) { return false; }
 
             var campos = cam.GetComponent<Transform>().position;
             var trans = GetComponent<Transform>().localToWorldMatrix;
@@ -429,7 +431,7 @@ namespace UTJ.BlendShapeBuilder
             var rmin = new Vector2(Math.Min(r1.x, r2.x), Math.Min(r1.y, r2.y));
             var rmax = new Vector2(Math.Max(r1.x, r2.x), Math.Max(r1.y, r2.y));
 
-            return npPickVertex(ref m_npModelData, ref mvp, rmin, rmax, campos, frontFaceOnly);
+            return npPickVertex(ref m_npModelData, ref mvp, rmin, rmax, campos, frontFaceOnly, ref vi, ref vpos);
         }
 
         public bool SelectVertex(Event e, float strength, bool frontFaceOnly)
@@ -626,8 +628,8 @@ namespace UTJ.BlendShapeBuilder
 
         [DllImport("BlendShapeBuilderCore")] static extern Vector3 npPickNormal(
             ref npMeshData model, Vector3 pos, int ti);
-        [DllImport("BlendShapeBuilderCore")] static extern int npPickVertex(
-            ref npMeshData model, ref Matrix4x4 viewproj, Vector2 rmin, Vector2 rmax, Vector3 campos, bool frontfaceOnly);
+        [DllImport("BlendShapeBuilderCore")] static extern bool npPickVertex(
+            ref npMeshData model, ref Matrix4x4 viewproj, Vector2 rmin, Vector2 rmax, Vector3 campos, bool frontfaceOnly, ref int vi, ref Vector3 vpos);
 
         [DllImport("BlendShapeBuilderCore")] static extern int npSelectSingle(
             ref npMeshData model, ref Matrix4x4 viewproj, Vector2 rmin, Vector2 rmax, Vector3 campos, float strength, bool frontfaceOnly);

@@ -72,6 +72,12 @@ namespace UTJ.BlendShapeBuilder
         Pivot,
     }
 
+    public enum MoveMode
+    {
+        FreeStyle,
+        Axis,
+    }
+
     public enum ProjectionRayDirection
     {
         CurrentNormals,
@@ -236,6 +242,7 @@ namespace UTJ.BlendShapeBuilder
 
         [NonSerialized] public Coordinate coordinate = Coordinate.World;
         [NonSerialized] public Vector3 assignValue = Vector3.up;
+        [NonSerialized] public MoveMode moveMode = MoveMode.FreeStyle;
         [NonSerialized] public Vector3 moveAmount;
         [NonSerialized] public Vector3 rotateAmount;
         [NonSerialized] public Vector3 scaleAmount;

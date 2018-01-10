@@ -205,6 +205,10 @@ namespace UTJ.BlendShapeBuilder
             "Local",
             "Pivot",
         };
+        static readonly string[] strMoveMode = new string[] {
+            "Free Style",
+            "Axis",
+        };
 
 
         void DrawBrushPanel()
@@ -363,6 +367,13 @@ namespace UTJ.BlendShapeBuilder
             }
             else if (settings.editMode == EditMode.Move)
             {
+                GUILayout.BeginHorizontal();
+                EditorGUILayout.LabelField("Move Mode", GUILayout.Width(EditorGUIUtility.labelWidth));
+                settings.moveMode = (MoveMode)GUILayout.SelectionGrid((int)settings.moveMode, strMoveMode, strMoveMode.Length);
+                GUILayout.EndHorizontal();
+                EditorGUILayout.Space();
+
+
                 settings.moveAmount = EditorGUILayout.Vector3Field("Move Amount", settings.moveAmount);
                 GUILayout.BeginHorizontal();
                 EditorGUILayout.LabelField("Coordinate", GUILayout.Width(EditorGUIUtility.labelWidth));

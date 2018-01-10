@@ -244,11 +244,15 @@ static bool npSelectNearestImpl(npMeshData *model, const float4x4 *mvp_, float2 
 }
 
 npAPI int npPickVertex(
-    npMeshData *model, const float4x4 *mvp_, float2 rmin, float2 rmax, float3 campos, int frontface_only)
+    npMeshData *model, const float4x4 *mvp_, float2 rmin, float2 rmax, float3 campos, int frontface_only, int *vi, float3 *vpos)
 {
     int pick_index = -1;
-    npSelectNearestImpl(model, mvp_, rmin, rmax, campos, frontface_only, pick_index);
-    return pick_index;
+    if (npSelectNearestImpl(model, mvp_, rmin, rmax, campos, frontface_only, pick_index)) {
+        *vi = pick_index;
+        *vpos = mul_p(model->transform, model->vertices[pick_index]);
+        return true;
+    }
+    return false;
 }
 
 npAPI int npSelectSingle(

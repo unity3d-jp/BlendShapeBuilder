@@ -61,8 +61,10 @@ namespace UTJ.BlendShapeBuilder
         bool m_edited;
         int m_numSelected = 0;
         bool m_rayHit;
-        int m_rayHitTriangle;
+        int m_rayHitTriangle = -1;
+        int m_rayHitVertex = -1;
         Vector3 m_rayPos;
+        Vector3 m_rayVertexPos;
         Vector3 m_selectionPos;
         Vector3 m_selectionNormal;
         Quaternion m_selectionRot;
@@ -422,14 +424,25 @@ namespace UTJ.BlendShapeBuilder
 
             if (et == EventType.MouseMove || et == EventType.MouseDrag)
             {
+                if(PickVertex(e, true, ref m_rayHitVertex, ref m_rayVertexPos))
+                {
+                    m_settings.pivotPos = m_rayVertexPos;
+                }
+                else
+                {
+                    m_rayHitVertex = -1;
+                }
+
                 bool prevRayHit = m_rayHit;
                 m_rayHit = Raycast(e, ref m_rayPos, ref m_rayHitTriangle);
                 if (m_rayHit || prevRayHit)
                     ret |= (int)SceneGUIState.Repaint;
             }
 
-            if (m_numSelected > 0 && editMode == EditMode.Move)
+            if (editMode == EditMode.Move)
             {
+                var move = Vector3.zero;
+
                 var pivotRot = Quaternion.identity;
                 switch (m_settings.coordinate)
                 {
@@ -441,18 +454,60 @@ namespace UTJ.BlendShapeBuilder
                         break;
                 }
 
-                if (et == EventType.MouseDown)
-                    m_prevMove = m_settings.pivotPos;
-
-                EditorGUI.BeginChangeCheck();
-                var move = Handles.PositionHandle(m_settings.pivotPos, pivotRot);
-                if (EditorGUI.EndChangeCheck())
+                if (m_settings.moveMode == MoveMode.Axis)
                 {
-                    handled = true;
+                    if(m_numSelected > 0)
+                    {
+                        if (et == EventType.MouseDown)
+                            m_prevMove = m_selectionPos;
+
+                        EditorGUI.BeginChangeCheck();
+                        move = Handles.PositionHandle(m_selectionPos, pivotRot);
+                        if (EditorGUI.EndChangeCheck())
+                            handled = true;
+                    }
+                }
+
+                if (et == EventType.MouseDown && e.button == 0 && GUIUtility.hotControl == 0)
+                {
+                    if (m_rayHitVertex != -1)
+                    {
+                        if(m_selection[m_rayHitVertex] > 0.0f) { }
+                        else {
+                            ClearSelection();
+                            m_selection[m_rayHitVertex] = 1.0f;
+                            UpdateSelection();
+                        }
+                    }
+                    else
+                    {
+                        ClearSelection();
+                        UpdateSelection();
+                    }
+                }
+
+                if (m_settings.moveMode == MoveMode.FreeStyle)
+                {
+                    if (m_rayHitVertex != -1)
+                    {
+                        if (et == EventType.MouseDown)
+                            m_prevMove = m_rayVertexPos;
+
+                        var size = HandleUtility.GetHandleSize(m_rayPos) * 0.15f;
+                        Vector3 snap = Vector3.one * 0.5f;
+                        EditorGUI.BeginChangeCheck();
+                        move = Handles.FreeMoveHandle(m_rayVertexPos, Quaternion.identity, size, snap, Handles.RectangleHandleCap);
+                        if (EditorGUI.EndChangeCheck())
+                            handled = true;
+                    }
+                }
+
+                if (handled)
+                {
                     var diff = move - m_prevMove;
                     m_prevMove = move;
 
-                    ApplyMove(diff * 1.0f, Coordinate.World, false);
+                    ApplyMove(diff * 1.0f, Coordinate.World, false); // push undo only when mouse up
                 }
             }
             else if (m_numSelected > 0 && editMode == EditMode.Rotate)
@@ -552,21 +607,7 @@ namespace UTJ.BlendShapeBuilder
 
             int ret = 0;
             bool handled = false;
-            bool pickVertex = false;
-
             var editMode = m_settings.editMode;
-            if (et == EventType.MouseDown &&
-                (editMode == EditMode.Move || editMode == EditMode.Rotate || editMode == EditMode.Scale))
-            {
-                if (settings.selectVertex && SelectVertex(e, 1, settings.selectFrontSideOnly))
-                    pickVertex = true;
-                if (pickVertex)
-                {
-                    handled = true;
-                    UpdateSelection();
-                }
-            }
-            if (!pickVertex)
             {
                 var selectMode = m_settings.selectMode;
                 float selectSign = e.control ? -1.0f : 1.0f;
@@ -574,7 +615,7 @@ namespace UTJ.BlendShapeBuilder
                 if (selectMode == SelectMode.Single)
                 {
                     if (!e.shift && !e.control)
-                        System.Array.Clear(m_selection, 0, m_selection.Count);
+                        ClearSelection();
 
                     if (settings.selectVertex && SelectVertex(e, selectSign, settings.selectFrontSideOnly))
                         handled = true;
@@ -602,7 +643,7 @@ namespace UTJ.BlendShapeBuilder
                         {
                             m_rectDragging = false;
                             if (!e.shift && !e.control)
-                                System.Array.Clear(m_selection, 0, m_selection.Count);
+                                ClearSelection();
 
                             m_rectEndPoint = e.mousePosition;
                             handled = true;
@@ -649,7 +690,7 @@ namespace UTJ.BlendShapeBuilder
                     else if (et == EventType.MouseUp)
                     {
                         if (!e.shift && !e.control)
-                            System.Array.Clear(m_selection, 0, m_selection.Count);
+                            ClearSelection();
 
                         handled = true;
                         if (!SelectLasso(m_lassoPoints.ToArray(), selectSign, settings.selectFrontSideOnly) && !m_rayHit)
@@ -663,7 +704,7 @@ namespace UTJ.BlendShapeBuilder
                 else if (selectMode == SelectMode.Brush)
                 {
                     if (et == EventType.MouseDown && !e.shift && !e.control)
-                        System.Array.Clear(m_selection, 0, m_selection.Count);
+                        ClearSelection();
 
                     if (et == EventType.MouseDown || et == EventType.MouseDrag)
                     {
@@ -682,7 +723,6 @@ namespace UTJ.BlendShapeBuilder
             }
             else if (et == EventType.MouseUp)
             {
-                pickVertex = false;
                 if (GUIUtility.hotControl == id && e.button == 0)
                     GUIUtility.hotControl = 0;
             }
