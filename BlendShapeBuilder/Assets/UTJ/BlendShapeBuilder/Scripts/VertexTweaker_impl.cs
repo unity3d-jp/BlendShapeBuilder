@@ -407,10 +407,10 @@ namespace UTJ.BlendShapeBuilder
         }
 
         // return vertex index. -1 if not hit
-        public bool PickVertex(Event e, bool frontFaceOnly, ref int vi, ref Vector3 vpos)
+        public bool PickVertex(Event e, float rectsize, bool frontFaceOnly, ref int vi, ref Vector3 vpos)
         {
             var center = e.mousePosition;
-            var size = new Vector2(15.0f, 15.0f);
+            var size = new Vector2(rectsize, rectsize);
             var r1 = center - size;
             var r2 = center + size;
             return PickVertex(r1, r2, frontFaceOnly, ref vi, ref vpos);
@@ -619,6 +619,9 @@ namespace UTJ.BlendShapeBuilder
             AssetDatabase.DeleteAsset(path);
             AssetDatabase.CreateAsset(Instantiate(m_settings), path);
         }
+
+
+
 
 
         [DllImport("BlendShapeBuilderCore")] static extern int npRaycast(

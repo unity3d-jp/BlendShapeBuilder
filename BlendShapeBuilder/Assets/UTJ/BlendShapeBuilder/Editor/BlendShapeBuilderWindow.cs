@@ -53,9 +53,6 @@ namespace UTJ.BlendShapeBuilder
 
         private void OnSelectionChange()
         {
-            if (m_target != null)
-            {
-            }
 
             m_target = null;
             if (Selection.activeGameObject != null)
@@ -75,6 +72,14 @@ namespace UTJ.BlendShapeBuilder
                 }
             }
             Repaint();
+        }
+
+        private void OnFocus()
+        {
+            if (m_target == null)
+            {
+                OnSelectionChange();
+            }
         }
 
 
@@ -160,10 +165,7 @@ namespace UTJ.BlendShapeBuilder
                 var width = rect.width;
                 var pos = rect.position;
 
-                EditorGUI.BeginChangeCheck();
-                var baseObject = EditorGUI.ObjectField(new Rect(pos, new Vector2(width , 16)), m_data.baseMesh, typeof(UnityEngine.Object), true);
-                if (EditorGUI.EndChangeCheck())
-                    m_data.baseMesh = baseObject;
+                EditorGUI.ObjectField(new Rect(pos, new Vector2(width , 16)), m_data.baseMesh, typeof(UnityEngine.Object), true);
             }
             if (GUILayout.Button("Find Targets", GUILayout.Width(80)))
                 FindValidTargets();

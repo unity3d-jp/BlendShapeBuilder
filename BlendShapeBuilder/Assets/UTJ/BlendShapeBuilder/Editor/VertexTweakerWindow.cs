@@ -173,7 +173,13 @@ namespace UTJ.BlendShapeBuilder
             Repaint();
         }
 
-
+        private void OnFocus()
+        {
+            if (m_target == null)
+            {
+                OnSelectionChange();
+            }
+        }
 
 
         void RepaintAllViews()

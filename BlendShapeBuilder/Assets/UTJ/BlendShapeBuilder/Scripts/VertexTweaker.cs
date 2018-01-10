@@ -403,7 +403,8 @@ namespace UTJ.BlendShapeBuilder
         Quaternion m_prevRot;
         Vector3 m_prevScale;
         bool m_toolHanding = false;
-        bool m_moveDragging = false;
+        bool m_axisMoveDragging = false;
+        bool m_freeMoveDragging = false;
 
         public int HandleEditTools()
         {
@@ -424,7 +425,7 @@ namespace UTJ.BlendShapeBuilder
 
             if (et == EventType.MouseMove || et == EventType.MouseDrag)
             {
-                if(PickVertex(e, true, ref m_rayHitVertex, ref m_rayVertexPos)) {}
+                if(PickVertex(e, 15.0f, true, ref m_rayHitVertex, ref m_rayVertexPos)) {}
                 else { m_rayHitVertex = -1; }
 
                 bool prevRayHit = m_rayHit;
@@ -448,65 +449,78 @@ namespace UTJ.BlendShapeBuilder
                         break;
                 }
 
-                if (m_settings.manipulatorStyle == ManipulatorStyle.Axis)
                 {
-                    if(m_numSelected > 0 && !m_moveDragging)
+                    if(m_numSelected > 0 && !m_freeMoveDragging)
                     {
                         if (et == EventType.MouseDown)
                             m_prevMove = m_selectionPos;
 
                         EditorGUI.BeginChangeCheck();
-                        move = Handles.PositionHandle(m_selectionPos, pivotRot);
+                        move = VertexHandles.PositionHandle(m_selectionPos, pivotRot);
                         if (EditorGUI.EndChangeCheck())
                             handled = true;
+                        if (et == EventType.MouseDown && VertexHandles.positionHandleControling)
+                            m_axisMoveDragging = true;
                     }
                 }
 
                 bool pickedVertex = false;
-                if (et == EventType.MouseDown && e.button == 0 && GUIUtility.hotControl == 0)
+                if (et == EventType.MouseDown && e.button == 0 && !m_axisMoveDragging)
                 {
-                    if (m_rayHitVertex != -1)
+                    if (m_settings.softOp)
                     {
-                        if(m_selection[m_rayHitVertex] > 0.0f)
+                        ClearSelection();
+                        if (m_rayHit)
                         {
-                            pickedVertex = true;
+                            var bd = m_settings.activeBrush;
+                            SelectBrush(m_rayPos, bd.radius, bd.strength, bd.samples);
+                        }
+                        UpdateSelection();
+                    }
+                    else
+                    {
+                        if (m_rayHitVertex != -1)
+                        {
+                            if (m_selection[m_rayHitVertex] > 0.0f)
+                            {
+                                pickedVertex = true;
+                            }
+                            else
+                            {
+                                ClearSelection();
+                                m_selection[m_rayHitVertex] = 1.0f;
+                                UpdateSelection();
+                            }
                         }
                         else
                         {
                             ClearSelection();
-                            m_selection[m_rayHitVertex] = 1.0f;
                             UpdateSelection();
                         }
                     }
-                    else
-                    {
-                        ClearSelection();
-                        UpdateSelection();
-                    }
                 }
 
-                if (m_settings.manipulatorStyle == ManipulatorStyle.FreeStyle)
-                {
+                if(!m_axisMoveDragging) {
                     if (m_rayHitVertex != -1 && et == EventType.MouseDown)
-                    {
                         m_prevMove = m_rayVertexPos;
-                        m_moveDragging = true;
-                    }
-                    if(m_rayHitVertex != -1 || m_moveDragging)
+                    if(m_rayHitVertex != -1 || m_freeMoveDragging)
                     {
-                        var size = HandleUtility.GetHandleSize(m_rayPos) * 0.15f;
-                        Vector3 snap = Vector3.one * 0.5f;
                         EditorGUI.BeginChangeCheck();
-                        move = Handles.FreeMoveHandle(m_rayVertexPos, Quaternion.identity, size, snap, Handles.RectangleHandleCap);
+                        move = VertexHandles.FreeMoveHandle(m_rayVertexPos);
                         if (EditorGUI.EndChangeCheck())
                             handled = true;
+                        if (et == EventType.MouseDown && VertexHandles.freeMoveHandleControling)
+                            m_freeMoveDragging = true;
                     }
                 }
 
                 if (pickedVertex)
                     e.Use();
                 if (et == EventType.MouseUp)
-                    m_moveDragging = false;
+                {
+                    m_axisMoveDragging = false;
+                    m_freeMoveDragging = false;
+                }
                 if (handled)
                 {
                     var diff = move - m_prevMove;
@@ -615,7 +629,8 @@ namespace UTJ.BlendShapeBuilder
             int ret = 0;
             bool handled = false;
             var editMode = m_settings.editMode;
-            if(!m_settings.softOp) {
+            if (editMode == EditMode.Select || !m_settings.softOp)
+            {
                 var selectMode = m_settings.selectMode;
                 float selectSign = e.control ? -1.0f : 1.0f;
 
