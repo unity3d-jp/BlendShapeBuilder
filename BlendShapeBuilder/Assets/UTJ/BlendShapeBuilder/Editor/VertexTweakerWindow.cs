@@ -203,7 +203,6 @@ namespace UTJ.BlendShapeBuilder
         static readonly string[] strCoodinate = new string[] {
             "World",
             "Local",
-            "Pivot",
         };
         static readonly string[] strMoveMode = new string[] {
             "Free Style",
@@ -367,14 +366,13 @@ namespace UTJ.BlendShapeBuilder
             }
             else if (settings.editMode == EditMode.Move)
             {
+                settings.softOp = GUILayout.Toggle(settings.softOp, "Soft Move", "Button", GUILayout.Width(120));
                 GUILayout.BeginHorizontal();
-                EditorGUILayout.LabelField("Move Mode", GUILayout.Width(EditorGUIUtility.labelWidth));
-                settings.moveMode = (MoveMode)GUILayout.SelectionGrid((int)settings.moveMode, strMoveMode, strMoveMode.Length);
+                EditorGUILayout.LabelField("Manipulator Style", GUILayout.Width(EditorGUIUtility.labelWidth));
+                settings.manipulatorStyle = (ManipulatorStyle)GUILayout.SelectionGrid((int)settings.manipulatorStyle, strMoveMode, strMoveMode.Length);
                 GUILayout.EndHorizontal();
                 EditorGUILayout.Space();
 
-
-                settings.moveAmount = EditorGUILayout.Vector3Field("Move Amount", settings.moveAmount);
                 GUILayout.BeginHorizontal();
                 EditorGUILayout.LabelField("Coordinate", GUILayout.Width(EditorGUIUtility.labelWidth));
                 settings.coordinate = (Coordinate)GUILayout.SelectionGrid((int)settings.coordinate, strCoodinate, strCoodinate.Length);
@@ -386,6 +384,8 @@ namespace UTJ.BlendShapeBuilder
                     settings.pivotRot = Quaternion.Euler(EditorGUILayout.Vector3Field("Pivot Rotation", settings.pivotRot.eulerAngles));
                 }
                 EditorGUILayout.Space();
+
+                settings.moveAmount = EditorGUILayout.Vector3Field("Move Amount", settings.moveAmount);
                 if (GUILayout.Button("Apply Move"))
                 {
                     m_target.ApplyMove(settings.moveAmount, settings.coordinate, true);
@@ -393,16 +393,25 @@ namespace UTJ.BlendShapeBuilder
             }
             else if (settings.editMode == EditMode.Rotate)
             {
-                settings.rotateAmount = EditorGUILayout.Vector3Field("Rotate Amount", settings.rotateAmount);
+                settings.softOp = GUILayout.Toggle(settings.softOp, "Soft Rotate", "Button", GUILayout.Width(120));
+                GUILayout.BeginHorizontal();
+                EditorGUILayout.LabelField("Manipulator Style", GUILayout.Width(EditorGUIUtility.labelWidth));
+                settings.manipulatorStyle = (ManipulatorStyle)GUILayout.SelectionGrid((int)settings.manipulatorStyle, strMoveMode, strMoveMode.Length);
+                GUILayout.EndHorizontal();
+                EditorGUILayout.Space();
+
+
                 GUILayout.BeginHorizontal();
                 EditorGUILayout.LabelField("Coordinate", GUILayout.Width(EditorGUIUtility.labelWidth));
                 settings.coordinate = (Coordinate)GUILayout.SelectionGrid((int)settings.coordinate, strCoodinate, strCoodinate.Length);
                 GUILayout.EndHorizontal();
-
                 EditorGUILayout.Space();
+
                 settings.pivotPos = EditorGUILayout.Vector3Field("Pivot Position", settings.pivotPos);
                 settings.pivotRot = Quaternion.Euler(EditorGUILayout.Vector3Field("Pivot Rotation", settings.pivotRot.eulerAngles));
                 EditorGUILayout.Space();
+
+                settings.rotateAmount = EditorGUILayout.Vector3Field("Rotate Amount", settings.rotateAmount);
                 if (GUILayout.Button("Apply Rotate"))
                 {
                     m_target.ApplyRotatePivot(
@@ -411,7 +420,7 @@ namespace UTJ.BlendShapeBuilder
             }
             else if (settings.editMode == EditMode.Scale)
             {
-                settings.scaleAmount = EditorGUILayout.Vector3Field("Scale Amount", settings.scaleAmount);
+                settings.softOp = GUILayout.Toggle(settings.softOp, "Soft Scale", "Button", GUILayout.Width(120));
                 GUILayout.BeginHorizontal();
                 EditorGUILayout.LabelField("Coordinate", GUILayout.Width(EditorGUIUtility.labelWidth));
                 settings.coordinate = (Coordinate)GUILayout.SelectionGrid((int)settings.coordinate, strCoodinate, strCoodinate.Length);
@@ -423,6 +432,8 @@ namespace UTJ.BlendShapeBuilder
                     settings.pivotRot = Quaternion.Euler(EditorGUILayout.Vector3Field("Pivot Rotation", settings.pivotRot.eulerAngles));
                 }
                 EditorGUILayout.Space();
+
+                settings.scaleAmount = EditorGUILayout.Vector3Field("Scale Amount", settings.scaleAmount);
                 if (GUILayout.Button("Apply Scale"))
                 {
                     m_target.ApplyScale(settings.scaleAmount, settings.pivotPos, settings.pivotRot, settings.coordinate, true);

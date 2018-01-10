@@ -72,7 +72,7 @@ namespace UTJ.BlendShapeBuilder
         Pivot,
     }
 
-    public enum MoveMode
+    public enum ManipulatorStyle
     {
         FreeStyle,
         Axis,
@@ -242,10 +242,11 @@ namespace UTJ.BlendShapeBuilder
 
         [NonSerialized] public Coordinate coordinate = Coordinate.World;
         [NonSerialized] public Vector3 assignValue = Vector3.up;
-        [NonSerialized] public MoveMode moveMode = MoveMode.FreeStyle;
+        [NonSerialized] public ManipulatorStyle manipulatorStyle = ManipulatorStyle.FreeStyle;
         [NonSerialized] public Vector3 moveAmount;
         [NonSerialized] public Vector3 rotateAmount;
         [NonSerialized] public Vector3 scaleAmount;
+        [NonSerialized] public bool softOp = false;
 
         [NonSerialized] public GameObject projTarget = null;
         [NonSerialized] public npProjectVerticesMode projMode = npProjectVerticesMode.ForwardAndBackward;

@@ -235,8 +235,6 @@ namespace UTJ.BlendShapeBuilder
                 }
             }
 
-            UpdateSelection();
-
             m_meshTarget.UploadMeshData(false);
             if (m_cbPoints != null)
                 m_cbPoints.SetData(m_points);

@@ -20,7 +20,6 @@ namespace UTJ.BlendShapeBuilder
         BlendShapeFrameData m_copySource;
 
         static readonly int indentSize = 16;
-        static readonly string dataPath = "Assets/UTJ/BlendShapeBuilder/Data/BlendShapeBuilderSettings.asset";
         #endregion
 
 

@@ -68,7 +68,6 @@ namespace UTJ.BlendShapeBuilder
         Vector3 m_selectionPos;
         Vector3 m_selectionNormal;
         Quaternion m_selectionRot;
-        bool m_rectDragging;
         Vector2 m_rectStartPoint;
         Vector2 m_rectEndPoint;
         List<Vector2> m_lassoPoints = new List<Vector2>();
@@ -449,9 +448,9 @@ namespace UTJ.BlendShapeBuilder
                         break;
                 }
 
-                if (m_settings.moveMode == MoveMode.Axis)
+                if (m_settings.manipulatorStyle == ManipulatorStyle.Axis)
                 {
-                    if(m_numSelected > 0)
+                    if(m_numSelected > 0 && !m_moveDragging)
                     {
                         if (et == EventType.MouseDown)
                             m_prevMove = m_selectionPos;
@@ -486,7 +485,7 @@ namespace UTJ.BlendShapeBuilder
                     }
                 }
 
-                if (m_settings.moveMode == MoveMode.FreeStyle)
+                if (m_settings.manipulatorStyle == ManipulatorStyle.FreeStyle)
                 {
                     if (m_rayHitVertex != -1 && et == EventType.MouseDown)
                     {
@@ -607,7 +606,7 @@ namespace UTJ.BlendShapeBuilder
         }
 
 
-        bool m_lassoDragging = false;
+        bool m_selDragging = false;
 
         int HandleMouseEvent(Event e, EventType et, int id)
         {
@@ -616,7 +615,7 @@ namespace UTJ.BlendShapeBuilder
             int ret = 0;
             bool handled = false;
             var editMode = m_settings.editMode;
-            {
+            if(!m_settings.softOp) {
                 var selectMode = m_settings.selectMode;
                 float selectSign = e.control ? -1.0f : 1.0f;
 
@@ -636,30 +635,27 @@ namespace UTJ.BlendShapeBuilder
                 {
                     if (et == EventType.MouseDown)
                     {
-                        m_rectDragging = true;
                         m_rectStartPoint = m_rectEndPoint = e.mousePosition;
                         handled = true;
+                        m_selDragging = true;
                     }
-                    else if (et == EventType.MouseDrag)
+                    else if (m_selDragging)
                     {
-                        m_rectEndPoint = e.mousePosition;
-                        handled = true;
-                    }
-                    else if (et == EventType.MouseUp)
-                    {
-                        if (m_rectDragging)
+                        if (et == EventType.MouseDrag)
                         {
-                            m_rectDragging = false;
+                            m_rectEndPoint = e.mousePosition;
+                            handled = true;
+                        }
+                        else if (et == EventType.MouseUp)
+                        {
+                            m_selDragging = false;
                             if (!e.shift && !e.control)
                                 ClearSelection();
 
                             m_rectEndPoint = e.mousePosition;
-                            handled = true;
-
-                            if (!SelectRect(m_rectStartPoint, m_rectEndPoint, selectSign, settings.selectFrontSideOnly) && !m_rayHit)
-                            {
-                            }
+                            SelectRect(m_rectStartPoint, m_rectEndPoint, selectSign, settings.selectFrontSideOnly);
                             m_rectStartPoint = m_rectEndPoint = -Vector2.one;
+                            handled = true;
                         }
                     }
                 }
@@ -671,9 +667,9 @@ namespace UTJ.BlendShapeBuilder
                         {
                             m_lassoPoints.Clear();
                             m_meshLasso.Clear();
-                            m_lassoDragging = true;
+                            m_selDragging = true;
                         }
-                        if (m_lassoDragging)
+                        if (m_selDragging)
                         {
                             m_lassoPoints.Add(ScreenCoord11(e.mousePosition));
                             handled = true;
@@ -700,7 +696,7 @@ namespace UTJ.BlendShapeBuilder
                     }
                     else if (et == EventType.MouseUp)
                     {
-                        m_lassoDragging = false;
+                        m_selDragging = false;
                         if (!e.shift && !e.control)
                             ClearSelection();
 
@@ -715,15 +711,27 @@ namespace UTJ.BlendShapeBuilder
                 }
                 else if (selectMode == SelectMode.Brush)
                 {
-                    if (et == EventType.MouseDown && !e.shift && !e.control)
-                        ClearSelection();
-
-                    if (et == EventType.MouseDown || et == EventType.MouseDrag)
+                    if (et == EventType.MouseDown)
                     {
-                        var bd = m_settings.activeBrush;
-                        if (m_rayHit && SelectBrush(m_rayPos, bd.radius, bd.strength * selectSign, bd.samples))
-                            handled = true;
+                        m_selDragging = true;
+                        if (!e.shift && !e.control)
+                            ClearSelection();
                     }
+                    if (m_selDragging)
+                    {
+                        if (et == EventType.MouseDown || et == EventType.MouseDrag)
+                        {
+                            var bd = m_settings.activeBrush;
+                            if (m_rayHit && SelectBrush(m_rayPos, bd.radius, bd.strength * selectSign, bd.samples))
+                                handled = true;
+                        }
+                        else if (et == EventType.MouseUp)
+                        {
+                            m_selDragging = false;
+                            handled = true;
+                        }
+                    }
+
                 }
 
                 UpdateSelection();
@@ -758,7 +766,8 @@ namespace UTJ.BlendShapeBuilder
                 return;
             }
 
-            bool brushMode = (m_settings.editMode == EditMode.Select && m_settings.selectMode == SelectMode.Brush);
+            bool brushMode = (m_settings.editMode == EditMode.Select && m_settings.selectMode == SelectMode.Brush) ||
+                (m_settings.softOp && (m_settings.editMode == EditMode.Move || m_settings.editMode == EditMode.Rotate || m_settings.editMode == EditMode.Scale));
             var trans = GetComponent<Transform>();
             var matrix = trans.localToWorldMatrix;
             var renderer = GetComponent<Renderer>();
@@ -870,7 +879,7 @@ namespace UTJ.BlendShapeBuilder
 
         void OnRepaint()
         {
-            if (m_settings.selectMode == SelectMode.Rect && m_rectDragging)
+            if (m_settings.selectMode == SelectMode.Rect && m_selDragging)
             {
                 var selectionRect = typeof(EditorStyles).GetProperty("selectionRect", BindingFlags.NonPublic | BindingFlags.Static);
                 if (selectionRect != null)
