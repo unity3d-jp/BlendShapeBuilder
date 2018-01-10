@@ -404,6 +404,7 @@ namespace UTJ.BlendShapeBuilder
         Quaternion m_prevRot;
         Vector3 m_prevScale;
         bool m_toolHanding = false;
+        bool m_moveDragging = false;
 
         public int HandleEditTools()
         {
@@ -424,14 +425,8 @@ namespace UTJ.BlendShapeBuilder
 
             if (et == EventType.MouseMove || et == EventType.MouseDrag)
             {
-                if(PickVertex(e, true, ref m_rayHitVertex, ref m_rayVertexPos))
-                {
-                    m_settings.pivotPos = m_rayVertexPos;
-                }
-                else
-                {
-                    m_rayHitVertex = -1;
-                }
+                if(PickVertex(e, true, ref m_rayHitVertex, ref m_rayVertexPos)) {}
+                else { m_rayHitVertex = -1; }
 
                 bool prevRayHit = m_rayHit;
                 m_rayHit = Raycast(e, ref m_rayPos, ref m_rayHitTriangle);
@@ -468,12 +463,17 @@ namespace UTJ.BlendShapeBuilder
                     }
                 }
 
+                bool pickedVertex = false;
                 if (et == EventType.MouseDown && e.button == 0 && GUIUtility.hotControl == 0)
                 {
                     if (m_rayHitVertex != -1)
                     {
-                        if(m_selection[m_rayHitVertex] > 0.0f) { }
-                        else {
+                        if(m_selection[m_rayHitVertex] > 0.0f)
+                        {
+                            pickedVertex = true;
+                        }
+                        else
+                        {
                             ClearSelection();
                             m_selection[m_rayHitVertex] = 1.0f;
                             UpdateSelection();
@@ -488,11 +488,13 @@ namespace UTJ.BlendShapeBuilder
 
                 if (m_settings.moveMode == MoveMode.FreeStyle)
                 {
-                    if (m_rayHitVertex != -1)
+                    if (m_rayHitVertex != -1 && et == EventType.MouseDown)
                     {
-                        if (et == EventType.MouseDown)
-                            m_prevMove = m_rayVertexPos;
-
+                        m_prevMove = m_rayVertexPos;
+                        m_moveDragging = true;
+                    }
+                    if(m_rayHitVertex != -1 || m_moveDragging)
+                    {
                         var size = HandleUtility.GetHandleSize(m_rayPos) * 0.15f;
                         Vector3 snap = Vector3.one * 0.5f;
                         EditorGUI.BeginChangeCheck();
@@ -502,11 +504,14 @@ namespace UTJ.BlendShapeBuilder
                     }
                 }
 
+                if (pickedVertex)
+                    e.Use();
+                if (et == EventType.MouseUp)
+                    m_moveDragging = false;
                 if (handled)
                 {
                     var diff = move - m_prevMove;
                     m_prevMove = move;
-
                     ApplyMove(diff * 1.0f, Coordinate.World, false); // push undo only when mouse up
                 }
             }
@@ -601,6 +606,9 @@ namespace UTJ.BlendShapeBuilder
             return new Vector3(n.r * 2.0f - 1.0f, n.g * 2.0f - 1.0f, n.b * 2.0f - 1.0f);
         }
 
+
+        bool m_lassoDragging = false;
+
         int HandleMouseEvent(Event e, EventType et, int id)
         {
             if (e.alt) return 0;
@@ -663,32 +671,36 @@ namespace UTJ.BlendShapeBuilder
                         {
                             m_lassoPoints.Clear();
                             m_meshLasso.Clear();
+                            m_lassoDragging = true;
                         }
-
-                        m_lassoPoints.Add(ScreenCoord11(e.mousePosition));
-                        handled = true;
-
-                        m_meshLasso.Clear();
-                        if (m_lassoPoints.Count > 1)
+                        if (m_lassoDragging)
                         {
-                            var vertices = new Vector3[m_lassoPoints.Count];
-                            var indices = new int[(vertices.Length - 1) * 2];
-                            for (int i = 0; i < vertices.Length; ++i)
+                            m_lassoPoints.Add(ScreenCoord11(e.mousePosition));
+                            handled = true;
+
+                            m_meshLasso.Clear();
+                            if (m_lassoPoints.Count > 1)
                             {
-                                vertices[i].x = m_lassoPoints[i].x;
-                                vertices[i].y = m_lassoPoints[i].y;
+                                var vertices = new Vector3[m_lassoPoints.Count];
+                                var indices = new int[(vertices.Length - 1) * 2];
+                                for (int i = 0; i < vertices.Length; ++i)
+                                {
+                                    vertices[i].x = m_lassoPoints[i].x;
+                                    vertices[i].y = m_lassoPoints[i].y;
+                                }
+                                for (int i = 0; i < vertices.Length - 1; ++i)
+                                {
+                                    indices[i * 2 + 0] = i;
+                                    indices[i * 2 + 1] = i + 1;
+                                }
+                                m_meshLasso.vertices = vertices;
+                                m_meshLasso.SetIndices(indices, MeshTopology.Lines, 0);
                             }
-                            for (int i = 0; i < vertices.Length - 1; ++i)
-                            {
-                                indices[i * 2 + 0] = i;
-                                indices[i * 2 + 1] = i + 1;
-                            }
-                            m_meshLasso.vertices = vertices;
-                            m_meshLasso.SetIndices(indices, MeshTopology.Lines, 0);
                         }
                     }
                     else if (et == EventType.MouseUp)
                     {
+                        m_lassoDragging = false;
                         if (!e.shift && !e.control)
                             ClearSelection();
 
