@@ -97,6 +97,7 @@ namespace UTJ.BlendShapeBuilder
         public Mesh mesh { get { return m_meshTarget; } }
         public Vector3 selectionPosition { get { return m_selectionPos; } }
         public Vector3 selectionNormal { get { return m_selectionNormal; } }
+        public bool skinned { get { return m_skinned; } }
 
         public float[] selection
         {
@@ -139,7 +140,7 @@ namespace UTJ.BlendShapeBuilder
 
             if (m_settings == null)
             {
-                var ds = AssetDatabase.LoadAssetAtPath<VertexTweakerSettings>(AssetDatabase.GUIDToAssetPath("f9fa1a75054c38b439daaed96bc5b424"));
+                var ds = AssetDatabase.LoadAssetAtPath<VertexTweakerSettings>(AssetDatabase.GUIDToAssetPath("9b3ba32ae87b3a94e9cf70157c96f58a"));
                 if (ds != null)
                 {
                     m_settings = Instantiate(ds);
@@ -392,7 +393,7 @@ namespace UTJ.BlendShapeBuilder
 
             if ((et == EventType.MouseDown || et == EventType.MouseUp || et == EventType.MouseDrag) && e.button == 0)
             {
-                ret |= HandleMouseEvent(e, et, id);
+                ret |= HandleSelectTools(e, et, id);
             }
 
             if (Event.current.type == EventType.Repaint)
@@ -427,7 +428,7 @@ namespace UTJ.BlendShapeBuilder
             }
 
             Event e = Event.current;
-            if (e.alt) return 0;
+            if (e.alt || m_selDragging) return 0;
 
             var editMode = m_settings.editMode;
             var et = e.type;
@@ -572,7 +573,7 @@ namespace UTJ.BlendShapeBuilder
                         handled = true;
                         var diff = (Quaternion.Inverse(m_prevRot) * rot);
                         m_prevRot = rot;
-                        ApplyRotatePivot(Quaternion.Inverse(diff), handlePos, Quaternion.identity, Coordinate.Pivot, false);
+                        ApplyRotatePivot(Quaternion.Inverse(diff), handlePos, pivotRot, Coordinate.Pivot, false);
                     }
                     if (mouseDown && m_toolState == ToolState.Neutral && VertexHandles.rotationHandleControling)
                     {
@@ -673,14 +674,12 @@ namespace UTJ.BlendShapeBuilder
 
         bool m_selDragging = false;
 
-        int HandleMouseEvent(Event e, EventType et, int id)
+        int HandleSelectTools(Event e, EventType et, int id)
         {
-            if (e.alt) return 0;
+            if (e.alt || m_settings.softOp) return 0;
 
             int ret = 0;
             bool handled = false;
-            var editMode = m_settings.editMode;
-            if (editMode == EditMode.Select || !m_settings.softOp)
             {
                 var selectMode = m_settings.selectMode;
                 float selectSign = e.control ? -1.0f : 1.0f;
@@ -833,7 +832,7 @@ namespace UTJ.BlendShapeBuilder
             }
 
             bool softOp = (m_settings.softOp && (m_settings.editMode == EditMode.Move || m_settings.editMode == EditMode.Rotate || m_settings.editMode == EditMode.Scale));
-            bool brushMode = (m_settings.editMode == EditMode.Select && m_settings.selectMode == SelectMode.Brush) || softOp;
+            bool brushMode = (m_settings.selectMode == SelectMode.Brush) || softOp;
             var brushPos = softOp ? m_rayVertexPos : m_rayPos;
 
             var trans = GetComponent<Transform>();

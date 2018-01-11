@@ -1,0 +1,153 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 322113ad21ec853419f1b961f63c1d62, type: 3}
+  m_Name: DefaultSettings
+  m_EditorClassIdentifier: 
+  normalMode: 0
+  tangentsMode: 0
+  tangentsPrecision: 0
+  editMode: 0
+  selectMode: 2
+  mirrorMode: 0
+  mirrorEpsilon: 0.0001
+  selectFrontSideOnly: 1
+  selectVertex: 1
+  selectTriangle: 0
+  brushData:
+  - maxRadius: 3
+    radius: 0.4
+    strength: 1
+    curve:
+      serializedVersion: 2
+      m_Curve:
+      - serializedVersion: 2
+        time: 0
+        value: 0
+        inSlope: 1
+        outSlope: 1
+        tangentMode: 0
+      - serializedVersion: 2
+        time: 1
+        value: 1
+        inSlope: 1
+        outSlope: 1
+        tangentMode: 0
+      m_PreInfinity: 2
+      m_PostInfinity: 2
+      m_RotationOrder: 4
+  - maxRadius: 3
+    radius: 0.4
+    strength: 1
+    curve:
+      serializedVersion: 2
+      m_Curve:
+      - serializedVersion: 2
+        time: 0
+        value: 0
+        inSlope: 2
+        outSlope: 2
+        tangentMode: 0
+      - serializedVersion: 2
+        time: 1
+        value: 1
+        inSlope: 0
+        outSlope: 0
+        tangentMode: 0
+      m_PreInfinity: 2
+      m_PostInfinity: 2
+      m_RotationOrder: 4
+  - maxRadius: 3
+    radius: 0.4
+    strength: 1
+    curve:
+      serializedVersion: 2
+      m_Curve:
+      - serializedVersion: 2
+        time: 0
+        value: 0
+        inSlope: 0
+        outSlope: 0
+        tangentMode: 0
+      - serializedVersion: 2
+        time: 1
+        value: 1
+        inSlope: 2
+        outSlope: 2
+        tangentMode: 0
+      m_PreInfinity: 2
+      m_PostInfinity: 2
+      m_RotationOrder: 4
+  - maxRadius: 3
+    radius: 0.4
+    strength: 1
+    curve:
+      serializedVersion: 2
+      m_Curve:
+      - serializedVersion: 2
+        time: 0
+        value: 0
+        inSlope: 0
+        outSlope: 0
+        tangentMode: 0
+      - serializedVersion: 2
+        time: 1
+        value: 1
+        inSlope: 0
+        outSlope: 0
+        tangentMode: 0
+      m_PreInfinity: 2
+      m_PostInfinity: 2
+      m_RotationOrder: 4
+  - maxRadius: 3
+    radius: 0.4
+    strength: 1
+    curve:
+      serializedVersion: 2
+      m_Curve:
+      - serializedVersion: 2
+        time: 0
+        value: 0
+        inSlope: 1
+        outSlope: 1
+        tangentMode: 0
+      - serializedVersion: 2
+        time: 0.5291646
+        value: 0.91250294
+        inSlope: 0.27909
+        outSlope: 0.27909
+        tangentMode: 0
+      - serializedVersion: 2
+        time: 1
+        value: 0.32500458
+        inSlope: -0.11999009
+        outSlope: -0.11999009
+        tangentMode: 0
+      m_PreInfinity: 2
+      m_PostInfinity: 2
+      m_RotationOrder: 4
+  showVertices: 1
+  showNormals: 0
+  showTangents: 0
+  showBinormals: 0
+  visualize: 1
+  showSelectedOnly: 0
+  showBrushRange: 1
+  modelOverlay: 0
+  vertexSize: 0.0075
+  normalSize: 0.1
+  tangentSize: 0.075
+  binormalSize: 0.06
+  vertexColor: {r: 0.15, g: 0.15, b: 0.3, a: 0.75}
+  vertexColor2: {r: 1, g: 0, b: 0, a: 0.75}
+  vertexColor3: {r: 0, g: 1, b: 1, a: 1}
+  normalColor: {r: 1, g: 0.92156863, b: 0.015686275, a: 1}
+  tangentColor: {r: 0, g: 1, b: 1, a: 1}
+  binormalColor: {r: 0, g: 1, b: 0, a: 1}

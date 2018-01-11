@@ -8,11 +8,10 @@ namespace UTJ.BlendShapeBuilder
 #if UNITY_EDITOR
     public enum EditMode
     {
-        Select,
-        Assign,
         Move,
         Rotate,
         Scale,
+        Assign,
         Projection,
         Reset,
     }
@@ -224,9 +223,10 @@ namespace UTJ.BlendShapeBuilder
         [NonSerialized] public Vector3 pivotPos;
         [NonSerialized] public Quaternion pivotRot = Quaternion.identity;
 
+        [NonSerialized] public bool foldSelect = true;
         [NonSerialized] public bool foldEdit = true;
         [NonSerialized] public bool foldMisc = true;
-        [NonSerialized] public bool foldInExport = false;
+        [NonSerialized] public bool foldExport = false;
         [NonSerialized] public bool foldDisplay = true;
         [NonSerialized] public int displayIndex;
         [NonSerialized] public int inexportIndex;

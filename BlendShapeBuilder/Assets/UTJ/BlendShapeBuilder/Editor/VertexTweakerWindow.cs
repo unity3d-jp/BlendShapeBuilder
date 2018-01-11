@@ -192,19 +192,17 @@ namespace UTJ.BlendShapeBuilder
         static readonly int c1Width = 100;
 
         static readonly string[] strCommands = new string[] {
-            "Selection [F1]",
-            "Assign [F2]",
-            "Move [F3]",
-            "Rotate [F4]",
-            "Scale [F5]",
-            "Projection [F6]",
-            "Reset [F7]",
+            "Move [F1]",
+            "Rotate [F2]",
+            "Scale [F3]",
+            "Assign [F4]",
+            "Projection [F5]",
+            "Reset [F6]",
         };
         static readonly string[] strSelectMode = new string[] {
             "Single [1]",
             "Rect [2]",
             "Lasso [3]",
-            "Brush [4]",
         };
         static readonly string[] strCoodinate = new string[] {
             "World",
@@ -254,7 +252,6 @@ namespace UTJ.BlendShapeBuilder
                 {
                     switch (settings.editMode)
                     {
-                        case EditMode.Select:
                         case EditMode.Assign:
                         case EditMode.Move:
                         case EditMode.Rotate:
@@ -273,85 +270,7 @@ namespace UTJ.BlendShapeBuilder
 
             EditorGUILayout.BeginVertical();
 
-            if (settings.editMode == EditMode.Select)
-            {
-                settings.selectMode = (SelectMode)GUILayout.SelectionGrid((int)settings.selectMode, strSelectMode, 4);
-                EditorGUILayout.Space();
-                if (settings.selectMode == SelectMode.Brush)
-                {
-                    DrawBrushPanel();
-                }
-                else
-                {
-                    if (settings.selectMode == SelectMode.Single)
-                    {
-                        GUILayout.BeginHorizontal();
-                        settings.selectVertex = GUILayout.Toggle(settings.selectVertex, "Vertex", "Button");
-                        settings.selectTriangle = GUILayout.Toggle(settings.selectTriangle, "Triangle", "Button");
-                        GUILayout.EndHorizontal();
-                    }
-                    settings.selectFrontSideOnly = EditorGUILayout.Toggle("Front Side Only", settings.selectFrontSideOnly);
-                }
-
-                EditorGUILayout.Space();
-
-                GUILayout.BeginHorizontal();
-                if (GUILayout.Button("Edge [E]", GUILayout.Width(100)))
-                {
-                    m_target.SelectEdge(m_ctrl ? -1.0f : 1.0f, !m_shift && !m_ctrl);
-                    m_target.UpdateSelection();
-                }
-                if (GUILayout.Button("Hole [H]", GUILayout.Width(100)))
-                {
-                    m_target.SelectHole(m_ctrl ? -1.0f : 1.0f, !m_shift && !m_ctrl);
-                    m_target.UpdateSelection();
-                }
-                if (GUILayout.Button("Connected [C]", GUILayout.Width(100)))
-                {
-                    m_target.SelectConnected(m_ctrl ? -1.0f : 1.0f, !m_shift && !m_ctrl);
-                    m_target.UpdateSelection();
-                }
-                GUILayout.EndHorizontal();
-
-                GUILayout.BeginHorizontal();
-                if (GUILayout.Button("All [A]", GUILayout.Width(100)))
-                {
-                    m_target.SelectAll();
-                    m_target.UpdateSelection();
-                }
-                if (GUILayout.Button("Clear [D]", GUILayout.Width(100)))
-                {
-                    m_target.ClearSelection();
-                    m_target.UpdateSelection();
-                }
-                if (GUILayout.Button("Invert [I]", GUILayout.Width(100)))
-                {
-                    m_target.InvertSelection();
-                    m_target.UpdateSelection();
-                }
-                GUILayout.EndHorizontal();
-
-                EditorGUILayout.Space();
-
-                GUILayout.BeginHorizontal();
-                EditorGUILayout.LabelField("Save", GUILayout.Width(50));
-                for (int i = 0; i < 5; ++i)
-                {
-                    if (GUILayout.Button((i + 1).ToString()))
-                        settings.selectionSets[i].selection = m_target.selection;
-                }
-                GUILayout.EndHorizontal();
-
-                GUILayout.BeginHorizontal();
-                EditorGUILayout.LabelField("Load", GUILayout.Width(50));
-                for (int i = 0; i < 5; ++i)
-                {
-                    if (GUILayout.Button((i + 1).ToString()))
-                        m_target.selection = settings.selectionSets[i].selection;
-                }
-                GUILayout.EndHorizontal();
-            }
-            else if (settings.editMode == EditMode.Assign)
+            if (settings.editMode == EditMode.Assign)
             {
                 settings.assignValue = EditorGUILayout.Vector3Field("Value", settings.assignValue);
                 GUILayout.BeginHorizontal();
@@ -482,6 +401,106 @@ namespace UTJ.BlendShapeBuilder
             EditorGUILayout.EndHorizontal();
         }
 
+        void DrawSelectPanel()
+        {
+            EditorGUILayout.BeginHorizontal();
+            EditorGUILayout.BeginVertical(GUILayout.Width(indentSize));
+            EditorGUILayout.Space();
+            EditorGUILayout.EndVertical();
+
+            EditorGUILayout.BeginVertical(GUILayout.Width(c1Width));
+            EditorGUILayout.LabelField("", GUILayout.Width(c1Width));
+            EditorGUILayout.EndVertical();
+
+            EditorGUILayout.BeginVertical(GUILayout.Width(spaceSize));
+            EditorGUILayout.Space();
+            EditorGUILayout.EndVertical();
+
+            EditorGUILayout.BeginVertical();
+
+            var settings = m_target.settings;
+            settings.selectMode = (SelectMode)GUILayout.SelectionGrid((int)settings.selectMode, strSelectMode, 4);
+            EditorGUILayout.Space();
+            if (settings.selectMode == SelectMode.Brush)
+            {
+                DrawBrushPanel();
+            }
+            else
+            {
+                if (settings.selectMode == SelectMode.Single)
+                {
+                    GUILayout.BeginHorizontal();
+                    settings.selectVertex = GUILayout.Toggle(settings.selectVertex, "Vertex", "Button");
+                    settings.selectTriangle = GUILayout.Toggle(settings.selectTriangle, "Triangle", "Button");
+                    GUILayout.EndHorizontal();
+                }
+                settings.selectFrontSideOnly = EditorGUILayout.Toggle("Front Side Only", settings.selectFrontSideOnly);
+            }
+
+            EditorGUILayout.Space();
+
+            GUILayout.BeginHorizontal();
+            if (GUILayout.Button("Edge [E]", GUILayout.Width(100)))
+            {
+                m_target.SelectEdge(m_ctrl ? -1.0f : 1.0f, !m_shift && !m_ctrl);
+                m_target.UpdateSelection();
+            }
+            if (GUILayout.Button("Hole [H]", GUILayout.Width(100)))
+            {
+                m_target.SelectHole(m_ctrl ? -1.0f : 1.0f, !m_shift && !m_ctrl);
+                m_target.UpdateSelection();
+            }
+            if (GUILayout.Button("Connected [C]", GUILayout.Width(100)))
+            {
+                m_target.SelectConnected(m_ctrl ? -1.0f : 1.0f, !m_shift && !m_ctrl);
+                m_target.UpdateSelection();
+            }
+            GUILayout.EndHorizontal();
+
+            GUILayout.BeginHorizontal();
+            if (GUILayout.Button("All [A]", GUILayout.Width(100)))
+            {
+                m_target.SelectAll();
+                m_target.UpdateSelection();
+            }
+            if (GUILayout.Button("Clear [D]", GUILayout.Width(100)))
+            {
+                m_target.ClearSelection();
+                m_target.UpdateSelection();
+            }
+            if (GUILayout.Button("Invert [I]", GUILayout.Width(100)))
+            {
+                m_target.InvertSelection();
+                m_target.UpdateSelection();
+            }
+            GUILayout.EndHorizontal();
+
+            /*
+            EditorGUILayout.Space();
+
+            GUILayout.BeginHorizontal();
+            EditorGUILayout.LabelField("Save", GUILayout.Width(50));
+            for (int i = 0; i < 5; ++i)
+            {
+                if (GUILayout.Button((i + 1).ToString()))
+                    settings.selectionSets[i].selection = m_target.selection;
+            }
+            GUILayout.EndHorizontal();
+
+            GUILayout.BeginHorizontal();
+            EditorGUILayout.LabelField("Load", GUILayout.Width(50));
+            for (int i = 0; i < 5; ++i)
+            {
+                if (GUILayout.Button((i + 1).ToString()))
+                    m_target.selection = settings.selectionSets[i].selection;
+            }
+            GUILayout.EndHorizontal();
+            */
+
+            EditorGUILayout.EndVertical();
+            EditorGUILayout.EndHorizontal();
+        }
+
         void DrawMiscPanel()
         {
             var settings = m_target.settings;
@@ -548,7 +567,7 @@ namespace UTJ.BlendShapeBuilder
                     EditorGUI.indentLevel--;
                 }
 
-                if (m_target.GetComponent<SkinnedMeshRenderer>() != null)
+                if (m_target.skinned)
                 {
                     EditorGUILayout.Space();
                     if (GUILayout.Button("Reset To Bindpose"))
@@ -558,7 +577,7 @@ namespace UTJ.BlendShapeBuilder
 
             EditorGUILayout.Space();
             if (GUILayout.Button("Save Settings"))
-                m_target.ExportSettings("Assets/UTJ/VertexTweaker/Data/DefaultSettings.asset");
+                m_target.ExportSettings("Assets/UTJ/BlendShapeBuilder/Data/DefaultSettings.asset");
 
             EditorGUILayout.EndVertical();
             EditorGUILayout.EndHorizontal();
@@ -727,14 +746,18 @@ namespace UTJ.BlendShapeBuilder
             if (settings.foldEdit)
                 DrawEditPanel();
 
+            settings.foldSelect = EditorGUILayout.Foldout(settings.foldSelect, "Select");
+            if (settings.foldSelect)
+                DrawSelectPanel();
+
             settings.foldMisc = EditorGUILayout.Foldout(settings.foldMisc, "Misc");
             if (settings.foldMisc)
                 DrawMiscPanel();
 
             EditorGUILayout.Space();
 
-            settings.foldInExport = EditorGUILayout.Foldout(settings.foldInExport, "Export");
-            if (settings.foldInExport)
+            settings.foldExport = EditorGUILayout.Foldout(settings.foldExport, "Export");
+            if (settings.foldExport)
                 DrawInExportPanel();
 
             EditorGUILayout.Space();
@@ -762,18 +785,16 @@ namespace UTJ.BlendShapeBuilder
                 var prevEditMode = settings.editMode;
                 switch (e.keyCode)
                 {
-                    case KeyCode.F1: settings.editMode = EditMode.Select; break;
-                    case KeyCode.F2: settings.editMode = EditMode.Assign; break;
-                    case KeyCode.F3: settings.editMode = EditMode.Move; break;
-                    case KeyCode.F4: settings.editMode = EditMode.Rotate; break;
-                    case KeyCode.F5: settings.editMode = EditMode.Scale; break;
-                    case KeyCode.F6: settings.editMode = EditMode.Projection; break;
-                    case KeyCode.F7: settings.editMode = EditMode.Reset; break;
+                    case KeyCode.F1: settings.editMode = EditMode.Move; break;
+                    case KeyCode.F2: settings.editMode = EditMode.Rotate; break;
+                    case KeyCode.F3: settings.editMode = EditMode.Scale; break;
+                    case KeyCode.F4: settings.editMode = EditMode.Assign; break;
+                    case KeyCode.F5: settings.editMode = EditMode.Projection; break;
+                    case KeyCode.F6: settings.editMode = EditMode.Reset; break;
                 }
                 if (settings.editMode != prevEditMode)
                     handled = true;
 
-                if (settings.editMode == EditMode.Select)
                 {
                     var prevSelectMode = settings.selectMode;
                     switch (e.keyCode)
@@ -876,7 +897,7 @@ namespace UTJ.BlendShapeBuilder
                 float amount = e.delta.x - e.delta.y;
 
                 if (((settings.editMode == EditMode.Move || settings.editMode == EditMode.Rotate || settings.editMode == EditMode.Scale) && settings.softOp) ||
-                    (settings.editMode == EditMode.Select && settings.selectMode == SelectMode.Brush))
+                    (settings.selectMode == SelectMode.Brush))
                 {
                     var bd = settings.activeBrush;
                     if (e.shift)
