@@ -391,7 +391,7 @@ namespace UTJ.BlendShapeBuilder
             int id = GUIUtility.GetControlID(FocusType.Passive);
             et = e.GetTypeForControl(id);
 
-            if ((et == EventType.MouseDown || et == EventType.MouseUp || et == EventType.MouseDrag) && e.button == 0)
+            if ((et == EventType.MouseDown || et == EventType.MouseUp || et == EventType.MouseMove || et == EventType.MouseDrag) && e.button == 0)
             {
                 ret |= HandleSelectTools(e, et, id);
             }
@@ -435,6 +435,7 @@ namespace UTJ.BlendShapeBuilder
             var et = e.type;
             bool mouseDown = et == EventType.MouseDown;
             bool mouseUp = et == EventType.MouseUp;
+            bool mouseDrag = et == EventType.MouseDrag;
 
             int ret = 0;
             bool handled = false;
@@ -487,7 +488,6 @@ namespace UTJ.BlendShapeBuilder
                 }
 
                 // pick vertex
-                bool pickedVertex = false;
                 if (mouseDown && e.button == 0 && m_toolState == ToolState.Neutral)
                 {
                     if (m_settings.softOp)
@@ -504,11 +504,7 @@ namespace UTJ.BlendShapeBuilder
                     {
                         if (m_rayHitVertex != -1)
                         {
-                            if (m_selection[m_rayHitVertex] > 0.0f)
-                            {
-                                pickedVertex = true;
-                            }
-                            else
+                            if (m_selection[m_rayHitVertex] == 0.0f)
                             {
                                 ClearSelection();
                                 m_selection[m_rayHitVertex] = 1.0f;
@@ -550,8 +546,6 @@ namespace UTJ.BlendShapeBuilder
                 }
                 if (mouseUp)
                     m_toolState = ToolState.Neutral;
-                if (pickedVertex)
-                    e.Use();
             }
             else if (editMode == EditMode.Rotate)
             {
@@ -703,6 +697,11 @@ namespace UTJ.BlendShapeBuilder
                     m_toolState = ToolState.Neutral;
             }
 
+            if(m_toolState!=ToolState.Neutral && (mouseDown || mouseUp || mouseDrag))
+            {
+                e.Use();
+            }
+
             if (handled)
             {
                 m_toolHanding = true;
@@ -715,7 +714,7 @@ namespace UTJ.BlendShapeBuilder
                 PushUndo();
             }
 
-            //Debug.Log("" + m_toolState + ", " + et + ", " + moved + ", " + GUIUtility.hotControl);
+            //Debug.Log("" + m_toolState + ", " + et + ", " + handled + ", " + GUIUtility.hotControl);
             return ret;
         }
 
@@ -817,7 +816,7 @@ namespace UTJ.BlendShapeBuilder
                             }
                         }
                     }
-                    else if (et == EventType.MouseUp)
+                    else if (et == EventType.MouseUp || (et == EventType.MouseMove && m_selDragging))
                     {
                         m_selDragging = false;
                         if (!e.shift && !e.control)
@@ -866,7 +865,7 @@ namespace UTJ.BlendShapeBuilder
             }
             else if (et == EventType.MouseUp)
             {
-                if (GUIUtility.hotControl == id && e.button == 0)
+                if (GUIUtility.hotControl == id)
                     GUIUtility.hotControl = 0;
             }
             e.Use();

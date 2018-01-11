@@ -481,6 +481,10 @@ namespace UTJ.BlendShapeBuilder
 
         public bool SelectTriangle(Event e, float strength)
         {
+            var mousePos = e.mousePosition;
+            if (Camera.current == null || !Camera.current.pixelRect.Contains(mousePos))
+                return false;
+
             Ray ray = HandleUtility.GUIPointToWorldRay(e.mousePosition);
             return SelectTriangle(ray, strength);
         }
