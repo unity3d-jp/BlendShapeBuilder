@@ -51,33 +51,42 @@ namespace UTJ.BlendShapeBuilder
             var size = HandleUtility.GetHandleSize(pos) * (rectSize * 0.01f);
             Vector3 snap = Vector3.one * 0.5f;
 
-            int cidF = GUIUtility.GetControlID(s_FreeMoveVertexHandle2Hash, FocusType.Passive);
+            int cid = GUIUtility.GetControlID(s_FreeMoveVertexHandle2Hash, FocusType.Passive);
             var e = Event.current;
             if ((e.type == EventType.MouseDown || e.type == EventType.MouseDrag) && e.button == 0)
-                GUIUtility.hotControl = cidF;
-            pos = Handles.FreeMoveHandle(cidF, pos, Quaternion.identity, size, snap, Handles.RectangleHandleCap);
-            freeMoveHandleControling = GUIUtility.hotControl == cidF;
+                GUIUtility.hotControl = cid;
+            pos = Handles.FreeMoveHandle(cid, pos, Quaternion.identity, size, snap, Handles.RectangleHandleCap);
+            freeMoveHandleControling = GUIUtility.hotControl == cid;
             return pos;
         }
 
 
         public static bool rotationHandleControling;
+        public static bool rotationHandleNear;
         public static Quaternion RotationHandle(Quaternion rot, Vector3 pos)
         {
             var hc = GUIUtility.hotControl;
+            var nc = HandleUtility.nearestControl;
+
             rot = Handles.RotationHandle(rot, pos);
+
             rotationHandleControling = GUIUtility.hotControl != hc;
+            rotationHandleNear = HandleUtility.nearestControl != nc;
             return rot;
         }
 
 
         public static bool scaleHandleControling;
+        public static bool scaleHandleNear;
         public static Vector3 ScaleHandle(Vector3 scale, Vector3 pos, Quaternion rot)
         {
             var hc = GUIUtility.hotControl;
+            var nc = HandleUtility.nearestControl;
             var size = HandleUtility.GetHandleSize(pos);
+
             scale = Handles.ScaleHandle(scale, pos, rot, size);
             scaleHandleControling = GUIUtility.hotControl != hc;
+            scaleHandleNear = HandleUtility.nearestControl != nc;
             return scale;
         }
     }

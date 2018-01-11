@@ -439,20 +439,21 @@ namespace UTJ.BlendShapeBuilder
             bool handled = false;
             var t = GetComponent<Transform>();
 
-            if ( (m_toolState == ToolState.Neutral && (et == EventType.MouseMove || et == EventType.MouseDrag)) ||
-                (m_toolState == ToolState.FreeMoveDragging && !m_settings.softOp))
-            {
-                if (PickVertex(e, pickRectSize, true, ref m_rayHitVertex, ref m_rayVertexPos)) { }
-                else { m_rayHitVertex = -1; }
-
-                bool prevRayHit = m_rayHit;
-                m_rayHit = Raycast(e, ref m_rayPos, ref m_rayHitTriangle);
-                if (m_rayHit || prevRayHit)
-                    ret |= (int)SceneGUIState.Repaint;
-            }
 
             if (editMode == EditMode.Move)
             {
+                if ((m_toolState == ToolState.Neutral && (et == EventType.MouseMove || et == EventType.MouseDrag)) ||
+                    (m_toolState == ToolState.FreeMoveDragging && !m_settings.softOp))
+                {
+                    if (PickVertex(e, pickRectSize, true, ref m_rayHitVertex, ref m_rayVertexPos)) { }
+                    else { m_rayHitVertex = -1; }
+
+                    bool prevRayHit = m_rayHit;
+                    m_rayHit = Raycast(e, ref m_rayPos, ref m_rayHitTriangle);
+                    if (m_rayHit || prevRayHit)
+                        ret |= (int)SceneGUIState.Repaint;
+                }
+
                 var move = Vector3.zero;
 
                 // 3 axis handles
@@ -551,6 +552,18 @@ namespace UTJ.BlendShapeBuilder
             }
             else if (editMode == EditMode.Rotate)
             {
+                if (m_toolState == ToolState.Neutral && m_settings.softOp && (et == EventType.MouseMove || et == EventType.MouseDrag) &&
+                    (!VertexHandles.rotationHandleNear))
+                {
+                    if (PickVertex(e, pickRectSize, true, ref m_rayHitVertex, ref m_rayVertexPos)) { }
+                    else { m_rayHitVertex = -1; }
+
+                    bool prevRayHit = m_rayHit;
+                    m_rayHit = Raycast(e, ref m_rayPos, ref m_rayHitTriangle);
+                    if (m_rayHit || prevRayHit)
+                        ret |= (int)SceneGUIState.Repaint;
+                }
+
                 if (m_numSelected > 0 || m_settings.softOp)
                 {
                     var pivotRot = Quaternion.identity;
@@ -565,6 +578,14 @@ namespace UTJ.BlendShapeBuilder
                     }
 
                     var handlePos = m_settings.softOp ? m_rayVertexPos : m_settings.pivotPos;
+                    if (m_settings.softOp)
+                    {
+                        handlePos = m_numSelected == 0 ? m_rayVertexPos : m_settings.pivotPos;
+                    }
+                    else
+                    {
+                        handlePos = m_settings.pivotPos;
+                    }
 
                     EditorGUI.BeginChangeCheck();
                     var rot = VertexHandles.RotationHandle(pivotRot, handlePos);
@@ -589,11 +610,30 @@ namespace UTJ.BlendShapeBuilder
                     }
                 }
                 if (mouseUp)
+                {
                     m_toolState = ToolState.Neutral;
+                    if (m_settings.softOp)
+                    {
+                        ClearSelection();
+                        UpdateSelection();
+                    }
+                }
             }
             else if (editMode == EditMode.Scale)
             {
-                if(m_numSelected > 0 || m_settings.softOp)
+                if (m_toolState == ToolState.Neutral && m_settings.softOp && (et == EventType.MouseMove || et == EventType.MouseDrag) &&
+                    (!VertexHandles.scaleHandleNear))
+                {
+                    if (PickVertex(e, pickRectSize, true, ref m_rayHitVertex, ref m_rayVertexPos)) { }
+                    else { m_rayHitVertex = -1; }
+
+                    bool prevRayHit = m_rayHit;
+                    m_rayHit = Raycast(e, ref m_rayPos, ref m_rayHitTriangle);
+                    if (m_rayHit || prevRayHit)
+                        ret |= (int)SceneGUIState.Repaint;
+                }
+
+                if (m_numSelected > 0 || m_settings.softOp)
                 {
                     var pivotRot = Quaternion.identity;
                     switch (m_settings.coordinate)
@@ -676,10 +716,11 @@ namespace UTJ.BlendShapeBuilder
 
         int HandleSelectTools(Event e, EventType et, int id)
         {
-            if (e.alt || m_settings.softOp) return 0;
+            if (e.alt) return 0;
 
             int ret = 0;
             bool handled = false;
+            if (!m_settings.softOp)
             {
                 var selectMode = m_settings.selectMode;
                 float selectSign = e.control ? -1.0f : 1.0f;
