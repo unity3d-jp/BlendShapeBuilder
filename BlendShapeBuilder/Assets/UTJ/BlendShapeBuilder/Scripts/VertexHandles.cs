@@ -64,10 +64,8 @@ namespace UTJ.BlendShapeBuilder
         public static bool rotationHandleControling;
         public static Quaternion RotationHandle(Quaternion rot, Vector3 pos)
         {
-            var size = HandleUtility.GetHandleSize(pos);
             var hc = GUIUtility.hotControl;
             rot = Handles.RotationHandle(rot, pos);
-            //rot = Handles.FreeRotateHandle(rot, pos, size);
             rotationHandleControling = GUIUtility.hotControl != hc;
             return rot;
         }

@@ -228,7 +228,7 @@ namespace UTJ.BlendShapeBuilder
             var bd = settings.activeBrush;
             bd.maxRadius = EditorGUILayout.FloatField("Max Radius", bd.maxRadius);
             bd.radius = EditorGUILayout.Slider("Radius [Shift+Drag]", bd.radius, 0.0f, bd.maxRadius);
-            bd.strength = EditorGUILayout.Slider("Strength [Ctrl+Drag]", bd.strength, -1.0f, 1.0f);
+            bd.strength = EditorGUILayout.Slider("Strength [Ctrl+Drag]", bd.strength, 0.0f, 1.0f);
             EditorGUI.BeginChangeCheck();
             bd.curve = EditorGUILayout.CurveField("Brush Shape", bd.curve, GUILayout.Width(EditorGUIUtility.labelWidth + 32), GUILayout.Height(32));
             if (EditorGUI.EndChangeCheck())
@@ -369,6 +369,10 @@ namespace UTJ.BlendShapeBuilder
             else if (settings.editMode == EditMode.Move)
             {
                 settings.softOp = GUILayout.Toggle(settings.softOp, "Soft Move", "Button", GUILayout.Width(120));
+                if (settings.softOp)
+                {
+                    DrawBrushPanel();
+                }
                 EditorGUILayout.Space();
 
                 GUILayout.BeginHorizontal();
@@ -392,8 +396,11 @@ namespace UTJ.BlendShapeBuilder
             else if (settings.editMode == EditMode.Rotate)
             {
                 settings.softOp = GUILayout.Toggle(settings.softOp, "Soft Rotate", "Button", GUILayout.Width(120));
+                if (settings.softOp)
+                {
+                    DrawBrushPanel();
+                }
                 EditorGUILayout.Space();
-
 
                 GUILayout.BeginHorizontal();
                 EditorGUILayout.LabelField("Coordinate", GUILayout.Width(EditorGUIUtility.labelWidth));
@@ -414,6 +421,12 @@ namespace UTJ.BlendShapeBuilder
             else if (settings.editMode == EditMode.Scale)
             {
                 settings.softOp = GUILayout.Toggle(settings.softOp, "Soft Scale", "Button", GUILayout.Width(120));
+                if (settings.softOp)
+                {
+                    DrawBrushPanel();
+                }
+                EditorGUILayout.Space();
+
                 GUILayout.BeginHorizontal();
                 EditorGUILayout.LabelField("Coordinate", GUILayout.Width(EditorGUIUtility.labelWidth));
                 settings.coordinate = (Coordinate)GUILayout.SelectionGrid((int)settings.coordinate, strCoodinate, strCoodinate.Length);
@@ -862,7 +875,8 @@ namespace UTJ.BlendShapeBuilder
             {
                 float amount = e.delta.x - e.delta.y;
 
-                if ((settings.editMode == EditMode.Select && settings.selectMode == SelectMode.Brush))
+                if (((settings.editMode == EditMode.Move || settings.editMode == EditMode.Rotate || settings.editMode == EditMode.Scale) && settings.softOp) ||
+                    (settings.editMode == EditMode.Select && settings.selectMode == SelectMode.Brush))
                 {
                     var bd = settings.activeBrush;
                     if (e.shift)
@@ -872,7 +886,7 @@ namespace UTJ.BlendShapeBuilder
                     }
                     else if (e.control)
                     {
-                        bd.strength = Mathf.Clamp(bd.strength + amount * 0.0025f, -1.0f, 1.0f);
+                        bd.strength = Mathf.Clamp(bd.strength + amount * 0.0025f, 0.0f, 1.0f);
                         handled = true;
                     }
                 }

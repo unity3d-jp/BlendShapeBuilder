@@ -433,14 +433,13 @@ namespace UTJ.BlendShapeBuilder
             var et = e.type;
             bool mouseDown = et == EventType.MouseDown;
             bool mouseUp = et == EventType.MouseUp;
-            bool mouseDrag = et == EventType.MouseDrag;
-            bool isMouseEvent = et == EventType.MouseDown || et == EventType.MouseUp || et == EventType.MouseDrag;
 
             int ret = 0;
             bool handled = false;
             var t = GetComponent<Transform>();
 
-            if (m_toolState == ToolState.Neutral && (et == EventType.MouseMove || et == EventType.MouseDrag))
+            if ( (m_toolState == ToolState.Neutral && (et == EventType.MouseMove || et == EventType.MouseDrag)) ||
+                (m_toolState == ToolState.FreeMoveDragging && !m_settings.softOp))
             {
                 if (PickVertex(e, pickRectSize, true, ref m_rayHitVertex, ref m_rayVertexPos)) { }
                 else { m_rayHitVertex = -1; }
@@ -522,14 +521,16 @@ namespace UTJ.BlendShapeBuilder
                 {
                     if ((m_rayHitVertex != -1 || m_settings.softOp) || m_toolState == ToolState.FreeMoveDragging)
                     {
+                        Vector3 handlePos = m_rayVertexPos;
+
                         EditorGUI.BeginChangeCheck();
-                        move = VertexHandles.FreeMoveHandle(m_rayVertexPos, pickRectSize);
+                        move = VertexHandles.FreeMoveHandle(handlePos, pickRectSize);
                         if (EditorGUI.EndChangeCheck())
                             handled = true;
                         if (mouseDown && m_toolState == ToolState.Neutral && VertexHandles.freeMoveHandleControling)
                         {
                             m_toolState = ToolState.FreeMoveDragging;
-                            m_prevMove = m_rayVertexPos;
+                            m_prevMove = handlePos;
                         }
                     }
                 }
@@ -571,9 +572,9 @@ namespace UTJ.BlendShapeBuilder
                         handled = true;
                         var diff = (Quaternion.Inverse(m_prevRot) * rot);
                         m_prevRot = rot;
-                        ApplyRotatePivot(Quaternion.Inverse(rot), handlePos, Quaternion.identity, Coordinate.Pivot, false);
+                        ApplyRotatePivot(Quaternion.Inverse(diff), handlePos, Quaternion.identity, Coordinate.Pivot, false);
                     }
-                    if (VertexHandles.rotationHandleControling && m_toolState == ToolState.Neutral)
+                    if (mouseDown && m_toolState == ToolState.Neutral && VertexHandles.rotationHandleControling)
                     {
                         m_toolState = ToolState.RotationDragging;
                         m_prevRot = pivotRot;
