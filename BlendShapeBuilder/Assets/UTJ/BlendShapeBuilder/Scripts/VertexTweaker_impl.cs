@@ -353,7 +353,11 @@ namespace UTJ.BlendShapeBuilder
 
         public bool Raycast(Event e, ref Vector3 pos, ref int ti)
         {
-            Ray ray = HandleUtility.GUIPointToWorldRay(e.mousePosition);
+            var mousePos = e.mousePosition;
+            if (Camera.current == null || !Camera.current.pixelRect.Contains(mousePos))
+                return false;
+
+            Ray ray = HandleUtility.GUIPointToWorldRay(mousePos);
             float d = 0.0f;
             if (Raycast(ray, ref ti, ref d))
             {
