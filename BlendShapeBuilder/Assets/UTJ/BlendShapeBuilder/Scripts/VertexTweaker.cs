@@ -380,15 +380,17 @@ namespace UTJ.BlendShapeBuilder
             if (!isActiveAndEnabled || m_points == null)
                 return 0;
 
-            int ret = 0;
-            ret |= HandleEditTools();
-
             Event e = Event.current;
             var et = e.type;
+            int ret = 0;
+            if (et == EventType.MouseDown || et == EventType.MouseUp || et == EventType.MouseMove || et == EventType.MouseDrag ||
+                et == EventType.Layout || et == EventType.Repaint)
+                ret |= HandleEditTools();
+
             int id = GUIUtility.GetControlID(FocusType.Passive);
             et = e.GetTypeForControl(id);
 
-            if ((et == EventType.MouseDown || et == EventType.MouseDrag || et == EventType.MouseUp) && e.button == 0)
+            if ((et == EventType.MouseDown || et == EventType.MouseUp || et == EventType.MouseDrag) && e.button == 0)
             {
                 ret |= HandleMouseEvent(e, et, id);
             }
@@ -429,6 +431,11 @@ namespace UTJ.BlendShapeBuilder
 
             var editMode = m_settings.editMode;
             var et = e.type;
+            bool mouseDown = et == EventType.MouseDown;
+            bool mouseUp = et == EventType.MouseUp;
+            bool mouseDrag = et == EventType.MouseDrag;
+            bool isMouseEvent = et == EventType.MouseDown || et == EventType.MouseUp || et == EventType.MouseDrag;
+
             int ret = 0;
             bool handled = false;
             var t = GetComponent<Transform>();
@@ -462,20 +469,20 @@ namespace UTJ.BlendShapeBuilder
                             break;
                     }
 
-                    if (et == EventType.MouseDown)
-                        m_prevMove = m_selectionPos;
-
                     EditorGUI.BeginChangeCheck();
                     move = VertexHandles.PositionHandle(m_selectionPos, pivotRot);
                     if (EditorGUI.EndChangeCheck())
                         handled = true;
-                    if (VertexHandles.positionHandleControling)
+                    if (mouseDown && m_toolState == ToolState.Neutral && VertexHandles.positionHandleControling)
+                    {
                         m_toolState = ToolState.AxisMoveDragging;
+                        m_prevMove = m_selectionPos;
+                    }
                 }
 
                 // pick vertex
                 bool pickedVertex = false;
-                if (et == EventType.MouseDown && e.button == 0 && m_toolState == ToolState.Neutral)
+                if (mouseDown && e.button == 0 && m_toolState == ToolState.Neutral)
                 {
                     if (m_settings.softOp)
                     {
@@ -513,30 +520,32 @@ namespace UTJ.BlendShapeBuilder
                 // free move handle
                 if(m_toolState == ToolState.Neutral || m_toolState == ToolState.FreeMoveDragging)
                 {
-                    if((m_rayHitVertex != -1 || m_settings.softOp) || m_toolState == ToolState.FreeMoveDragging)
+                    if ((m_rayHitVertex != -1 || m_settings.softOp) || m_toolState == ToolState.FreeMoveDragging)
                     {
-                        if (m_rayHitVertex != -1 && et == EventType.MouseDown)
-                            m_prevMove = m_rayVertexPos;
-
                         EditorGUI.BeginChangeCheck();
                         move = VertexHandles.FreeMoveHandle(m_rayVertexPos, pickRectSize);
                         if (EditorGUI.EndChangeCheck())
                             handled = true;
-                        if (VertexHandles.freeMoveHandleControling)
+                        if (mouseDown && m_toolState == ToolState.Neutral && VertexHandles.freeMoveHandleControling)
+                        {
                             m_toolState = ToolState.FreeMoveDragging;
+                            m_prevMove = m_rayVertexPos;
+                        }
                     }
                 }
 
-                if (pickedVertex)
-                    e.Use();
-                if (et == EventType.MouseUp)
-                    m_toolState = ToolState.Neutral;
                 if (handled)
                 {
                     var diff = move - m_prevMove;
                     m_prevMove = move;
-                    ApplyMove(diff * 1.0f, Coordinate.World, false); // push undo only when mouse up
+                    ApplyMove(diff * 1.0f, Coordinate.World, false);
                 }
+                if (mouseUp)
+                    m_toolState = ToolState.Neutral;
+                if (pickedVertex)
+                    e.Use();
+
+                //Debug.Log("" + m_toolState + ", " + et + ", " + handled + ", " + move);
             }
             else if (editMode == EditMode.Rotate)
             {
@@ -577,7 +586,7 @@ namespace UTJ.BlendShapeBuilder
                         }
                     }
                 }
-                if (et == EventType.MouseUp)
+                if (mouseUp)
                     m_toolState = ToolState.Neutral;
             }
             else if (editMode == EditMode.Scale)
@@ -619,7 +628,7 @@ namespace UTJ.BlendShapeBuilder
                         }
                     }
                 }
-                if (et == EventType.MouseUp)
+                if (mouseUp)
                     m_toolState = ToolState.Neutral;
             }
             else if (editMode == EditMode.Projection)
@@ -627,11 +636,11 @@ namespace UTJ.BlendShapeBuilder
                 if(m_settings.projRayDir == ProjectionRayDirection.Radial)
                 {
                     EditorGUI.BeginChangeCheck();
-                    var move = Handles.PositionHandle(m_settings.projRadialCenter, t.rotation);
+                    var center = Handles.PositionHandle(m_settings.projRadialCenter, t.rotation);
                     if (EditorGUI.EndChangeCheck())
                     {
                         handled = true;
-                        m_settings.projRadialCenter = move;
+                        m_settings.projRadialCenter = center;
                     }
                 }
             }
@@ -983,6 +992,8 @@ namespace UTJ.BlendShapeBuilder
 
         public void OnUndoRedo()
         {
+            if (m_points == null)
+                return;
             if (m_historyIndex != m_history.index)
             {
                 m_historyIndex = m_history.index;

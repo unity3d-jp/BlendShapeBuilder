@@ -235,6 +235,12 @@ namespace UTJ.BlendShapeBuilder
                 }
             }
             m_meshTarget.UploadMeshData(false);
+            var smr = GetComponent<SkinnedMeshRenderer>();
+            if (smr != null)
+            { // force recalculate
+                smr.enabled = false;
+                smr.enabled = true;
+            }
             if (m_cbPoints != null)
                 m_cbPoints.SetData(m_points);
             UpdateSelectionPos();

@@ -52,6 +52,9 @@ namespace UTJ.BlendShapeBuilder
             Vector3 snap = Vector3.one * 0.5f;
 
             int cidF = GUIUtility.GetControlID(s_FreeMoveVertexHandle2Hash, FocusType.Passive);
+            var e = Event.current;
+            if ((e.type == EventType.MouseDown || e.type == EventType.MouseDrag) && e.button == 0)
+                GUIUtility.hotControl = cidF;
             pos = Handles.FreeMoveHandle(cidF, pos, Quaternion.identity, size, snap, Handles.RectangleHandleCap);
             freeMoveHandleControling = GUIUtility.hotControl == cidF;
             return pos;
