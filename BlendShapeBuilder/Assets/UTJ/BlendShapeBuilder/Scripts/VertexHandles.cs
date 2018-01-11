@@ -15,8 +15,9 @@ namespace UTJ.BlendShapeBuilder
         static int s_FreeMoveVertexHandleHash = "FreeMoveVertexHandleHash".GetHashCode();
         #endregion
 
-        public static bool positionHandleControling;
-        public static Vector3 PositionHandle(Vector3 pos, Quaternion rot)
+        public static bool axisMoveHandleControling;
+        public static bool axisMoveHandleNear;
+        public static Vector3 AxisMoveHandle(Vector3 pos, Quaternion rot)
         {
             var size = HandleUtility.GetHandleSize(pos);
             var snap = 0.0f;
@@ -35,8 +36,10 @@ namespace UTJ.BlendShapeBuilder
             Handles.color = Handles.zAxisColor;
             pos = Handles.Slider(cidZ, pos, rot * Vector3.forward, size, Handles.ArrowHandleCap, snap);
 
-            var cid = GUIUtility.hotControl;
-            positionHandleControling = cid == cidF || cid == cidX || cid == cidY || cid == cidZ;
+            var hc = GUIUtility.hotControl;
+            axisMoveHandleControling = hc == cidF || hc == cidX || hc == cidY || hc == cidZ;
+            var nc = HandleUtility.nearestControl;
+            axisMoveHandleNear = nc == cidF || nc == cidX || nc == cidY || nc == cidZ;
             return pos;
         }
 
@@ -46,15 +49,16 @@ namespace UTJ.BlendShapeBuilder
         #endregion
 
         public static bool freeMoveHandleControling;
-        public static Vector3 FreeMoveHandle(Vector3 pos, float rectSize)
+        public static Vector3 FreeMoveHandle(Vector3 pos, float rectSize, bool forceCapture)
         {
             var size = HandleUtility.GetHandleSize(pos) * (rectSize * 0.01f);
             Vector3 snap = Vector3.one * 0.5f;
 
             int cid = GUIUtility.GetControlID(s_FreeMoveVertexHandle2Hash, FocusType.Passive);
             var e = Event.current;
-            if ((e.type == EventType.MouseDown || e.type == EventType.MouseDrag) && e.button == 0)
-                GUIUtility.hotControl = cid;
+            if (forceCapture && GUIUtility.hotControl != cid &&
+                ((e.type == EventType.MouseDown || e.type == EventType.MouseDrag) && e.button == 0))
+                GUIUtility.hotControl = 0;
             pos = Handles.FreeMoveHandle(cid, pos, Quaternion.identity, size, snap, Handles.RectangleHandleCap);
             freeMoveHandleControling = GUIUtility.hotControl == cid;
             return pos;
