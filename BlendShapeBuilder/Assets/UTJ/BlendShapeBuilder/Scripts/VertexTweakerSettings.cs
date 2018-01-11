@@ -76,6 +76,7 @@ namespace UTJ.BlendShapeBuilder
         CurrentNormals,
         BaseNomals,
         Radial,
+        Directional,
     }
 
     public enum SceneGUIState
@@ -246,6 +247,7 @@ namespace UTJ.BlendShapeBuilder
         [NonSerialized] public ProjectionRayDirection projRayDir = ProjectionRayDirection.CurrentNormals;
         [NonSerialized] public float projMaxRayDistance = 10.0f;
         [NonSerialized] public Vector3 projRadialCenter;
+        [NonSerialized] public Vector3 projDirection = Vector3.down;
 
         [NonSerialized] public bool objFlipHandedness = true;
         [NonSerialized] public bool objFlipFaces = false;

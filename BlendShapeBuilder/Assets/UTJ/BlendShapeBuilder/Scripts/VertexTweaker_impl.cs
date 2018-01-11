@@ -101,22 +101,27 @@ namespace UTJ.BlendShapeBuilder
         public void ApplyProjection(bool pushUndo)
         {
             var target = m_settings.projTarget;
+            if (target == null)
+            {
+                Debug.LogWarning("Projection target is not set.");
+                return;
+            }
             var targetData = new MeshData();
-            if (target == null || !targetData.Extract(target)) { return; }
+            if (!targetData.Extract(target))
+            {
+                Debug.LogWarning("Projection target has no mesh.");
+                return;
+            }
 
             var targetNP = (npMeshData)targetData;
             if(m_settings.projRayDir == ProjectionRayDirection.CurrentNormals)
-            {
                 npProjectVertices(ref m_npModelData, ref targetNP, m_normals, m_settings.projMode, m_settings.projMaxRayDistance);
-            }
-            else if(m_settings.projRayDir == ProjectionRayDirection.BaseNomals)
-            {
+            else if (m_settings.projRayDir == ProjectionRayDirection.BaseNomals)
                 npProjectVertices(ref m_npModelData, ref targetNP, m_normalsBase, m_settings.projMode, m_settings.projMaxRayDistance);
-            }
             else if (m_settings.projRayDir == ProjectionRayDirection.Radial)
-            {
                 npProjectVerticesRadial(ref m_npModelData, ref targetNP, m_settings.projRadialCenter, m_settings.projMode, m_settings.projMaxRayDistance);
-            }
+            else if (m_settings.projRayDir == ProjectionRayDirection.Directional)
+                npProjectVerticesDirectional(ref m_npModelData, ref targetNP, m_settings.projDirection.normalized, m_settings.projMode, m_settings.projMaxRayDistance);
 
             UpdateVertices(false, true);
             if (pushUndo) PushUndo();
@@ -712,9 +717,11 @@ namespace UTJ.BlendShapeBuilder
             ref npMeshData model, IntPtr relation, Vector3 plane_normal);
 
         [DllImport("BlendShapeBuilderCore")] static extern void npProjectVertices(
-            ref npMeshData model, ref npMeshData target, IntPtr ray_dir, npProjectVerticesMode mode, float max_distance);
+            ref npMeshData model, ref npMeshData target, IntPtr ray_dirs, npProjectVerticesMode mode, float max_distance);
         [DllImport("BlendShapeBuilderCore")] static extern void npProjectVerticesRadial(
             ref npMeshData model, ref npMeshData target, Vector3 center, npProjectVerticesMode mode, float max_distance);
+        [DllImport("BlendShapeBuilderCore")] static extern void npProjectVerticesDirectional(
+            ref npMeshData model, ref npMeshData target, Vector3 ray_dir, npProjectVerticesMode mode, float max_distance);
 
         [DllImport("BlendShapeBuilderCore")] static extern void npApplySkinning(
             ref npSkinData skin,

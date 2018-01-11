@@ -376,6 +376,12 @@ namespace UTJ.BlendShapeBuilder
                     settings.projRadialCenter = EditorGUILayout.Vector3Field("Center", settings.projRadialCenter);
                     EditorGUI.indentLevel--;
                 }
+                else if (settings.projRayDir == ProjectionRayDirection.Directional)
+                {
+                    EditorGUI.indentLevel++;
+                    settings.projDirection = EditorGUILayout.Vector3Field("Direction", settings.projDirection).normalized;
+                    EditorGUI.indentLevel--;
+                }
                 settings.projMaxRayDistance = EditorGUILayout.FloatField("Max Ray Distance", settings.projMaxRayDistance);
                 EditorGUILayout.Space();
 
@@ -419,7 +425,7 @@ namespace UTJ.BlendShapeBuilder
             EditorGUILayout.BeginVertical();
 
             var settings = m_target.settings;
-            settings.selectMode = (SelectMode)GUILayout.SelectionGrid((int)settings.selectMode, strSelectMode, 4);
+            settings.selectMode = (SelectMode)GUILayout.SelectionGrid((int)settings.selectMode, strSelectMode, 3);
             EditorGUILayout.Space();
             if (settings.selectMode == SelectMode.Brush)
             {
@@ -475,7 +481,6 @@ namespace UTJ.BlendShapeBuilder
             }
             GUILayout.EndHorizontal();
 
-            /*
             EditorGUILayout.Space();
 
             GUILayout.BeginHorizontal();
@@ -486,7 +491,6 @@ namespace UTJ.BlendShapeBuilder
                     settings.selectionSets[i].selection = m_target.selection;
             }
             GUILayout.EndHorizontal();
-
             GUILayout.BeginHorizontal();
             EditorGUILayout.LabelField("Load", GUILayout.Width(50));
             for (int i = 0; i < 5; ++i)
@@ -495,7 +499,6 @@ namespace UTJ.BlendShapeBuilder
                     m_target.selection = settings.selectionSets[i].selection;
             }
             GUILayout.EndHorizontal();
-            */
 
             EditorGUILayout.EndVertical();
             EditorGUILayout.EndHorizontal();
@@ -590,7 +593,7 @@ namespace UTJ.BlendShapeBuilder
             "Export .obj",
         };
 
-        void DrawInExportPanel()
+        void DrawExportPanel()
         {
             var settings = m_target.settings;
 
@@ -742,29 +745,35 @@ namespace UTJ.BlendShapeBuilder
 
             EditorGUILayout.Space();
 
+            EditorGUILayout.BeginVertical("Box");
             settings.foldEdit = EditorGUILayout.Foldout(settings.foldEdit, "Edit");
             if (settings.foldEdit)
                 DrawEditPanel();
+            EditorGUILayout.EndVertical();
 
+            EditorGUILayout.BeginVertical("Box");
             settings.foldSelect = EditorGUILayout.Foldout(settings.foldSelect, "Select");
             if (settings.foldSelect)
                 DrawSelectPanel();
+            EditorGUILayout.EndVertical();
 
+            EditorGUILayout.BeginVertical("Box");
             settings.foldMisc = EditorGUILayout.Foldout(settings.foldMisc, "Misc");
             if (settings.foldMisc)
                 DrawMiscPanel();
-
-            EditorGUILayout.Space();
-
+            EditorGUILayout.EndVertical();
+            
+            EditorGUILayout.BeginVertical("Box");
             settings.foldExport = EditorGUILayout.Foldout(settings.foldExport, "Export");
             if (settings.foldExport)
-                DrawInExportPanel();
+                DrawExportPanel();
+            EditorGUILayout.EndVertical();
 
-            EditorGUILayout.Space();
-
+            EditorGUILayout.BeginVertical("Box");
             settings.foldDisplay = EditorGUILayout.Foldout(settings.foldDisplay, "Display");
             if (settings.foldDisplay)
                 DrawDisplayPanel();
+            EditorGUILayout.EndVertical();
 
             if (EditorGUI.EndChangeCheck())
                 RepaintAllViews();

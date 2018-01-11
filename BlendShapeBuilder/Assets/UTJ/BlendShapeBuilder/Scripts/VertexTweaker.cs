@@ -414,6 +414,7 @@ namespace UTJ.BlendShapeBuilder
             FreeMove,
             Rotation,
             Scale,
+            Projection,
         }
         ToolState m_toolState = ToolState.Neutral;
 
@@ -436,8 +437,18 @@ namespace UTJ.BlendShapeBuilder
             bool mouseUp = et == EventType.MouseUp;
 
             int ret = 0;
-            bool moved = false;
+            bool handled = false;
             var t = GetComponent<Transform>();
+
+            Action pickVertex = () => {
+                if (PickVertex(e, pickRectSize, true, ref m_rayHitVertex, ref m_rayVertexPos)) { }
+                else { m_rayHitVertex = -1; }
+
+                bool prevRayHit = m_rayHit;
+                m_rayHit = Raycast(e, ref m_rayPos, ref m_rayHitTriangle);
+                if (m_rayHit || prevRayHit)
+                    ret |= (int)SceneGUIState.Repaint;
+            };
 
 
             if (editMode == EditMode.Move)
@@ -445,13 +456,7 @@ namespace UTJ.BlendShapeBuilder
                 if ((m_toolState == ToolState.Neutral && (et == EventType.MouseMove || et == EventType.MouseDrag)) ||
                     (m_toolState == ToolState.FreeMove && !m_settings.softOp))
                 {
-                    if (PickVertex(e, pickRectSize, true, ref m_rayHitVertex, ref m_rayVertexPos)) { }
-                    else { m_rayHitVertex = -1; }
-
-                    bool prevRayHit = m_rayHit;
-                    m_rayHit = Raycast(e, ref m_rayPos, ref m_rayHitTriangle);
-                    if (m_rayHit || prevRayHit)
-                        ret |= (int)SceneGUIState.Repaint;
+                    pickVertex();
                 }
 
                 var move = Vector3.zero;
@@ -473,7 +478,7 @@ namespace UTJ.BlendShapeBuilder
                     EditorGUI.BeginChangeCheck();
                     move = VertexHandles.AxisMoveHandle(m_selectionPos, pivotRot);
                     if (EditorGUI.EndChangeCheck())
-                        moved = true;
+                        handled = true;
                     if (mouseDown && m_toolState == ToolState.Neutral && VertexHandles.axisMoveHandleControling)
                     {
                         m_toolState = ToolState.AxisMove;
@@ -528,7 +533,7 @@ namespace UTJ.BlendShapeBuilder
                         EditorGUI.BeginChangeCheck();
                         move = VertexHandles.FreeMoveHandle(handlePos, pickRectSize, m_toolState == ToolState.FreeMove);
                         if (EditorGUI.EndChangeCheck())
-                            moved = true;
+                            handled = true;
                         if (mouseDown && m_toolState == ToolState.Neutral && VertexHandles.freeMoveHandleControling)
                         {
                             m_toolState = ToolState.FreeMove;
@@ -537,7 +542,7 @@ namespace UTJ.BlendShapeBuilder
                     }
                 }
 
-                if (moved)
+                if (handled)
                 {
                     var diff = move - m_prevMove;
                     m_prevMove = move;
@@ -553,13 +558,7 @@ namespace UTJ.BlendShapeBuilder
                 if (m_toolState == ToolState.Neutral && m_settings.softOp && (et == EventType.MouseMove || et == EventType.MouseDrag) &&
                     (!VertexHandles.rotationHandleNear))
                 {
-                    if (PickVertex(e, pickRectSize, true, ref m_rayHitVertex, ref m_rayVertexPos)) { }
-                    else { m_rayHitVertex = -1; }
-
-                    bool prevRayHit = m_rayHit;
-                    m_rayHit = Raycast(e, ref m_rayPos, ref m_rayHitTriangle);
-                    if (m_rayHit || prevRayHit)
-                        ret |= (int)SceneGUIState.Repaint;
+                    pickVertex();
                 }
 
                 if (m_numSelected > 0 || m_settings.softOp)
@@ -589,7 +588,7 @@ namespace UTJ.BlendShapeBuilder
                     var rot = VertexHandles.RotationHandle(pivotRot, handlePos);
                     if (EditorGUI.EndChangeCheck())
                     {
-                        moved = true;
+                        handled = true;
                         var diff = (Quaternion.Inverse(m_prevRot) * rot);
                         m_prevRot = rot;
                         ApplyRotatePivot(Quaternion.Inverse(diff), handlePos, pivotRot, Coordinate.Pivot, false);
@@ -622,13 +621,7 @@ namespace UTJ.BlendShapeBuilder
                 if (m_toolState == ToolState.Neutral && m_settings.softOp && (et == EventType.MouseMove || et == EventType.MouseDrag) &&
                     (!VertexHandles.scaleHandleNear))
                 {
-                    if (PickVertex(e, pickRectSize, true, ref m_rayHitVertex, ref m_rayVertexPos)) { }
-                    else { m_rayHitVertex = -1; }
-
-                    bool prevRayHit = m_rayHit;
-                    m_rayHit = Raycast(e, ref m_rayPos, ref m_rayHitTriangle);
-                    if (m_rayHit || prevRayHit)
-                        ret |= (int)SceneGUIState.Repaint;
+                    pickVertex();
                 }
 
                 if (m_numSelected > 0 || m_settings.softOp)
@@ -650,7 +643,7 @@ namespace UTJ.BlendShapeBuilder
                     var scale = VertexHandles.ScaleHandle(Vector3.one, handlePos, pivotRot);
                     if (EditorGUI.EndChangeCheck())
                     {
-                        moved = true;
+                        handled = true;
                         var diff = scale - m_prevScale;
                         m_prevScale = scale;
                         ApplyScale(Vector3.one + diff, handlePos, pivotRot, Coordinate.Pivot, false);
@@ -673,19 +666,44 @@ namespace UTJ.BlendShapeBuilder
             }
             else if (editMode == EditMode.Projection)
             {
-                if(m_settings.projRayDir == ProjectionRayDirection.Radial)
+                if (m_toolState == ToolState.Neutral && (et == EventType.MouseMove || et == EventType.MouseDrag) &&
+                    (!VertexHandles.rotationHandleNear))
+                {
+                    pickVertex();
+                }
+
+                if (m_settings.projRayDir == ProjectionRayDirection.Radial)
                 {
                     EditorGUI.BeginChangeCheck();
                     var center = Handles.PositionHandle(m_settings.projRadialCenter, t.rotation);
                     if (EditorGUI.EndChangeCheck())
                     {
-                        moved = true;
+                        handled = true;
                         m_settings.projRadialCenter = center;
                     }
                 }
+                if (m_settings.projRayDir == ProjectionRayDirection.Directional)
+                {
+                    EditorGUI.BeginChangeCheck();
+                    var rot = VertexHandles.RotationHandle(Quaternion.identity, m_rayVertexPos);
+                    if (EditorGUI.EndChangeCheck())
+                    {
+                        var diff = (Quaternion.Inverse(m_prevRot) * rot);
+                        m_prevRot = rot;
+                        m_settings.projDirection = (diff * m_settings.projDirection).normalized;
+                        handled = true;
+                    }
+                    if (mouseDown && m_toolState == ToolState.Neutral && VertexHandles.rotationHandleControling)
+                    {
+                        m_toolState = ToolState.Projection;
+                        m_prevRot = Quaternion.identity;
+                    }
+                }
+                if (mouseUp)
+                    m_toolState = ToolState.Neutral;
             }
 
-            if (moved)
+            if (handled)
             {
                 m_toolHanding = true;
                 ret |= (int)SceneGUIState.Repaint;
@@ -975,6 +993,16 @@ namespace UTJ.BlendShapeBuilder
                 // ray pos
                 if (brushMode)
                     m_cmdDraw.DrawMesh(m_meshCube, Matrix4x4.identity, m_matVisualize, 0, (int)VisualizeType.RayPosition);
+            }
+            if(m_settings.editMode == EditMode.Projection)
+            {
+                if (m_settings.projRayDir == ProjectionRayDirection.Directional)
+                {
+                    m_matVisualize.SetVector("_BrushPos", m_rayVertexPos);
+                    m_matVisualize.SetVector("_Direction", m_settings.projDirection);
+                    m_cmdDraw.DrawMesh(m_meshCube, Matrix4x4.identity, m_matVisualize, 0, (int)VisualizeType.RayPosition);
+                    m_cmdDraw.DrawMesh(m_meshLine, Matrix4x4.identity, m_matVisualize, 0, (int)VisualizeType.Direction);
+                }
             }
 
             // lasso lines

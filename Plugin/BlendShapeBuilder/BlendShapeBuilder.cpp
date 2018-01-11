@@ -1388,6 +1388,17 @@ npAPI void npProjectVerticesRadial(
     npProjectVerticesImpl(model, target, ray_dirs, mode, max_distance);
 }
 
+npAPI void npProjectVerticesDirectional(
+    npMeshData *model, npMeshData *target, const float3 ray_dir, npProjectVerticesMode mode, float max_distance)
+{
+    struct RayDir
+    {
+        float3 ray_dir;
+        const float3& operator[](int) const { return ray_dir; }
+    } ray_dirs = { ray_dir };
+    npProjectVerticesImpl(model, target, ray_dirs, mode, max_distance);
+}
+
 template<int NumInfluence>
 static void SkinningImpl(
     int num_vertices, const RawVector<float4x4>& poses, const Weights<NumInfluence> weights[],
