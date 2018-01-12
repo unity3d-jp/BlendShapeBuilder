@@ -11,8 +11,8 @@
     </ProjectConfiguration>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="BlendShapeBuilder\BlendShapeBuilder.cpp" />
-    <ClCompile Include="BlendShapeBuilder\pch.cpp">
+    <ClCompile Include="VertexTweaker\VertexTweaker.cpp" />
+    <ClCompile Include="VertexTweaker\pch.cpp">
       <PrecompiledHeader>Create</PrecompiledHeader>
     </ClCompile>
   </ItemGroup>
@@ -28,8 +28,8 @@
     <Natvis Include="NatvisFile.natvis" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="BlendShapeBuilder\BlendShapeBuilder.h" />
-    <ClInclude Include="BlendShapeBuilder\pch.h" />
+    <ClInclude Include="VertexTweaker\VertexTweaker.h" />
+    <ClInclude Include="VertexTweaker\pch.h" />
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <ProjectGuid>{98EB8D3A-2692-4854-A236-00E5D97BBB0E}</ProjectGuid>
@@ -57,7 +57,7 @@
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <PostBuildEvent>
-      <Command>xcopy /YQ $(TargetPath) $(SolutionDir)..\BlendShapeBuilder\Assets\UTJ\BlendShapeBuilder\Plugins\x86_64\</Command>
+      <Command>xcopy /YQ $(TargetPath) $(SolutionDir)..\BlendShapeBuilder\Assets\UTJ\VertexTweaker\Plugins\x86_64\</Command>
     </PostBuildEvent>
     <ClCompile>
       <PrecompiledHeader>Use</PrecompiledHeader>
@@ -75,7 +75,7 @@
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Master|x64'">
     <PostBuildEvent>
-      <Command>xcopy /YQ $(TargetPath) $(SolutionDir)..\BlendShapeBuilder\Assets\UTJ\BlendShapeBuilder\Plugins\x86_64\</Command>
+      <Command>xcopy /YQ $(TargetPath) $(SolutionDir)..\BlendShapeBuilder\Assets\UTJ\VertexTweaker\Plugins\x86_64\</Command>
     </PostBuildEvent>
     <ClCompile>
       <PrecompiledHeader>Use</PrecompiledHeader>

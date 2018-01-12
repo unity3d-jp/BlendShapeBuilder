@@ -8,7 +8,7 @@ using UnityEditor;
 #endif
 
 
-namespace UTJ.BlendShapeBuilder
+namespace UTJ.VertexTweaker
 {
     [ExecuteInEditMode]
     public partial class VertexTweaker : MonoBehaviour

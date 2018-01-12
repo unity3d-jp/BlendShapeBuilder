@@ -2,7 +2,7 @@ using UnityEngine;
 using UnityEditor;
 using System.Collections;
 
-namespace UTJ.BlendShapeBuilder
+namespace UTJ.VertexTweaker
 {
     [CustomEditor(typeof(VertexTweaker))]
     public class VertexTweakerEditor : Editor

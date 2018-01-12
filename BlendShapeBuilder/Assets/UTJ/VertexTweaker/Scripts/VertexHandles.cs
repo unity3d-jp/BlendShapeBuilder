@@ -4,7 +4,7 @@ using System;
 using System.Collections.Generic;
 using System.Runtime.InteropServices;
 
-namespace UTJ.BlendShapeBuilder
+namespace UTJ.VertexTweaker
 {
     public static class VertexHandles
     {

@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEditor;
 
-namespace UTJ.BlendShapeBuilder
+namespace UTJ.VertexTweaker
 {
 #if UNITY_EDITOR
     public enum EditMode

@@ -8,7 +8,7 @@ using UnityEditor;
 #endif
 
 
-namespace UTJ.BlendShapeBuilder
+namespace UTJ.VertexTweaker
 {
     public class VertexTweakerWindow : EditorWindow
     {
