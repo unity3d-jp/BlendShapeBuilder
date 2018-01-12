@@ -175,8 +175,8 @@ namespace UTJ.VertexTweaker
             public float[] selection;
         }
 
-        public NormalsUpdateMode normalMode = NormalsUpdateMode.Manual;
-        public TangentsUpdateMode tangentsMode = TangentsUpdateMode.Manual;
+        public NormalsUpdateMode normalMode = NormalsUpdateMode.Realtime;
+        public TangentsUpdateMode tangentsMode = TangentsUpdateMode.Auto;
         public TangentsPrecision tangentsPrecision = TangentsPrecision.Fast;
 
         // edit options

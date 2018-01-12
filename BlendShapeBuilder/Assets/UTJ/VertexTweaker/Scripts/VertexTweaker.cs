@@ -377,29 +377,19 @@ namespace UTJ.VertexTweaker
         }
 
 
-
         public int OnSceneGUI()
         {
             if (!isActiveAndEnabled || m_points == null)
                 return 0;
 
-            Event e = Event.current;
-            var et = e.type;
+            var et = Event.current.rawType;
             int ret = 0;
-            if (et == EventType.MouseDown || et == EventType.MouseUp || et == EventType.MouseMove || et == EventType.MouseDrag ||
-                et == EventType.Layout || et == EventType.Repaint)
-                ret |= HandleEditTools();
-
-            int id = GUIUtility.GetControlID(FocusType.Passive);
-            et = e.GetTypeForControl(id);
-
-            if ((et == EventType.MouseDown || et == EventType.MouseUp || et == EventType.MouseMove || et == EventType.MouseDrag) && e.button == 0)
-            {
-                ret |= HandleSelectTools(e, et, id);
-            }
-
+            ret |= HandleEditTools();
+            ret |= HandleSelectTools();
             if (Event.current.type == EventType.Repaint)
                 OnRepaint();
+
+            //Debug.Log("" + m_toolState + ", " + et + "(" + Event.current.type + "), " + GUIUtility.hotControl);
             return ret;
         }
 
@@ -417,27 +407,30 @@ namespace UTJ.VertexTweaker
             Rotation,
             Scale,
             Projection,
+            Selection,
         }
         ToolState m_toolState = ToolState.Neutral;
 
-        public int HandleEditTools()
+        int HandleEditTools()
         {
-            float pickRectSize = 15.0f;
+            Event e = Event.current;
+            var et = e.type;
+            if (!e.isMouse && et != EventType.Layout && et != EventType.Repaint)
+                return 0;
+            if (e.isMouse && (e.shift || e.control || e.alt || m_toolState == ToolState.Selection))
+                return 0;
 
             // check if model has been changed
             if (m_meshTarget != GetTargetMesh())
-            {
                 BeginEdit();
-            }
 
-            Event e = Event.current;
-            if (e.shift || e.control || e.alt || m_selDragging) return 0;
+            float pickRectSize = 15.0f;
 
             var editMode = m_settings.editMode;
-            var et = e.type;
             bool mouseDown = et == EventType.MouseDown;
             bool mouseUp = et == EventType.MouseUp;
             bool mouseDrag = et == EventType.MouseDrag;
+            bool mouseMove = et == EventType.MouseMove;
 
             int ret = 0;
             bool handled = false;
@@ -456,7 +449,7 @@ namespace UTJ.VertexTweaker
 
             if (editMode == EditMode.Move)
             {
-                if ((m_toolState == ToolState.Neutral && (et == EventType.MouseMove || et == EventType.MouseDrag)) ||
+                if ((m_toolState == ToolState.Neutral && (mouseMove || mouseDrag)) ||
                     (m_toolState == ToolState.FreeMove && !m_settings.softOp))
                 {
                     pickVertex();
@@ -482,12 +475,14 @@ namespace UTJ.VertexTweaker
                     move = VertexHandles.AxisMoveHandle(m_selectionPos, pivotRot);
                     if (EditorGUI.EndChangeCheck())
                         handled = true;
-                    if (mouseDown && m_toolState == ToolState.Neutral && VertexHandles.axisMoveHandleControling)
+                    if (VertexHandles.axisMoveHandleGainedControl)
                     {
                         m_toolState = ToolState.AxisMove;
                         m_prevMove = m_selectionPos;
                     }
                 }
+                if (VertexHandles.axisMoveHandleLostControl)
+                    m_toolState = ToolState.Neutral;
 
                 // pick vertex
                 if (mouseDown && e.button == 0 && m_toolState == ToolState.Neutral)
@@ -532,13 +527,15 @@ namespace UTJ.VertexTweaker
                         move = VertexHandles.FreeMoveHandle(handlePos, pickRectSize, m_toolState == ToolState.FreeMove);
                         if (EditorGUI.EndChangeCheck())
                             handled = true;
-                        if (mouseDown && m_toolState == ToolState.Neutral && VertexHandles.freeMoveHandleControling)
+                        if (VertexHandles.freeMoveHandleGainedControl)
                         {
                             m_toolState = ToolState.FreeMove;
                             m_prevMove = handlePos;
                         }
                     }
                 }
+                if (VertexHandles.freeMoveHandleLostControl)
+                    m_toolState = ToolState.Neutral;
 
                 if (handled)
                 {
@@ -546,12 +543,10 @@ namespace UTJ.VertexTweaker
                     m_prevMove = move;
                     ApplyMove(diff * 1.0f, Coordinate.World, false);
                 }
-                if (mouseUp)
-                    m_toolState = ToolState.Neutral;
             }
             else if (editMode == EditMode.Rotate)
             {
-                if (m_toolState == ToolState.Neutral && m_settings.softOp && (et == EventType.MouseMove || et == EventType.MouseDrag) &&
+                if (m_toolState == ToolState.Neutral && m_settings.softOp && (mouseMove || mouseDrag) &&
                     (!VertexHandles.rotationHandleNear))
                 {
                     pickVertex();
@@ -589,7 +584,7 @@ namespace UTJ.VertexTweaker
                         m_prevRot = rot;
                         ApplyRotatePivot(Quaternion.Inverse(diff), handlePos, pivotRot, Coordinate.Pivot, false);
                     }
-                    if (mouseDown && m_toolState == ToolState.Neutral && VertexHandles.rotationHandleControling)
+                    if (VertexHandles.rotationHandleGainedControl)
                     {
                         m_toolState = ToolState.Rotation;
                         m_prevRot = pivotRot;
@@ -602,19 +597,14 @@ namespace UTJ.VertexTweaker
                         }
                     }
                 }
-                if (mouseUp)
+                if (VertexHandles.rotationHandleLostControl)
                 {
                     m_toolState = ToolState.Neutral;
-                    if (m_settings.softOp)
-                    {
-                        ClearSelection();
-                        UpdateSelection();
-                    }
                 }
             }
             else if (editMode == EditMode.Scale)
             {
-                if (m_toolState == ToolState.Neutral && m_settings.softOp && (et == EventType.MouseMove || et == EventType.MouseDrag) &&
+                if (m_toolState == ToolState.Neutral && m_settings.softOp && (mouseMove || mouseDrag) &&
                     (!VertexHandles.scaleHandleNear))
                 {
                     pickVertex();
@@ -644,7 +634,7 @@ namespace UTJ.VertexTweaker
                         m_prevScale = scale;
                         ApplyScale(Vector3.one + diff, handlePos, pivotRot, Coordinate.Pivot, false);
                     }
-                    if (VertexHandles.scaleHandleControling && m_toolState == ToolState.Neutral)
+                    if (VertexHandles.scaleHandleGainedControl)
                     {
                         m_toolState = ToolState.Scale;
                         m_prevScale = Vector3.one;
@@ -657,12 +647,14 @@ namespace UTJ.VertexTweaker
                         }
                     }
                 }
-                if (mouseUp)
+                if (VertexHandles.scaleHandleLostControl)
+                {
                     m_toolState = ToolState.Neutral;
+                }
             }
             else if (editMode == EditMode.Projection)
             {
-                if (m_toolState == ToolState.Neutral && (et == EventType.MouseMove || et == EventType.MouseDrag) &&
+                if (m_toolState == ToolState.Neutral && (mouseMove || mouseDrag) &&
                     (!VertexHandles.rotationHandleNear))
                 {
                     pickVertex();
@@ -699,48 +691,51 @@ namespace UTJ.VertexTweaker
                     m_toolState = ToolState.Neutral;
             }
 
-            if(m_toolState!=ToolState.Neutral && (mouseDown || mouseUp || mouseDrag))
-            {
+            if (m_toolState != ToolState.Neutral && e.isMouse && e.button == 0)
                 e.Use();
-            }
 
             if (handled)
             {
                 m_toolHanding = true;
                 ret |= (int)SceneGUIState.Repaint;
             }
-            else if (m_toolHanding && et == EventType.MouseUp)
+            else if (m_toolHanding && mouseUp)
             {
                 m_toolHanding = false;
                 ret |= (int)SceneGUIState.Repaint;
                 PushUndo();
             }
 
-            //Debug.Log("" + m_toolState + ", " + et + ", " + handled + ", " + GUIUtility.hotControl);
             return ret;
         }
 
-        public static Color ToColor(Vector3 n)
-        {
-            return new Color(n.x * 0.5f + 0.5f, n.y * 0.5f + 0.5f, n.z * 0.5f + 0.5f, 1.0f);
-        }
-        public static Vector3 ToVector(Color n)
-        {
-            return new Vector3(n.r * 2.0f - 1.0f, n.g * 2.0f - 1.0f, n.b * 2.0f - 1.0f);
-        }
 
+        static readonly int selectCID = "VertexTweakerSelectHash".GetHashCode();
 
-        bool m_selDragging = false;
-
-        int HandleSelectTools(Event e, EventType et, int id)
+        int HandleSelectTools()
         {
-            if (e.alt && !m_selDragging) return 0;
+            Event e = Event.current;
+            var et = e.type;
+            if (et == EventType.Ignore)
+            {
+                // handle out-of-window mouse move
+                if (e.rawType == EventType.MouseDrag || e.rawType == EventType.MouseUp)
+                    et = e.rawType;
+                else
+                    return 0;
+            }
+            else if (!e.isMouse || e.button != 0 || (e.alt && m_toolState != ToolState.Selection))
+                return 0;
+
+            int cid = selectCID;
+            var toolStateOld = m_toolState;
+            int ret = 0;
+
             bool mouseDown = et == EventType.MouseDown;
             bool mouseUp = et == EventType.MouseUp;
             bool mouseDrag = et == EventType.MouseDrag;
             bool mouseMove = et == EventType.MouseMove;
 
-            int ret = 0;
             bool handled = false;
             if (!m_settings.softOp)
             {
@@ -767,9 +762,9 @@ namespace UTJ.VertexTweaker
                     {
                         m_rectStartPoint = m_rectEndPoint = e.mousePosition;
                         handled = true;
-                        m_selDragging = true;
+                        m_toolState = ToolState.Selection;
                     }
-                    else if (m_selDragging)
+                    else if (m_toolState == ToolState.Selection)
                     {
                         if (mouseDrag)
                         {
@@ -778,7 +773,7 @@ namespace UTJ.VertexTweaker
                         }
                         else if (mouseUp)
                         {
-                            m_selDragging = false;
+                            m_toolState = ToolState.Neutral;
                             if (!e.shift && !e.control)
                                 ClearSelection();
 
@@ -797,9 +792,9 @@ namespace UTJ.VertexTweaker
                         {
                             m_lassoPoints.Clear();
                             m_meshLasso.Clear();
-                            m_selDragging = true;
+                            m_toolState = ToolState.Selection;
                         }
-                        if (m_selDragging)
+                        if (m_toolState == ToolState.Selection)
                         {
                             m_lassoPoints.Add(ScreenCoord11(e.mousePosition));
                             handled = true;
@@ -824,9 +819,9 @@ namespace UTJ.VertexTweaker
                             }
                         }
                     }
-                    else if (mouseUp || (mouseMove && m_selDragging))
+                    else if (mouseUp || (mouseMove && m_toolState == ToolState.Selection))
                     {
-                        m_selDragging = false;
+                        m_toolState = ToolState.Neutral;
                         if (!e.shift && !e.control)
                             ClearSelection();
 
@@ -843,11 +838,11 @@ namespace UTJ.VertexTweaker
                 {
                     if (mouseDown)
                     {
-                        m_selDragging = true;
+                        m_toolState = ToolState.Selection;
                         if (!e.shift && !e.control)
                             ClearSelection();
                     }
-                    if (m_selDragging)
+                    if (m_toolState == ToolState.Selection)
                     {
                         if (mouseDown || mouseDrag)
                         {
@@ -857,7 +852,7 @@ namespace UTJ.VertexTweaker
                         }
                         else if (mouseUp)
                         {
-                            m_selDragging = false;
+                            m_toolState = ToolState.Neutral;
                             handled = true;
                         }
                     }
@@ -867,15 +862,10 @@ namespace UTJ.VertexTweaker
                 UpdateSelection();
             }
 
-            if (mouseDown)
-            {
-                GUIUtility.hotControl = id;
-            }
-            else if (mouseUp)
-            {
-                if (GUIUtility.hotControl == id)
-                    GUIUtility.hotControl = 0;
-            }
+            if (mouseDown && m_toolState == ToolState.Selection)
+                GUIUtility.hotControl = cid;
+            else if (mouseUp && toolStateOld == ToolState.Selection && m_toolState == ToolState.Neutral)
+                GUIUtility.hotControl = 0;
             e.Use();
 
             if (handled)
@@ -1021,7 +1011,7 @@ namespace UTJ.VertexTweaker
 
         void OnRepaint()
         {
-            if (m_settings.selectMode == SelectMode.Rect && m_selDragging)
+            if (m_toolState == ToolState.Selection && m_settings.selectMode == SelectMode.Rect)
             {
                 var selectionRect = typeof(EditorStyles).GetProperty("selectionRect", BindingFlags.NonPublic | BindingFlags.Static);
                 if (selectionRect != null)

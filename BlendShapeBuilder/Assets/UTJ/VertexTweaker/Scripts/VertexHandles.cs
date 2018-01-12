@@ -8,13 +8,14 @@ namespace UTJ.VertexTweaker
 {
     public static class VertexHandles
     {
-        #region impl
-        static int s_xVertexHandleHash = "xAxisVertexHandleHash".GetHashCode();
-        static int s_yVertexHandleHash = "yAxisVertexHandleHash".GetHashCode();
-        static int s_zVertexHandleHash = "zAxisVertexHandleHash".GetHashCode();
-        static int s_FreeMoveVertexHandleHash = "FreeMoveVertexHandleHash".GetHashCode();
-        #endregion
+        // "immutable" control ids
+        static readonly int axisMoveHandleFCID = "AxisMoveVertexHandleFHash".GetHashCode();
+        static readonly int axisMoveHandleXCID = "AxisMoveVertexHandleXHash".GetHashCode();
+        static readonly int axisMoveHandleYCID = "AxisMoveVertexHandleYHash".GetHashCode();
+        static readonly int axisMoveHandleZCID = "AxisMoveVertexHandleZHash".GetHashCode();
 
+        public static bool axisMoveHandleGainedControl;
+        public static bool axisMoveHandleLostControl;
         public static bool axisMoveHandleControling;
         public static bool axisMoveHandleNear;
         public static Vector3 AxisMoveHandle(Vector3 pos, Quaternion rot)
@@ -23,74 +24,150 @@ namespace UTJ.VertexTweaker
             var snap = 0.0f;
             var snap3 = Vector3.zero;
 
-            int cidF = GUIUtility.GetControlID(s_FreeMoveVertexHandleHash, FocusType.Passive);
-            int cidX = GUIUtility.GetControlID(s_xVertexHandleHash, FocusType.Passive);
-            int cidY = GUIUtility.GetControlID(s_yVertexHandleHash, FocusType.Passive);
-            int cidZ = GUIUtility.GetControlID(s_zVertexHandleHash, FocusType.Passive);
+            var et = Event.current.type;
+            int hcOld = GUIUtility.hotControl;
+            int ncOld = HandleUtility.nearestControl;
 
-            pos = Handles.FreeMoveHandle(cidF, pos, Quaternion.identity, size * 0.2f, snap3, Handles.RectangleHandleCap);
+            pos = Handles.FreeMoveHandle(axisMoveHandleFCID, pos, Quaternion.identity, size * 0.2f, snap3, Handles.RectangleHandleCap);
             Handles.color = Handles.xAxisColor;
-            pos = Handles.Slider(cidX, pos, rot * Vector3.right, size, Handles.ArrowHandleCap, snap);
+            pos = Handles.Slider(axisMoveHandleXCID, pos, rot * Vector3.right, size, Handles.ArrowHandleCap, snap);
             Handles.color = Handles.yAxisColor;
-            pos = Handles.Slider(cidY, pos, rot * Vector3.up, size, Handles.ArrowHandleCap, snap);
+            pos = Handles.Slider(axisMoveHandleYCID, pos, rot * Vector3.up, size, Handles.ArrowHandleCap, snap);
             Handles.color = Handles.zAxisColor;
-            pos = Handles.Slider(cidZ, pos, rot * Vector3.forward, size, Handles.ArrowHandleCap, snap);
+            pos = Handles.Slider(axisMoveHandleZCID, pos, rot * Vector3.forward, size, Handles.ArrowHandleCap, snap);
 
-            var hc = GUIUtility.hotControl;
-            axisMoveHandleControling = hc == cidF || hc == cidX || hc == cidY || hc == cidZ;
-            var nc = HandleUtility.nearestControl;
-            axisMoveHandleNear = nc == cidF || nc == cidX || nc == cidY || nc == cidZ;
+            // check handle has control
+            axisMoveHandleGainedControl = axisMoveHandleLostControl = false;
+            switch (et)
+            {
+                case EventType.MouseDown:
+                    if (Event.current.button == 0 && GUIUtility.hotControl != hcOld)
+                        axisMoveHandleControling = axisMoveHandleGainedControl = true;
+                    break;
+                case EventType.MouseUp:
+                    if (Event.current.button == 0 && axisMoveHandleControling)
+                    {
+                        axisMoveHandleLostControl = true;
+                        axisMoveHandleControling = false;
+                    }
+                    break;
+                case EventType.Layout:
+                    axisMoveHandleNear = HandleUtility.nearestControl != ncOld;
+                    break;
+            }
+
             return pos;
         }
 
 
-        #region impl
-        static int s_FreeMoveVertexHandle2Hash = "FreeMoveVertexHandle2Hash".GetHashCode();
-        #endregion
-
+        static readonly int freeMoveHandleCID = "FreeMoveVertexHandleHash".GetHashCode();
+        public static bool freeMoveHandleGainedControl;
+        public static bool freeMoveHandleLostControl;
         public static bool freeMoveHandleControling;
+        public static bool freeMoveHandleNear;
+
         public static Vector3 FreeMoveHandle(Vector3 pos, float rectSize, bool forceCapture)
         {
             var size = HandleUtility.GetHandleSize(pos) * (rectSize * 0.01f);
             Vector3 snap = Vector3.one * 0.5f;
 
-            int cid = GUIUtility.GetControlID(s_FreeMoveVertexHandle2Hash, FocusType.Passive);
-            var e = Event.current;
-            if (forceCapture && GUIUtility.hotControl != cid &&
-                ((e.type == EventType.MouseDown || e.type == EventType.MouseDrag) && e.button == 0))
-                GUIUtility.hotControl = cid;
-            pos = Handles.FreeMoveHandle(cid, pos, Quaternion.identity, size, snap, Handles.RectangleHandleCap);
-            freeMoveHandleControling = GUIUtility.hotControl == cid;
+            var et = Event.current.type;
+            int hcOld = GUIUtility.hotControl;
+            int ncOld = HandleUtility.nearestControl;
+
+            pos = Handles.FreeMoveHandle(freeMoveHandleCID, pos, Quaternion.identity, size, snap, Handles.RectangleHandleCap);
+
+            // check handle has control
+            freeMoveHandleGainedControl = freeMoveHandleLostControl = false;
+            switch (et)
+            {
+                case EventType.MouseDown:
+                    if (Event.current.button == 0 && GUIUtility.hotControl != hcOld)
+                        freeMoveHandleControling = freeMoveHandleGainedControl = true;
+                    break;
+                case EventType.MouseUp:
+                    if (Event.current.button == 0 && freeMoveHandleControling)
+                    {
+                        freeMoveHandleLostControl = true;
+                        freeMoveHandleControling = false;
+                    }
+                    break;
+                case EventType.Layout:
+                    freeMoveHandleNear = HandleUtility.nearestControl != ncOld;
+                    break;
+            }
             return pos;
         }
 
 
+        public static bool rotationHandleGainedControl;
+        public static bool rotationHandleLostControl;
         public static bool rotationHandleControling;
         public static bool rotationHandleNear;
         public static Quaternion RotationHandle(Quaternion rot, Vector3 pos)
         {
-            var hc = GUIUtility.hotControl;
-            var nc = HandleUtility.nearestControl;
+            var et = Event.current.type;
+            int hcOld = GUIUtility.hotControl;
+            int ncOld = HandleUtility.nearestControl;
 
             rot = Handles.RotationHandle(rot, pos);
 
-            rotationHandleControling = GUIUtility.hotControl != hc;
-            rotationHandleNear = HandleUtility.nearestControl != nc;
+            // check handle has control
+            rotationHandleGainedControl = rotationHandleLostControl = false;
+            switch (et)
+            {
+                case EventType.MouseDown:
+                    if (Event.current.button == 0 && GUIUtility.hotControl != hcOld)
+                        rotationHandleControling = rotationHandleGainedControl = true;
+                    break;
+                case EventType.MouseUp:
+                    if (Event.current.button == 0 && rotationHandleControling)
+                    {
+                        rotationHandleLostControl = true;
+                        rotationHandleControling = false;
+                    }
+                    break;
+                case EventType.Layout:
+                    rotationHandleNear = HandleUtility.nearestControl != ncOld;
+                    break;
+            }
             return rot;
         }
 
 
+        public static bool scaleHandleGainedControl;
+        public static bool scaleHandleLostControl;
         public static bool scaleHandleControling;
         public static bool scaleHandleNear;
         public static Vector3 ScaleHandle(Vector3 scale, Vector3 pos, Quaternion rot)
         {
-            var hc = GUIUtility.hotControl;
-            var nc = HandleUtility.nearestControl;
+            var et = Event.current.type;
+            int hcOld = GUIUtility.hotControl;
+            int ncOld = HandleUtility.nearestControl;
+
             var size = HandleUtility.GetHandleSize(pos);
 
             scale = Handles.ScaleHandle(scale, pos, rot, size);
-            scaleHandleControling = GUIUtility.hotControl != hc;
-            scaleHandleNear = HandleUtility.nearestControl != nc;
+
+            // check handle has control
+            scaleHandleGainedControl = scaleHandleLostControl = false;
+            switch (et)
+            {
+                case EventType.MouseDown:
+                    if (Event.current.button == 0 && GUIUtility.hotControl != hcOld)
+                        scaleHandleControling = scaleHandleGainedControl = true;
+                    break;
+                case EventType.MouseUp:
+                    if (Event.current.button == 0 && scaleHandleControling)
+                    {
+                        scaleHandleLostControl = true;
+                        scaleHandleControling = false;
+                    }
+                    break;
+                case EventType.Layout:
+                    scaleHandleNear = HandleUtility.nearestControl != ncOld;
+                    break;
+            }
             return scale;
         }
     }
