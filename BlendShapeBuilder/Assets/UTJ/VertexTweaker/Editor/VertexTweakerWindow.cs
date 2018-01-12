@@ -237,9 +237,9 @@ namespace UTJ.VertexTweaker
 
             EditorGUILayout.BeginVertical(GUILayout.Width(c1Width));
             {
-                var prev = settings.editMode;
+                EditorGUI.BeginChangeCheck();
                 settings.editMode = (EditMode)GUILayout.SelectionGrid((int)settings.editMode, strCommands, 1);
-                if (settings.editMode != prev)
+                if (EditorGUI.EndChangeCheck())
                 {
                     switch (settings.editMode)
                     {
@@ -278,7 +278,13 @@ namespace UTJ.VertexTweaker
             }
             else if (settings.editMode == EditMode.Move)
             {
+                EditorGUI.BeginChangeCheck();
                 settings.softOp = GUILayout.Toggle(settings.softOp, "Soft Move", "Button", GUILayout.Width(120));
+                if(EditorGUI.EndChangeCheck())
+                {
+                    m_target.ClearSelection();
+                    m_target.UpdateSelection();
+                }
                 if (settings.softOp)
                 {
                     DrawBrushPanel();
@@ -297,15 +303,24 @@ namespace UTJ.VertexTweaker
                 }
                 EditorGUILayout.Space();
 
-                settings.moveAmount = EditorGUILayout.Vector3Field("Move Amount", settings.moveAmount);
-                if (GUILayout.Button("Apply Move"))
+                if (!settings.softOp)
                 {
-                    m_target.ApplyMove(settings.moveAmount, settings.coordinate, true);
+                    settings.moveAmount = EditorGUILayout.Vector3Field("Move Amount", settings.moveAmount);
+                    if (GUILayout.Button("Apply Move"))
+                    {
+                        m_target.ApplyMove(settings.moveAmount, settings.coordinate, true);
+                    }
                 }
             }
             else if (settings.editMode == EditMode.Rotate)
             {
+                EditorGUI.BeginChangeCheck();
                 settings.softOp = GUILayout.Toggle(settings.softOp, "Soft Rotate", "Button", GUILayout.Width(120));
+                if (EditorGUI.EndChangeCheck())
+                {
+                    m_target.ClearSelection();
+                    m_target.UpdateSelection();
+                }
                 if (settings.softOp)
                 {
                     DrawBrushPanel();
@@ -318,19 +333,28 @@ namespace UTJ.VertexTweaker
                 GUILayout.EndHorizontal();
                 EditorGUILayout.Space();
 
-                settings.pivotPos = EditorGUILayout.Vector3Field("Pivot Position", settings.pivotPos);
-                EditorGUILayout.Space();
-
-                settings.rotateAmount = EditorGUILayout.Vector3Field("Rotate Amount", settings.rotateAmount);
-                if (GUILayout.Button("Apply Rotate"))
+                if (!settings.softOp)
                 {
-                    m_target.ApplyRotatePivot(
-                        Quaternion.Euler(settings.rotateAmount), settings.pivotPos, settings.pivotRot, settings.coordinate, true);
+                    settings.pivotPos = EditorGUILayout.Vector3Field("Pivot Position", settings.pivotPos);
+                    EditorGUILayout.Space();
+
+                    settings.rotateAmount = EditorGUILayout.Vector3Field("Rotate Amount", settings.rotateAmount);
+                    if (GUILayout.Button("Apply Rotate"))
+                    {
+                        m_target.ApplyRotatePivot(
+                            Quaternion.Euler(settings.rotateAmount), settings.pivotPos, settings.pivotRot, settings.coordinate, true);
+                    }
                 }
             }
             else if (settings.editMode == EditMode.Scale)
             {
+                EditorGUI.BeginChangeCheck();
                 settings.softOp = GUILayout.Toggle(settings.softOp, "Soft Scale", "Button", GUILayout.Width(120));
+                if (EditorGUI.EndChangeCheck())
+                {
+                    m_target.ClearSelection();
+                    m_target.UpdateSelection();
+                }
                 if (settings.softOp)
                 {
                     DrawBrushPanel();
@@ -417,7 +441,6 @@ namespace UTJ.VertexTweaker
 
             var settings = m_target.settings;
             settings.selectMode = (SelectMode)GUILayout.SelectionGrid((int)settings.selectMode, strSelectMode, 3);
-            EditorGUILayout.Space();
             if (settings.selectMode == SelectMode.Brush)
             {
                 DrawBrushPanel();
@@ -426,6 +449,7 @@ namespace UTJ.VertexTweaker
             {
                 if (settings.selectMode == SelectMode.Single)
                 {
+                    EditorGUILayout.Space();
                     GUILayout.BeginHorizontal();
                     settings.selectVertex = GUILayout.Toggle(settings.selectVertex, "Vertex", "Button");
                     settings.selectTriangle = GUILayout.Toggle(settings.selectTriangle, "Triangle", "Button");
@@ -472,24 +496,24 @@ namespace UTJ.VertexTweaker
             }
             GUILayout.EndHorizontal();
 
-            EditorGUILayout.Space();
+            //EditorGUILayout.Space();
 
-            GUILayout.BeginHorizontal();
-            EditorGUILayout.LabelField("Save", GUILayout.Width(50));
-            for (int i = 0; i < 5; ++i)
-            {
-                if (GUILayout.Button((i + 1).ToString()))
-                    settings.selectionSets[i].selection = m_target.selection;
-            }
-            GUILayout.EndHorizontal();
-            GUILayout.BeginHorizontal();
-            EditorGUILayout.LabelField("Load", GUILayout.Width(50));
-            for (int i = 0; i < 5; ++i)
-            {
-                if (GUILayout.Button((i + 1).ToString()))
-                    m_target.selection = settings.selectionSets[i].selection;
-            }
-            GUILayout.EndHorizontal();
+            //GUILayout.BeginHorizontal();
+            //EditorGUILayout.LabelField("Save", GUILayout.Width(50));
+            //for (int i = 0; i < 5; ++i)
+            //{
+            //    if (GUILayout.Button((i + 1).ToString()))
+            //        settings.selectionSets[i].selection = m_target.selection;
+            //}
+            //GUILayout.EndHorizontal();
+            //GUILayout.BeginHorizontal();
+            //EditorGUILayout.LabelField("Load", GUILayout.Width(50));
+            //for (int i = 0; i < 5; ++i)
+            //{
+            //    if (GUILayout.Button((i + 1).ToString()))
+            //        m_target.selection = settings.selectionSets[i].selection;
+            //}
+            //GUILayout.EndHorizontal();
 
             EditorGUILayout.EndVertical();
             EditorGUILayout.EndHorizontal();

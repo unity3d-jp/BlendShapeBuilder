@@ -431,7 +431,7 @@ namespace UTJ.VertexTweaker
             }
 
             Event e = Event.current;
-            if (e.alt || m_selDragging) return 0;
+            if (e.shift || e.control || e.alt || m_selDragging) return 0;
 
             var editMode = m_settings.editMode;
             var et = e.type;
@@ -735,6 +735,10 @@ namespace UTJ.VertexTweaker
         int HandleSelectTools(Event e, EventType et, int id)
         {
             if (e.alt && !m_selDragging) return 0;
+            bool mouseDown = et == EventType.MouseDown;
+            bool mouseUp = et == EventType.MouseUp;
+            bool mouseDrag = et == EventType.MouseDrag;
+            bool mouseMove = et == EventType.MouseMove;
 
             int ret = 0;
             bool handled = false;
@@ -742,22 +746,24 @@ namespace UTJ.VertexTweaker
             {
                 var selectMode = m_settings.selectMode;
                 float selectSign = e.control ? -1.0f : 1.0f;
-
                 if (selectMode == SelectMode.Single)
                 {
-                    if (!e.shift && !e.control)
-                        ClearSelection();
+                    if (mouseDrag)
+                    {
+                        if (!e.shift && !e.control)
+                            ClearSelection();
 
-                    if (settings.selectVertex && SelectVertex(e, selectSign, settings.selectFrontSideOnly))
-                        handled = true;
-                    else if (settings.selectTriangle && SelectTriangle(e, selectSign))
-                        handled = true;
-                    else if (m_rayHit)
-                        handled = true;
+                        if (settings.selectVertex && SelectVertex(e, selectSign, settings.selectFrontSideOnly))
+                            handled = true;
+                        else if (settings.selectTriangle && SelectTriangle(e, selectSign))
+                            handled = true;
+                        else if (m_rayHit)
+                            handled = true;
+                    }
                 }
                 else if (selectMode == SelectMode.Rect)
                 {
-                    if (et == EventType.MouseDown)
+                    if (mouseDown)
                     {
                         m_rectStartPoint = m_rectEndPoint = e.mousePosition;
                         handled = true;
@@ -765,12 +771,12 @@ namespace UTJ.VertexTweaker
                     }
                     else if (m_selDragging)
                     {
-                        if (et == EventType.MouseDrag)
+                        if (mouseDrag)
                         {
                             m_rectEndPoint = e.mousePosition;
                             handled = true;
                         }
-                        else if (et == EventType.MouseUp)
+                        else if (mouseUp)
                         {
                             m_selDragging = false;
                             if (!e.shift && !e.control)
@@ -785,9 +791,9 @@ namespace UTJ.VertexTweaker
                 }
                 else if (selectMode == SelectMode.Lasso)
                 {
-                    if (et == EventType.MouseDown || et == EventType.MouseDrag)
+                    if (mouseDown || mouseDrag)
                     {
-                        if (et == EventType.MouseDown)
+                        if (mouseDown)
                         {
                             m_lassoPoints.Clear();
                             m_meshLasso.Clear();
@@ -818,7 +824,7 @@ namespace UTJ.VertexTweaker
                             }
                         }
                     }
-                    else if (et == EventType.MouseUp || (et == EventType.MouseMove && m_selDragging))
+                    else if (mouseUp || (mouseMove && m_selDragging))
                     {
                         m_selDragging = false;
                         if (!e.shift && !e.control)
@@ -835,7 +841,7 @@ namespace UTJ.VertexTweaker
                 }
                 else if (selectMode == SelectMode.Brush)
                 {
-                    if (et == EventType.MouseDown)
+                    if (mouseDown)
                     {
                         m_selDragging = true;
                         if (!e.shift && !e.control)
@@ -843,13 +849,13 @@ namespace UTJ.VertexTweaker
                     }
                     if (m_selDragging)
                     {
-                        if (et == EventType.MouseDown || et == EventType.MouseDrag)
+                        if (mouseDown || mouseDrag)
                         {
                             var bd = m_settings.activeBrush;
                             if (m_rayHit && SelectBrush(m_rayPos, bd.radius, bd.strength * selectSign, bd.samples))
                                 handled = true;
                         }
-                        else if (et == EventType.MouseUp)
+                        else if (mouseUp)
                         {
                             m_selDragging = false;
                             handled = true;
@@ -861,11 +867,11 @@ namespace UTJ.VertexTweaker
                 UpdateSelection();
             }
 
-            if (et == EventType.MouseDown)
+            if (mouseDown)
             {
                 GUIUtility.hotControl = id;
             }
-            else if (et == EventType.MouseUp)
+            else if (mouseUp)
             {
                 if (GUIUtility.hotControl == id)
                     GUIUtility.hotControl = 0;

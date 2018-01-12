@@ -58,7 +58,7 @@ namespace UTJ.VertexTweaker
             var e = Event.current;
             if (forceCapture && GUIUtility.hotControl != cid &&
                 ((e.type == EventType.MouseDown || e.type == EventType.MouseDrag) && e.button == 0))
-                GUIUtility.hotControl = 0;
+                GUIUtility.hotControl = cid;
             pos = Handles.FreeMoveHandle(cid, pos, Quaternion.identity, size, snap, Handles.RectangleHandleCap);
             freeMoveHandleControling = GUIUtility.hotControl == cid;
             return pos;
