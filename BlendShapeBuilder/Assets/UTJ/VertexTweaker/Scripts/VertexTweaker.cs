@@ -386,7 +386,7 @@ namespace UTJ.VertexTweaker
             int ret = 0;
             ret |= HandleEditTools();
             ret |= HandleSelectTools();
-            if (Event.current.type == EventType.Repaint)
+            if (et == EventType.Repaint)
                 OnRepaint();
 
             //Debug.Log("" + m_toolState + ", " + et + "(" + Event.current.type + "), " + GUIUtility.hotControl);
@@ -431,6 +431,7 @@ namespace UTJ.VertexTweaker
             bool mouseUp = et == EventType.MouseUp;
             bool mouseDrag = et == EventType.MouseDrag;
             bool mouseMove = et == EventType.MouseMove;
+            bool isMouse = e.isMouse;
 
             int ret = 0;
             bool handled = false;
@@ -691,7 +692,7 @@ namespace UTJ.VertexTweaker
                     m_toolState = ToolState.Neutral;
             }
 
-            if (m_toolState != ToolState.Neutral && e.isMouse && e.button == 0)
+            if (m_toolState != ToolState.Neutral && isMouse && e.button == 0)
                 e.Use();
 
             if (handled)
@@ -703,7 +704,6 @@ namespace UTJ.VertexTweaker
             {
                 m_toolHanding = false;
                 ret |= (int)SceneGUIState.Repaint;
-                PushUndo();
             }
 
             return ret;
@@ -714,12 +714,13 @@ namespace UTJ.VertexTweaker
 
         int HandleSelectTools()
         {
+            int cid = selectCID;
             Event e = Event.current;
-            var et = e.type;
+            var et = e.GetTypeForControl(cid);
             if (et == EventType.Ignore)
             {
                 // handle out-of-window mouse move
-                if (e.rawType == EventType.MouseDrag || e.rawType == EventType.MouseUp)
+                if ((e.rawType == EventType.MouseDrag || e.rawType == EventType.MouseUp) && e.button == 0)
                     et = e.rawType;
                 else
                     return 0;
@@ -727,7 +728,6 @@ namespace UTJ.VertexTweaker
             else if (!e.isMouse || e.button != 0 || (e.alt && m_toolState != ToolState.Selection))
                 return 0;
 
-            int cid = selectCID;
             var toolStateOld = m_toolState;
             int ret = 0;
 
@@ -825,13 +825,10 @@ namespace UTJ.VertexTweaker
                         if (!e.shift && !e.control)
                             ClearSelection();
 
-                        handled = true;
-                        if (!SelectLasso(m_lassoPoints.ToArray(), selectSign, settings.selectFrontSideOnly) && !m_rayHit)
-                        {
-                        }
-
+                        SelectLasso(m_lassoPoints.ToArray(), selectSign, settings.selectFrontSideOnly);
                         m_lassoPoints.Clear();
                         m_meshLasso.Clear();
+                        handled = true;
                     }
                 }
                 else if (selectMode == SelectMode.Brush)
@@ -860,6 +857,13 @@ namespace UTJ.VertexTweaker
                 }
 
                 UpdateSelection();
+            }
+            else
+            {
+                if (mouseDown)
+                    m_toolState = ToolState.Selection;
+                else if (mouseUp && m_toolState == ToolState.Selection)
+                    m_toolState = ToolState.Neutral;
             }
 
             if (mouseDown && m_toolState == ToolState.Selection)
