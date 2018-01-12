@@ -130,6 +130,24 @@ namespace UTJ.BlendShapeBuilder
             }
         }
 
+        bool IsValidTarget(UnityEngine.Object obj)
+        {
+            if (obj == null)
+                return false;
+
+            var mesh = Utils.ExtractMesh(obj);
+            if (mesh == null)
+            {
+                Debug.LogWarning(obj.name + " has no mesh");
+                return false;
+            }
+            else if (Utils.ExtractMesh(m_target.gameObject).vertexCount != mesh.vertexCount)
+            {
+                Debug.LogWarning(obj.name + ": vertex count doesn't match");
+                return false;
+            }
+            return true;
+        }
 
         public void DrawBlendShapeBuilder()
         {
@@ -172,11 +190,10 @@ namespace UTJ.BlendShapeBuilder
                             Undo.RecordObject(m_target, "BlendShapeBuilder");
                             foreach (var obj in DragAndDrop.objectReferences)
                             {
-                                var mesh = Utils.ExtractMesh(obj);
-                                if (mesh != null)
+                                if (IsValidTarget(obj))
                                 {
                                     var bsd = new BlendShapeData();
-                                    bsd.name = mesh.name;
+                                    bsd.name = obj.name;
                                     bsd.frames.Add(new BlendShapeFrameData { mesh = obj });
                                     m_data.blendShapeData.Add(bsd);
                                 }
@@ -219,8 +236,7 @@ namespace UTJ.BlendShapeBuilder
                                     data.ClearInvalidFrames();
                                     foreach (var obj in DragAndDrop.objectReferences)
                                     {
-                                        var mesh = Utils.ExtractMesh(obj);
-                                        if(mesh != null)
+                                        if (IsValidTarget(obj))
                                             data.frames.Add(new BlendShapeFrameData { mesh = obj });
                                     }
                                     data.NormalizeWeights();
@@ -285,8 +301,11 @@ namespace UTJ.BlendShapeBuilder
                             var m = EditorGUI.ObjectField(new Rect(pos, new Vector2(width - 40, 16)), frame.mesh, typeof(UnityEngine.Object), true);
                             if (EditorGUI.EndChangeCheck())
                             {
-                                Undo.RecordObject(m_target, "BlendShapeBuilder");
-                                frame.mesh = m;
+                                if (IsValidTarget(m))
+                                {
+                                    Undo.RecordObject(m_target, "BlendShapeBuilder");
+                                    frame.mesh = m;
+                                }
                             }
 
                             if (GUILayout.Button("Edit", GUILayout.Width(50)))
@@ -415,7 +434,6 @@ namespace UTJ.BlendShapeBuilder
                     Undo.RecordObject(m_target, "BlendShapeBuilder");
                     var tmp = new BlendShapeData();
                     tmp.name = "NewBlendShape" + bsData.Count;
-                    tmp.frames.Add(new BlendShapeFrameData());
                     bsData.Add(tmp);
                 }
                 GUILayout.EndHorizontal();
