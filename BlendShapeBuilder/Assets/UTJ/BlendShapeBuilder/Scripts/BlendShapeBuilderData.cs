@@ -16,24 +16,6 @@ namespace UTJ.BlendShapeBuilder
         public bool vertex = true;
         public bool normal = true;
         public bool tangent = true;
-
-        public Vector3[] deltaVertices;
-        public Vector3[] deltaNormals;
-        public Vector3[] deltaTangents;
-
-        public void AllocateDelta(int size)
-        {
-            deltaVertices = new Vector3[size];
-            deltaNormals = new Vector3[size];
-            deltaTangents = new Vector3[size];
-        }
-
-        public void ReleaseDelta()
-        {
-            deltaVertices = null;
-            deltaNormals = null;
-            deltaTangents = null;
-        }
     }
 
     [Serializable]

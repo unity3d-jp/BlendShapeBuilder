@@ -327,13 +327,15 @@ namespace UTJ.VertexTweaker
             UpdateTransform();
             UpdateVertices();
             PushUndo();
+            Tools.current = Tool.None;
             m_editing = true;
         }
 
         void EndEdit()
         {
             ReleaseComputeBuffers();
-
+            if (Tools.current == Tool.None)
+                Tools.current = Tool.Move;
             m_editing = false;
         }
 

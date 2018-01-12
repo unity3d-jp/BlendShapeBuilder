@@ -36,7 +36,6 @@ namespace UTJ.VertexTweaker
         }
 
 
-
         private void OnEnable()
         {
             isOpen = true;
@@ -99,14 +98,6 @@ namespace UTJ.VertexTweaker
                         "Button", GUILayout.Width(33), GUILayout.Height(23));
                     if (EditorGUI.EndChangeCheck())
                     {
-                        if (m_target.editing)
-                        {
-                            Tools.current = Tool.None;
-                        }
-                        else
-                        {
-                            Tools.current = Tool.Move;
-                        }
                     }
                     GUILayout.Label("Edit Vertices");
                     EditorGUILayout.EndHorizontal();
@@ -624,7 +615,7 @@ namespace UTJ.VertexTweaker
             {
                 if (GUILayout.Button("Export .asset file"))
                 {
-                    string path = EditorUtility.SaveFilePanel("Export .asset file", "Assets", SanitizeForFileName(m_target.name), "asset");
+                    string path = EditorUtility.SaveFilePanel("Export .asset file", "Assets", Utils.SanitizeForFileName(m_target.name), "asset");
                     if (path.Length > 0)
                     {
                         var dataPath = Application.dataPath;
@@ -651,7 +642,7 @@ namespace UTJ.VertexTweaker
             
                 if (GUILayout.Button("Export .obj file"))
                 {
-                    string path = EditorUtility.SaveFilePanel("Export .obj file", "", SanitizeForFileName(m_target.name), "obj");
+                    string path = EditorUtility.SaveFilePanel("Export .obj file", "", Utils.SanitizeForFileName(m_target.name), "obj");
                     ObjExporter.Export(m_target.gameObject, path, new ObjExporter.Settings
                     {
                         flipFaces = settings.objFlipFaces,
@@ -923,12 +914,6 @@ namespace UTJ.VertexTweaker
             }
 
             return handled;
-        }
-
-        public static string SanitizeForFileName(string name)
-        {
-            var reg = new Regex("[\\/:\\*\\?<>\\|\\\"]");
-            return reg.Replace(name, "_");
         }
     }
 }

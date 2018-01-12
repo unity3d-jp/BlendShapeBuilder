@@ -2,7 +2,6 @@ using UnityEngine;
 using UnityEditor;
 using System;
 using System.Collections.Generic;
-using System.Runtime.InteropServices;
 using UTJ.VertexTweaker;
 
 namespace UTJ.BlendShapeBuilder
@@ -290,11 +289,8 @@ namespace UTJ.BlendShapeBuilder
                                 frame.mesh = m;
                             }
 
-                            if (GUILayout.Button("Edit", GUILayout.Width(75)))
-                            {
-                                // todo
-                            }
-
+                            if (GUILayout.Button("Edit", GUILayout.Width(50)))
+                                OnEditFrame(frame);
 
                             EditorGUI.BeginChangeCheck();
                             var v = GUILayout.Toggle(frame.vertex, "V", GUILayout.Width(25));
@@ -374,11 +370,7 @@ namespace UTJ.BlendShapeBuilder
                             }
                         }
                         if (GUILayout.Button("+", GUILayout.Width(20)))
-                        {
-                            Undo.RecordObject(m_target, "BlendShapeBuilder");
-                            data.frames.Add(new BlendShapeFrameData());
-                            data.NormalizeWeights();
-                        }
+                            OnAddFrame(data);
                         GUILayout.EndHorizontal();
 
                         GUILayout.BeginHorizontal();
@@ -431,39 +423,17 @@ namespace UTJ.BlendShapeBuilder
             }
 
             GUILayout.Space(8);
+            m_data.preserveExistingBlendShapes = GUILayout.Toggle(m_data.preserveExistingBlendShapes, "Preserve Existing BlendShapes");
 
             GUILayout.BeginHorizontal();
-            if (GUILayout.Button("Update Mesh", GUILayout.Width(100)))
+            if (GUILayout.Button("Update Mesh", GUILayout.Width(150)))
             {
                 Build(true);
             }
-            {
-                EditorGUI.BeginChangeCheck();
-                var v = GUILayout.Toggle(m_data.preserveExistingBlendShapes, "Preserve Existing BlendShapes");
-                if (EditorGUI.EndChangeCheck())
-                {
-                    Undo.RecordObject(m_target, "BlendShapeBuilder");
-                    m_data.preserveExistingBlendShapes = v;
-                }
-            }
-            GUILayout.EndHorizontal();
-
-            GUILayout.Space(6);
-
-            GUILayout.BeginHorizontal();
-            if (GUILayout.Button("Generate New Mesh", GUILayout.Width(130)))
+            if (GUILayout.Button("Generate New Asset", GUILayout.Width(150)))
             {
                 var result = Build();
-                if (result != null)
-                {
-                    var go = Utils.MeshToGameObject(result, Vector3.zero, Utils.ExtractMaterials(m_data.baseMesh));
-                    Selection.activeGameObject = go;
-                }
-            }
-            if (GUILayout.Button("Export BaseMesh To .asset", GUILayout.Width(170)))
-            {
-                var baseMesh = Utils.ExtractMesh(m_data.baseMesh);
-                string path = EditorUtility.SaveFilePanel("Export .asset file", "Assets", baseMesh.name, "asset");
+                string path = EditorUtility.SaveFilePanel("Generate New Asset", "Assets", Utils.SanitizeForFileName(m_data.baseMesh.name), "asset");
                 if (path.Length > 0)
                 {
                     var dataPath = Application.dataPath;
@@ -474,12 +444,14 @@ namespace UTJ.BlendShapeBuilder
                     else
                     {
                         path = path.Replace(dataPath, "Assets");
-                        AssetDatabase.CreateAsset(Instantiate(baseMesh), path);
+                        AssetDatabase.CreateAsset(result, path);
                         Debug.Log("Asset exported: " + path);
                     }
                 }
             }
             GUILayout.EndHorizontal();
+
+            GUILayout.Space(6);
 
             if (repaint)
                 RepaintAllViews();
@@ -559,38 +531,14 @@ namespace UTJ.BlendShapeBuilder
                 ret.name = baseMesh.name;
             }
 
+
             var baseVertices = baseMesh.vertices;
             var baseNormals = baseMesh.normals;
             var baseTangents = baseMesh.tangents;
 
-            // generate delta. * this must be before delete existing blend shapes *
-            foreach (var shape in m_data.blendShapeData)
-            {
-                var name = shape.name;
-
-                foreach(var frame in shape.frames)
-                {
-                    var mesh = Utils.ExtractMesh(frame.mesh);
-                    if (mesh == null)
-                    {
-                        Debug.LogError("Invalid target in " + name + " at weight " + frame.weight);
-                    }
-                    else if (mesh.vertexCount != baseMesh.vertexCount)
-                    {
-                        Debug.LogError("Invalid target (vertex count doesn't match) in " + name + " at weight " + frame.weight);
-                    }
-                    else
-                    {
-                        frame.AllocateDelta(baseMesh.vertexCount);
-                        if (frame.vertex)
-                            GenerateDelta(baseVertices, mesh.vertices, frame.deltaVertices);
-                        if (frame.normal)
-                            GenerateDelta(baseNormals, mesh.normals, frame.deltaNormals);
-                        if (frame.tangent)
-                            GenerateDelta(baseTangents, mesh.tangents, frame.deltaTangents);
-                    }
-                }
-            }
+            var deltaVertices = new Vector3[baseMesh.vertexCount];
+            var deltaNormals = new Vector3[baseMesh.vertexCount];
+            var deltaTangents = new Vector3[baseMesh.vertexCount];
 
             // delete or copy existing blend shapes
             if (m_data.preserveExistingBlendShapes)
@@ -612,10 +560,6 @@ namespace UTJ.BlendShapeBuilder
 
                 if (del.Count > 0)
                 {
-                    var deltaVertices = new Vector3[baseMesh.vertexCount];
-                    var deltaNormals = new Vector3[baseMesh.vertexCount];
-                    var deltaTangents = new Vector3[baseMesh.vertexCount];
-
                     var src = Instantiate(ret);
                     ret.ClearBlendShapes();
                     for (int si = 0; si < numBS; ++si)
@@ -642,20 +586,45 @@ namespace UTJ.BlendShapeBuilder
 
             // add new blend shapes
             int numAdded = 0;
+
+            // generate delta. * this must be before delete existing blend shapes *
             foreach (var shape in m_data.blendShapeData)
             {
                 var name = shape.name;
+
                 foreach (var frame in shape.frames)
                 {
-                    if (frame.deltaVertices != null)
+                    var mesh = Utils.ExtractMesh(frame.mesh);
+                    if (mesh == null)
                     {
-                        ret.AddBlendShapeFrame(name, frame.weight, frame.deltaVertices, frame.deltaNormals, frame.deltaTangents);
-                        frame.ReleaseDelta();
+                        Debug.LogError("Invalid target in " + name + " at weight " + frame.weight);
+                    }
+                    else if (mesh.vertexCount != baseMesh.vertexCount)
+                    {
+                        Debug.LogError("Invalid target (vertex count doesn't match) in " + name + " at weight " + frame.weight);
+                    }
+                    else
+                    {
+                        if (frame.vertex)
+                            GenerateDelta(baseVertices, mesh.vertices, deltaVertices);
+                        else
+                            ZeroClear(deltaVertices);
+
+                        if (frame.normal)
+                            GenerateDelta(baseNormals, mesh.normals, deltaNormals);
+                        else
+                            ZeroClear(deltaNormals);
+
+                        if (frame.tangent)
+                            GenerateDelta(baseTangents, mesh.tangents, deltaTangents);
+                        else
+                            ZeroClear(deltaTangents);
+
+                        ret.AddBlendShapeFrame(name, frame.weight, deltaVertices, deltaNormals, deltaTangents);
                         ++numAdded;
                     }
                 }
             }
-
             Debug.Log("Done: added " + numAdded + " frames");
             return ret;
         }
@@ -663,6 +632,49 @@ namespace UTJ.BlendShapeBuilder
         void RepaintAllViews()
         {
             UnityEditorInternal.InternalEditorUtility.RepaintAllViews();
+        }
+
+        void OnEditFrame(BlendShapeFrameData frame)
+        {
+            if(frame.mesh == null)
+            {
+                Debug.LogWarning("Target object is null");
+                return;
+            }
+
+            var mesh = Utils.ExtractMesh(frame.mesh);
+            if (mesh == null)
+            {
+                Debug.LogWarning("Target object has no mesh");
+                return;
+            }
+
+            var go = frame.mesh as GameObject;
+            if (go == null)
+                go = Utils.MeshToGameObject(mesh, Vector3.zero, Utils.ExtractMaterials(m_target));
+            
+            var vt = go.GetComponent<UTJ.VertexTweaker.VertexTweaker>();
+            if (vt == null)
+                vt = go.AddComponent<UTJ.VertexTweaker.VertexTweaker>();
+
+            Selection.activeObject = go;
+            VertexTweakerWindow.Open();
+            vt.editing = true;
+        }
+
+        void OnAddFrame(BlendShapeData bsd)
+        {
+            var frame = new BlendShapeFrameData();
+            bsd.frames.Add(frame);
+            bsd.NormalizeWeights();
+
+            var meshBase = Utils.ExtractMesh(m_target.gameObject);
+            if (meshBase == null)
+                return;
+
+            var meshNew = Instantiate(meshBase);
+            meshNew.name = meshNew.name.Replace("(Clone)", "(BlendShape Frame)");
+            frame.mesh = Utils.MeshToGameObject(meshNew, m_target.gameObject);
         }
 
         private static void ZeroClear(Vector3[] dst)

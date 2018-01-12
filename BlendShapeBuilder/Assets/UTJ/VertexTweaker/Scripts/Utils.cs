@@ -1,6 +1,6 @@
 using UnityEngine;
 using UnityEditor;
-using System;
+using System.Text.RegularExpressions;
 using System.Collections.Generic;
 
 namespace UTJ.VertexTweaker
@@ -19,6 +19,15 @@ namespace UTJ.VertexTweaker
             go.GetComponent<Transform>().position = pos;
             return go;
         }
+
+        public static GameObject MeshToGameObject(Mesh mesh, GameObject from)
+        {
+            var go = MeshToGameObject(mesh, Vector3.zero, ExtractMaterials(from));
+            if (from != null)
+                go.transform.localScale = from.transform.localScale;
+            return go;
+        }
+
 
         public static Mesh ExtractMesh(UnityEngine.Object obj)
         {
@@ -70,6 +79,12 @@ namespace UTJ.VertexTweaker
                     ret = new Material[1] { mat };
             }
             return ret;
+        }
+
+        public static string SanitizeForFileName(string name)
+        {
+            var reg = new Regex("[\\/:\\*\\?<>\\|\\\"]");
+            return reg.Replace(name, "_");
         }
     }
 }
