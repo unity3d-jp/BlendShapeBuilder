@@ -352,9 +352,18 @@ namespace UTJ.VertexTweaker
             if (m_skinned)
             {
                 UpdateBoneMatrices();
-                npApplyReverseSkinning(ref m_npSkinData,
-                    m_points, IntPtr.Zero, IntPtr.Zero,
-                    m_pointsPredeformed, IntPtr.Zero, IntPtr.Zero);
+                if (flushAll)
+                {
+                    npApplyReverseSkinning(ref m_npSkinData,
+                        m_points, m_normals, m_tangents,
+                        m_pointsPredeformed, m_normalsPredeformed, m_tangentsPredeformed);
+                }
+                else
+                {
+                    npApplyReverseSkinning(ref m_npSkinData,
+                        m_points, IntPtr.Zero, IntPtr.Zero,
+                        m_pointsPredeformed, IntPtr.Zero, IntPtr.Zero);
+                }
                 if (mirror)
                 {
                     ApplyMirroringInternal();
@@ -362,29 +371,20 @@ namespace UTJ.VertexTweaker
                         m_pointsPredeformed, IntPtr.Zero, IntPtr.Zero,
                         m_points, IntPtr.Zero, IntPtr.Zero);
                 }
-                m_meshTarget.SetVertices(m_pointsPredeformed);
             }
             else
             {
                 if (mirror)
                     ApplyMirroringInternal();
-                m_meshTarget.SetVertices(m_points);
             }
 
+            m_meshTarget.SetVertices(m_pointsPredeformed);
             if (flushAll)
             {
                 if (m_normals.Count == m_points.Count)
-                {
-                    m_meshTarget.SetNormals(m_normals);
-                    if (m_cbNormals != null)
-                        m_cbNormals.SetData(m_normals);
-                }
+                    m_meshTarget.SetNormals(m_normalsPredeformed);
                 if (m_tangents.Count == m_points.Count)
-                {
-                    m_meshTarget.SetTangents(m_tangents);
-                    if (m_cbTangents != null)
-                        m_cbTangents.SetData(m_normals);
-                }
+                    m_meshTarget.SetTangents(m_tangentsPredeformed);
             }
             else
             {
@@ -396,14 +396,24 @@ namespace UTJ.VertexTweaker
                 }
             }
             m_meshTarget.UploadMeshData(false);
+
             var smr = GetComponent<SkinnedMeshRenderer>();
             if (smr != null)
             { // force recalculate
                 smr.enabled = false;
                 smr.enabled = true;
             }
+
             if (m_cbPoints != null)
                 m_cbPoints.SetData(m_points);
+            if (flushAll)
+            {
+                if (m_cbNormals != null)
+                    m_cbNormals.SetData(m_normals);
+                if (m_cbTangents != null)
+                    m_cbTangents.SetData(m_normals);
+            }
+
             UpdateSelectionPos();
         }
 

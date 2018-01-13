@@ -445,7 +445,7 @@ namespace UTJ.VertexTweaker
             bool handled = false;
             var t = GetComponent<Transform>();
 
-            Action pickVertex = () => {
+            Action searchNearestVertex = () => {
                 if (PickVertex(e, pickRectSize, true, ref m_rayHitVertex, ref m_rayVertexPos)) { }
                 else { m_rayHitVertex = -1; }
 
@@ -454,6 +454,35 @@ namespace UTJ.VertexTweaker
                 if (m_rayHit || prevRayHit)
                     ret |= (int)SceneGUIState.Repaint;
             };
+            Action selectVertexAtMousePosition = () => {
+                if (m_settings.softOp)
+                {
+                    ClearSelection();
+                    if (m_rayHitVertex != -1)
+                    {
+                        var bd = m_settings.activeBrush;
+                        SelectBrush(m_rayVertexPos, bd.radius, bd.strength, bd.samples);
+                    }
+                    UpdateSelection();
+                }
+                else
+                {
+                    if (m_rayHitVertex != -1)
+                    {
+                        if (m_selection[m_rayHitVertex] == 0.0f)
+                        {
+                            ClearSelection();
+                            m_selection[m_rayHitVertex] = 1.0f;
+                            UpdateSelection();
+                        }
+                    }
+                    else
+                    {
+                        ClearSelection();
+                        UpdateSelection();
+                    }
+                }
+            };
 
 
             if (editMode == EditMode.Move)
@@ -461,7 +490,7 @@ namespace UTJ.VertexTweaker
                 if ((m_toolState == ToolState.Neutral && (mouseMove || mouseDrag)) ||
                     (m_toolState == ToolState.FreeMove && !m_settings.softOp))
                 {
-                    pickVertex();
+                    searchNearestVertex();
                 }
 
                 var move = Vector3.zero;
@@ -493,40 +522,12 @@ namespace UTJ.VertexTweaker
                 if (VertexHandles.axisMoveHandleLostControl)
                     m_toolState = ToolState.Neutral;
 
-                // pick vertex
+                // select vertex
                 if (mouseDown && e.button == 0 && m_toolState == ToolState.Neutral)
-                {
-                    if (m_settings.softOp)
-                    {
-                        ClearSelection();
-                        if (m_rayHitVertex != -1)
-                        {
-                            var bd = m_settings.activeBrush;
-                            SelectBrush(m_rayVertexPos, bd.radius, bd.strength, bd.samples);
-                        }
-                        UpdateSelection();
-                    }
-                    else
-                    {
-                        if (m_rayHitVertex != -1)
-                        {
-                            if (m_selection[m_rayHitVertex] == 0.0f)
-                            {
-                                ClearSelection();
-                                m_selection[m_rayHitVertex] = 1.0f;
-                                UpdateSelection();
-                            }
-                        }
-                        else
-                        {
-                            ClearSelection();
-                            UpdateSelection();
-                        }
-                    }
-                }
+                    selectVertexAtMousePosition();
 
                 // free move handle
-                if((m_toolState == ToolState.Neutral && !VertexHandles.axisMoveHandleNear) || m_toolState == ToolState.FreeMove)
+                if ((m_toolState == ToolState.Neutral && !VertexHandles.axisMoveHandleNear) || m_toolState == ToolState.FreeMove)
                 {
                     if ((m_rayHitVertex != -1 || m_settings.softOp) || m_toolState == ToolState.FreeMove)
                     {
@@ -544,7 +545,10 @@ namespace UTJ.VertexTweaker
                     }
                 }
                 if (VertexHandles.freeMoveHandleLostControl)
+                {
                     m_toolState = ToolState.Neutral;
+                    PushUndo();
+                }
 
                 if (handled)
                 {
@@ -558,7 +562,7 @@ namespace UTJ.VertexTweaker
                 if (m_toolState == ToolState.Neutral && m_settings.softOp && (mouseMove || mouseDrag) &&
                     (!VertexHandles.rotationHandleNear))
                 {
-                    pickVertex();
+                    searchNearestVertex();
                 }
 
                 if (m_numSelected > 0 || m_settings.softOp)
@@ -575,14 +579,6 @@ namespace UTJ.VertexTweaker
                     }
 
                     var handlePos = m_settings.softOp ? m_rayVertexPos : m_settings.pivotPos;
-                    if (m_settings.softOp)
-                    {
-                        handlePos = m_numSelected == 0 ? m_rayVertexPos : m_settings.pivotPos;
-                    }
-                    else
-                    {
-                        handlePos = m_settings.pivotPos;
-                    }
 
                     EditorGUI.BeginChangeCheck();
                     var rot = VertexHandles.RotationHandle(pivotRot, handlePos);
@@ -608,6 +604,7 @@ namespace UTJ.VertexTweaker
                 }
                 if (VertexHandles.rotationHandleLostControl)
                 {
+                    PushUndo();
                     m_toolState = ToolState.Neutral;
                 }
             }
@@ -616,7 +613,7 @@ namespace UTJ.VertexTweaker
                 if (m_toolState == ToolState.Neutral && m_settings.softOp && (mouseMove || mouseDrag) &&
                     (!VertexHandles.scaleHandleNear))
                 {
-                    pickVertex();
+                    searchNearestVertex();
                 }
 
                 if (m_numSelected > 0 || m_settings.softOp)
@@ -658,6 +655,7 @@ namespace UTJ.VertexTweaker
                 }
                 if (VertexHandles.scaleHandleLostControl)
                 {
+                    PushUndo();
                     m_toolState = ToolState.Neutral;
                 }
             }
@@ -666,7 +664,7 @@ namespace UTJ.VertexTweaker
                 if (m_toolState == ToolState.Neutral && (mouseMove || mouseDrag) &&
                     (!VertexHandles.rotationHandleNear))
                 {
-                    pickVertex();
+                    searchNearestVertex();
                 }
 
                 if (m_settings.projRayDir == ProjectionRayDirection.Radial)
