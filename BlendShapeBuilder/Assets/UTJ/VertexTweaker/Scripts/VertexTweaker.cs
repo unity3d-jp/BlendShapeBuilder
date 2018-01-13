@@ -688,7 +688,7 @@ namespace UTJ.VertexTweaker
                         m_settings.projDirection = (diff * m_settings.projDirection).normalized;
                         handled = true;
                     }
-                    if (mouseDown && m_toolState == ToolState.Neutral && VertexHandles.rotationHandleControling)
+                    if (mouseDown && m_toolState == ToolState.Neutral && VertexHandles.rotationHandleHasControl)
                     {
                         m_toolState = ToolState.Projection;
                         m_prevRot = Quaternion.identity;

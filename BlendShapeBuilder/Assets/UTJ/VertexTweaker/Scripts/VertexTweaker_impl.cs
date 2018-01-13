@@ -364,19 +364,9 @@ namespace UTJ.VertexTweaker
                         m_points, IntPtr.Zero, IntPtr.Zero,
                         m_pointsPredeformed, IntPtr.Zero, IntPtr.Zero);
                 }
-                if (mirror)
-                {
-                    ApplyMirroringInternal();
-                    npApplySkinning(ref m_npSkinData,
-                        m_pointsPredeformed, IntPtr.Zero, IntPtr.Zero,
-                        m_points, IntPtr.Zero, IntPtr.Zero);
-                }
             }
-            else
-            {
-                if (mirror)
-                    ApplyMirroringInternal();
-            }
+            if (mirror)
+                ApplyMirroringInternal();
 
             m_meshTarget.SetVertices(m_pointsPredeformed);
             if (flushAll)
@@ -750,7 +740,7 @@ namespace UTJ.VertexTweaker
                 tmp.vertices = m_pointsPredeformed;
                 tmp.normals = m_normalsPredeformed;
                 tmp.tangents = m_tangentsPredeformed;
-                npApplyMirroring(ref m_npModelData, m_mirrorRelation, planeNormal);
+                npApplyMirroring(ref tmp, m_mirrorRelation, planeNormal);
                 npApplySkinning(ref m_npSkinData,
                     m_pointsPredeformed, m_normalsPredeformed, m_tangentsPredeformed,
                     m_points, m_normals, m_tangents);
