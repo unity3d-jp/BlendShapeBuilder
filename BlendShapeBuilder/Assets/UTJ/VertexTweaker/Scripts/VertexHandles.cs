@@ -66,7 +66,7 @@ namespace UTJ.VertexTweaker
         public static bool freeMoveHandleControling;
         public static bool freeMoveHandleNear;
 
-        public static Vector3 FreeMoveHandle(Vector3 pos, float rectSize, bool forceCapture)
+        public static Vector3 FreeMoveHandle(Vector3 pos, float rectSize)
         {
             var size = HandleUtility.GetHandleSize(pos) * (rectSize * 0.01f);
             Vector3 snap = Vector3.one * 0.5f;

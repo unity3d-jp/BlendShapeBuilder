@@ -525,7 +525,7 @@ namespace UTJ.VertexTweaker
                         Vector3 handlePos = m_rayVertexPos;
 
                         EditorGUI.BeginChangeCheck();
-                        move = VertexHandles.FreeMoveHandle(handlePos, pickRectSize, m_toolState == ToolState.FreeMove);
+                        move = VertexHandles.FreeMoveHandle(handlePos, pickRectSize);
                         if (EditorGUI.EndChangeCheck())
                             handled = true;
                         if (VertexHandles.freeMoveHandleGainedControl)

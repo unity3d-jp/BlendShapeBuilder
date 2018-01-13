@@ -268,21 +268,22 @@ namespace UTJ.VertexTweaker
                 return;
             }
 
+            bool mask = m_settings.projUseSelection && m_numSelected > 0;
             var targetNP = (npMeshData)targetData;
             if(m_settings.projRayDir == ProjectionRayDirection.CurrentNormals)
-                npProjectVertices(ref m_npModelData, ref targetNP, m_normals, m_settings.projMode, m_settings.projMaxRayDistance);
+                npProjectVertices(ref m_npModelData, ref targetNP, m_normals, m_settings.projMode, m_settings.projMaxRayDistance, mask);
             else if (m_settings.projRayDir == ProjectionRayDirection.BaseNomals)
-                npProjectVertices(ref m_npModelData, ref targetNP, m_normalsBase, m_settings.projMode, m_settings.projMaxRayDistance);
+                npProjectVertices(ref m_npModelData, ref targetNP, m_normalsBase, m_settings.projMode, m_settings.projMaxRayDistance, mask);
             else if (m_settings.projRayDir == ProjectionRayDirection.Radial)
-                npProjectVerticesRadial(ref m_npModelData, ref targetNP, m_settings.projRadialCenter, m_settings.projMode, m_settings.projMaxRayDistance);
+                npProjectVerticesRadial(ref m_npModelData, ref targetNP, m_settings.projRadialCenter, m_settings.projMode, m_settings.projMaxRayDistance, mask);
             else if (m_settings.projRayDir == ProjectionRayDirection.Directional)
-                npProjectVerticesDirectional(ref m_npModelData, ref targetNP, m_settings.projDirection.normalized, m_settings.projMode, m_settings.projMaxRayDistance);
+                npProjectVerticesDirectional(ref m_npModelData, ref targetNP, m_settings.projDirection.normalized, m_settings.projMode, m_settings.projMaxRayDistance, mask);
 
             UpdateVertices(false, true);
             if (pushUndo) PushUndo();
         }
 
-        public void ResetVertices(bool useSelection, bool pushUndo)
+        public void ApplyReset(bool useSelection, bool pushUndo)
         {
             if (!useSelection)
             {
@@ -876,11 +877,11 @@ namespace UTJ.VertexTweaker
             ref npMeshData model, IntPtr relation, Vector3 plane_normal);
 
         [DllImport("VertexTweakerCore")] static extern void npProjectVertices(
-            ref npMeshData model, ref npMeshData target, IntPtr ray_dirs, npProjectVerticesMode mode, float max_distance);
+            ref npMeshData model, ref npMeshData target, IntPtr ray_dirs, npProjectVerticesMode mode, float max_distance, bool mask);
         [DllImport("VertexTweakerCore")] static extern void npProjectVerticesRadial(
-            ref npMeshData model, ref npMeshData target, Vector3 center, npProjectVerticesMode mode, float max_distance);
+            ref npMeshData model, ref npMeshData target, Vector3 center, npProjectVerticesMode mode, float max_distance, bool mask);
         [DllImport("VertexTweakerCore")] static extern void npProjectVerticesDirectional(
-            ref npMeshData model, ref npMeshData target, Vector3 ray_dir, npProjectVerticesMode mode, float max_distance);
+            ref npMeshData model, ref npMeshData target, Vector3 ray_dir, npProjectVerticesMode mode, float max_distance, bool mask);
 
         [DllImport("VertexTweakerCore")] static extern void npApplySkinning(
             ref npSkinData skin,

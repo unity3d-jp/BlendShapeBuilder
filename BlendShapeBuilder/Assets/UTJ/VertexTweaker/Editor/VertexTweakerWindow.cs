@@ -384,7 +384,13 @@ namespace UTJ.VertexTweaker
                 settings.projTarget =
                     (GameObject)EditorGUILayout.ObjectField("Projection Target", settings.projTarget, typeof(GameObject), true);
                 settings.projMode = (npProjectVerticesMode)EditorGUILayout.EnumPopup("Projection Mode", settings.projMode);
+                EditorGUI.BeginChangeCheck();
                 settings.projRayDir = (ProjectionRayDirection)EditorGUILayout.EnumPopup("Ray Direction", settings.projRayDir);
+                if(EditorGUI.EndChangeCheck())
+                {
+                    if (settings.projRayDir == ProjectionRayDirection.Radial)
+                        settings.projRadialCenter = m_target.GetComponent<Transform>().position;
+                }
                 if (settings.projRayDir == ProjectionRayDirection.Radial)
                 {
                     EditorGUI.indentLevel++;
@@ -398,6 +404,7 @@ namespace UTJ.VertexTweaker
                     EditorGUI.indentLevel--;
                 }
                 settings.projMaxRayDistance = EditorGUILayout.FloatField("Max Ray Distance", settings.projMaxRayDistance);
+                settings.projUseSelection = EditorGUILayout.Toggle("Use Selection", settings.projUseSelection);
                 EditorGUILayout.Space();
 
                 if (GUILayout.Button("Apply Projection"))
@@ -410,11 +417,11 @@ namespace UTJ.VertexTweaker
                 EditorGUILayout.BeginHorizontal();
                 if (GUILayout.Button("Reset (Selection)"))
                 {
-                    m_target.ResetVertices(true, true);
+                    m_target.ApplyReset(true, true);
                 }
                 else if (GUILayout.Button("Reset (All)"))
                 {
-                    m_target.ResetVertices(false, true);
+                    m_target.ApplyReset(false, true);
                 }
                 EditorGUILayout.EndHorizontal();
             }

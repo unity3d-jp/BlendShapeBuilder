@@ -248,6 +248,7 @@ namespace UTJ.VertexTweaker
         [NonSerialized] public float projMaxRayDistance = 10.0f;
         [NonSerialized] public Vector3 projRadialCenter;
         [NonSerialized] public Vector3 projDirection = Vector3.down;
+        [NonSerialized] public bool projUseSelection = true;
 
         [NonSerialized] public bool objFlipHandedness = true;
         [NonSerialized] public bool objFlipFaces = false;
