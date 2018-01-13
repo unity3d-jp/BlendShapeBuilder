@@ -519,8 +519,6 @@ namespace UTJ.VertexTweaker
                         m_prevMove = m_selectionPos;
                     }
                 }
-                if (VertexHandles.axisMoveHandleLostControl)
-                    m_toolState = ToolState.Neutral;
 
                 // select vertex
                 if (mouseDown && e.button == 0 && m_toolState == ToolState.Neutral)
@@ -544,17 +542,17 @@ namespace UTJ.VertexTweaker
                         }
                     }
                 }
-                if (VertexHandles.freeMoveHandleLostControl)
-                {
-                    m_toolState = ToolState.Neutral;
-                    PushUndo();
-                }
 
                 if (handled)
                 {
                     var diff = move - m_prevMove;
                     m_prevMove = move;
                     ApplyMove(diff * 1.0f, Coordinate.World, false);
+                }
+                if (m_toolState != ToolState.Neutral && (VertexHandles.freeMoveHandleLostControl || VertexHandles.axisMoveHandleLostControl))
+                {
+                    m_toolState = ToolState.Neutral;
+                    PushUndo();
                 }
             }
             else if (editMode == EditMode.Rotate)
@@ -602,7 +600,7 @@ namespace UTJ.VertexTweaker
                         }
                     }
                 }
-                if (VertexHandles.rotationHandleLostControl)
+                if (m_toolState != ToolState.Neutral && VertexHandles.rotationHandleLostControl)
                 {
                     PushUndo();
                     m_toolState = ToolState.Neutral;
@@ -653,7 +651,7 @@ namespace UTJ.VertexTweaker
                         }
                     }
                 }
-                if (VertexHandles.scaleHandleLostControl)
+                if (m_toolState != ToolState.Neutral && VertexHandles.scaleHandleLostControl)
                 {
                     PushUndo();
                     m_toolState = ToolState.Neutral;
@@ -1063,6 +1061,7 @@ namespace UTJ.VertexTweaker
             m_history.mesh = m_meshTarget;
 
             Undo.FlushUndoRecordObjects();
+            Debug.Log("PushUndo " + m_historyIndex);
         }
 
         public void OnUndoRedo()
