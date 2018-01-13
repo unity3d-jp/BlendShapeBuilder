@@ -181,7 +181,8 @@ namespace UTJ.VertexTweaker
 
         public void ApplyAssign(Vector3 v, Coordinate c, int xyz, bool pushUndo)
         {
-            v = ToWorldVector(v, c);
+            if (c == Coordinate.World)
+                v = GetComponent<Transform>().worldToLocalMatrix.MultiplyPoint(v);
 
             npAssignVertices(ref m_npModelData, v, xyz, m_numSelected > 0);
             UpdateVertices();

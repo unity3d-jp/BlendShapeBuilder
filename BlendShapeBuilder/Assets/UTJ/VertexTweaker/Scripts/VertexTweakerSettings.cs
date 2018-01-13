@@ -238,6 +238,7 @@ namespace UTJ.VertexTweaker
         [NonSerialized] public Coordinate coordinate = Coordinate.World;
         [NonSerialized] public Vector3 assignValue = Vector3.up;
         [NonSerialized] public int assignMask = 0x7;
+        [NonSerialized] public Coordinate assignCoordinate = Coordinate.Local;
         [NonSerialized] public Vector3 moveAmount;
         [NonSerialized] public Vector3 rotateAmount;
         [NonSerialized] public Vector3 scaleAmount = Vector3.one;

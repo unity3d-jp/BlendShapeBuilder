@@ -280,19 +280,22 @@ namespace UTJ.VertexTweaker
 
                 GUILayout.BeginHorizontal();
                 EditorGUILayout.LabelField("Coordinate", GUILayout.Width(EditorGUIUtility.labelWidth));
-                settings.coordinate = (Coordinate)GUILayout.SelectionGrid((int)settings.coordinate, strCoodinate, strCoodinate.Length);
+                EditorGUI.BeginChangeCheck();
+                var coordinate = (Coordinate)GUILayout.SelectionGrid((int)settings.assignCoordinate, strCoodinate, strCoodinate.Length);
+                if (EditorGUI.EndChangeCheck())
+                    SetAssignCoordinate(coordinate);
                 GUILayout.EndHorizontal();
 
                 GUILayout.BeginHorizontal();
                 if (GUILayout.Button("Copy Selected Position [Shift+C]", GUILayout.Width(200)))
-                    settings.assignValue = m_target.selectionPosition;
+                    SetAssignValue(m_target.selectionPosition);
                 GUILayout.EndHorizontal();
 
                 EditorGUILayout.Space();
 
                 if (GUILayout.Button("Assign [Shift+V]"))
                 {
-                    m_target.ApplyAssign(settings.assignValue, settings.coordinate, settings.assignMask, true);
+                    m_target.ApplyAssign(settings.assignValue, settings.assignCoordinate, settings.assignMask, true);
                 }
             }
             else if (settings.editMode == EditMode.Move)
@@ -861,7 +864,7 @@ namespace UTJ.VertexTweaker
                 {
                     handled = true;
                     tips = "Copy";
-                    settings.assignValue = m_target.selectionPosition;
+                    SetAssignValue(m_target.selectionPosition);
                 }
                 else if (e.keyCode == KeyCode.V && e.shift)
                 {
@@ -963,6 +966,36 @@ namespace UTJ.VertexTweaker
             }
 
             return handled;
+        }
+
+
+
+        void SetAssignCoordinate(Coordinate c)
+        {
+            var settings = m_target.settings;
+            settings.assignCoordinate = c;
+            switch (c)
+            {
+                case Coordinate.World:
+                    settings.assignValue = m_target.GetComponent<Transform>().localToWorldMatrix.MultiplyPoint(settings.assignValue);
+                    break;
+                case Coordinate.Local:
+                    settings.assignValue = m_target.GetComponent<Transform>().worldToLocalMatrix.MultiplyPoint(settings.assignValue);
+                    break;
+            }
+        }
+        void SetAssignValue(Vector3 worldPos)
+        {
+            var settings = m_target.settings;
+            switch (settings.assignCoordinate)
+            {
+                case Coordinate.World:
+                    settings.assignValue = worldPos;
+                    break;
+                case Coordinate.Local:
+                    settings.assignValue = m_target.GetComponent<Transform>().worldToLocalMatrix.MultiplyPoint(worldPos);
+                    break;
+            }
         }
     }
 }
