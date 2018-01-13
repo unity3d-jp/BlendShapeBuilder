@@ -24,7 +24,7 @@ namespace UTJ.VertexTweaker
             var snap = 0.0f;
             var snap3 = Vector3.zero;
 
-            var et = Event.current.type;
+            var et = Event.current.rawType;
             int hcOld = GUIUtility.hotControl;
             int ncOld = HandleUtility.nearestControl;
 
@@ -71,7 +71,7 @@ namespace UTJ.VertexTweaker
             var size = HandleUtility.GetHandleSize(pos) * (rectSize * 0.01f);
             Vector3 snap = Vector3.one * 0.5f;
 
-            var et = Event.current.type;
+            var et = Event.current.rawType;
             int hcOld = GUIUtility.hotControl;
             int ncOld = HandleUtility.nearestControl;
 
@@ -106,7 +106,7 @@ namespace UTJ.VertexTweaker
         public static bool rotationHandleNear;
         public static Quaternion RotationHandle(Quaternion rot, Vector3 pos)
         {
-            var et = Event.current.type;
+            var et = Event.current.rawType;
             int hcOld = GUIUtility.hotControl;
             int ncOld = HandleUtility.nearestControl;
 
@@ -141,7 +141,7 @@ namespace UTJ.VertexTweaker
         public static bool scaleHandleNear;
         public static Vector3 ScaleHandle(Vector3 scale, Vector3 pos, Quaternion rot)
         {
-            var et = Event.current.type;
+            var et = Event.current.rawType;
             int hcOld = GUIUtility.hotControl;
             int ncOld = HandleUtility.nearestControl;
 

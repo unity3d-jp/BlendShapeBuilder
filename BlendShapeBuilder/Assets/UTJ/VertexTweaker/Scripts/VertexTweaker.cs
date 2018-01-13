@@ -415,7 +415,15 @@ namespace UTJ.VertexTweaker
         {
             Event e = Event.current;
             var et = e.type;
-            if (!e.isMouse && et != EventType.Layout && et != EventType.Repaint)
+            if (et == EventType.Ignore)
+            {
+                // handle out-of-window mouse move
+                if ((e.rawType == EventType.MouseDrag || e.rawType == EventType.MouseUp) && e.button == 0)
+                    et = e.rawType;
+                else
+                    return 0;
+            }
+            else if (!e.isMouse && et != EventType.Layout && et != EventType.Repaint)
                 return 0;
             if (e.isMouse && (e.shift || e.control || e.alt || m_toolState == ToolState.Selection))
                 return 0;
