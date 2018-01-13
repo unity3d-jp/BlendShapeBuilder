@@ -179,11 +179,11 @@ namespace UTJ.VertexTweaker
         }
 
 
-        public void ApplyAssign(Vector3 v, Coordinate c, bool pushUndo)
+        public void ApplyAssign(Vector3 v, Coordinate c, int xyz, bool pushUndo)
         {
             v = ToWorldVector(v, c);
 
-            npAssignVertices(ref m_npModelData, v);
+            npAssignVertices(ref m_npModelData, v, xyz, m_numSelected > 0);
             UpdateVertices();
             if (pushUndo) PushUndo();
         }
@@ -192,7 +192,7 @@ namespace UTJ.VertexTweaker
         {
             v = ToWorldVector(v, c);
 
-            npMoveVertices(ref m_npModelData, v);
+            npMoveVertices(ref m_npModelData, v, m_numSelected > 0);
             UpdateVertices();
             if (pushUndo) PushUndo();
         }
@@ -218,7 +218,7 @@ namespace UTJ.VertexTweaker
                 default: return;
             }
 
-            npRotatePivotVertices(ref m_npModelData, amount, pivotPos, pivotRot);
+            npRotatePivotVertices(ref m_npModelData, amount, pivotPos, pivotRot, m_numSelected > 0);
             m_npModelData.transform = backup;
 
             UpdateVertices();
@@ -246,7 +246,7 @@ namespace UTJ.VertexTweaker
                 default: return;
             }
 
-            npScaleVertices(ref m_npModelData, amount, pivotPos, pivotRot);
+            npScaleVertices(ref m_npModelData, amount, pivotPos, pivotRot, m_numSelected > 0);
             m_npModelData.transform = backup;
 
             UpdateVertices();
@@ -268,7 +268,7 @@ namespace UTJ.VertexTweaker
                 return;
             }
 
-            bool mask = m_settings.projUseSelection && m_numSelected > 0;
+            bool mask = m_numSelected > 0;
             var targetNP = (npMeshData)targetData;
             if(m_settings.projRayDir == ProjectionRayDirection.CurrentNormals)
                 npProjectVertices(ref m_npModelData, ref targetNP, m_normals, m_settings.projMode, m_settings.projMaxRayDistance, mask);
@@ -859,16 +859,16 @@ namespace UTJ.VertexTweaker
             ref Vector3 selection_pos, ref Vector3 selection_normal);
 
         [DllImport("VertexTweakerCore")] static extern int npAssignVertices(
-            ref npMeshData model, Vector3 value);
+            ref npMeshData model, Vector3 value, int xyz, bool mask);
         
         [DllImport("VertexTweakerCore")] static extern int npMoveVertices(
-            ref npMeshData model, Vector3 amount);
+            ref npMeshData model, Vector3 amount, bool mask);
         
         [DllImport("VertexTweakerCore")] static extern int npRotatePivotVertices(
-            ref npMeshData model, Quaternion amount, Vector3 pivotPos, Quaternion pivotRot);
+            ref npMeshData model, Quaternion amount, Vector3 pivotPos, Quaternion pivotRot, bool mask);
 
         [DllImport("VertexTweakerCore")] static extern int npScaleVertices(
-            ref npMeshData model, Vector3 amount, Vector3 pivotPos, Quaternion pivotRot);
+            ref npMeshData model, Vector3 amount, Vector3 pivotPos, Quaternion pivotRot, bool mask);
 
         [DllImport("VertexTweakerCore")] static extern int npBuildMirroringRelation(
             ref npMeshData model, Vector3 plane_normal, float epsilon, IntPtr relation);

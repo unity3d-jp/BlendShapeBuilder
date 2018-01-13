@@ -263,7 +263,26 @@ namespace UTJ.VertexTweaker
 
             if (settings.editMode == EditMode.Assign)
             {
-                settings.assignValue = EditorGUILayout.Vector3Field("Value", settings.assignValue);
+                bool mx = (settings.assignMask & 1) != 0;
+                bool my = (settings.assignMask & 2) != 0;
+                bool mz = (settings.assignMask & 4) != 0;
+
+                EditorGUILayout.LabelField("Value");
+                GUILayout.BeginHorizontal();
+                mx = EditorGUILayout.ToggleLeft("X", mx, GUILayout.Width(30));
+                settings.assignValue.x = EditorGUILayout.FloatField(settings.assignValue.x, GUILayout.Width(50));
+                my = EditorGUILayout.ToggleLeft("Y", my, GUILayout.Width(30));
+                settings.assignValue.y = EditorGUILayout.FloatField(settings.assignValue.y, GUILayout.Width(50));
+                mz = EditorGUILayout.ToggleLeft("Z", mz, GUILayout.Width(30));
+                settings.assignValue.z = EditorGUILayout.FloatField(settings.assignValue.z, GUILayout.Width(50));
+                GUILayout.EndHorizontal();
+                settings.assignMask = (mx ? 1 : 0) | (my ? 2 : 0) | (mz ? 4 : 0);
+
+                GUILayout.BeginHorizontal();
+                EditorGUILayout.LabelField("Coordinate", GUILayout.Width(EditorGUIUtility.labelWidth));
+                settings.coordinate = (Coordinate)GUILayout.SelectionGrid((int)settings.coordinate, strCoodinate, strCoodinate.Length);
+                GUILayout.EndHorizontal();
+
                 GUILayout.BeginHorizontal();
                 if (GUILayout.Button("Copy Selected Position [Shift+C]", GUILayout.Width(200)))
                     settings.assignValue = m_target.selectionPosition;
@@ -273,7 +292,7 @@ namespace UTJ.VertexTweaker
 
                 if (GUILayout.Button("Assign [Shift+V]"))
                 {
-                    m_target.ApplyAssign(settings.assignValue, settings.coordinate, true);
+                    m_target.ApplyAssign(settings.assignValue, settings.coordinate, settings.assignMask, true);
                 }
             }
             else if (settings.editMode == EditMode.Move)
@@ -404,7 +423,6 @@ namespace UTJ.VertexTweaker
                     EditorGUI.indentLevel--;
                 }
                 settings.projMaxRayDistance = EditorGUILayout.FloatField("Max Ray Distance", settings.projMaxRayDistance);
-                settings.projUseSelection = EditorGUILayout.Toggle("Use Selection", settings.projUseSelection);
                 EditorGUILayout.Space();
 
                 if (GUILayout.Button("Apply Projection"))
@@ -849,7 +867,7 @@ namespace UTJ.VertexTweaker
                 {
                     handled = true;
                     tips = "Paste";
-                    m_target.ApplyAssign(settings.assignValue, settings.coordinate, true);
+                    m_target.ApplyAssign(settings.assignValue, settings.coordinate, settings.assignMask, true);
                 }
                 else if (e.keyCode == KeyCode.Tab)
                 {

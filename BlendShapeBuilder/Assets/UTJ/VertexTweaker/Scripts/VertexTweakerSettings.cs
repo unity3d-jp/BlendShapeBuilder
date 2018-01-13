@@ -237,6 +237,7 @@ namespace UTJ.VertexTweaker
 
         [NonSerialized] public Coordinate coordinate = Coordinate.World;
         [NonSerialized] public Vector3 assignValue = Vector3.up;
+        [NonSerialized] public int assignMask = 0x7;
         [NonSerialized] public Vector3 moveAmount;
         [NonSerialized] public Vector3 rotateAmount;
         [NonSerialized] public Vector3 scaleAmount = Vector3.one;
@@ -248,7 +249,6 @@ namespace UTJ.VertexTweaker
         [NonSerialized] public float projMaxRayDistance = 10.0f;
         [NonSerialized] public Vector3 projRadialCenter;
         [NonSerialized] public Vector3 projDirection = Vector3.down;
-        [NonSerialized] public bool projUseSelection = true;
 
         [NonSerialized] public bool objFlipHandedness = true;
         [NonSerialized] public bool objFlipFaces = false;

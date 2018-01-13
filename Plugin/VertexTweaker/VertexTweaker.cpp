@@ -539,7 +539,7 @@ npAPI int npUpdateSelection(
 
 
 npAPI void npAssignVertices(
-    npMeshData *model, float3 value)
+    npMeshData *model, float3 value, int xyz, int mask)
 {
     auto num_vertices = model->num_vertices;
     auto vertices = model->vertices;
@@ -547,15 +547,18 @@ npAPI void npAssignVertices(
 
     value = mul_v(invert(model->transform), value);
     for (int vi = 0; vi < num_vertices; ++vi) {
-        float s = selection[vi];
+        float s = mask ? selection[vi] : 1.0f;
         if (s == 0.0f) continue;
 
-        vertices[vi] = lerp(vertices[vi], value, s);
+        float3 v = lerp(vertices[vi], value, s);
+        if (xyz & 1) vertices[vi].x = v.x;
+        if (xyz & 2) vertices[vi].y = v.y;
+        if (xyz & 4) vertices[vi].z = v.z;
     }
 }
 
 npAPI void npMoveVertices(
-    npMeshData *model, float3 value)
+    npMeshData *model, float3 value, int mask)
 {
     auto num_vertices = model->num_vertices;
     auto vertices = model->vertices;
@@ -563,7 +566,7 @@ npAPI void npMoveVertices(
 
     value = mul_v(invert(model->transform), value);
     for (int vi = 0; vi < num_vertices; ++vi) {
-        float s = selection[vi];
+        float s = mask ? selection[vi] : 1.0f;
         if (s == 0.0f) continue;
 
         vertices[vi] = (vertices[vi] + value * s);
@@ -571,7 +574,7 @@ npAPI void npMoveVertices(
 }
 
 npAPI void npRotatePivotVertices(
-    npMeshData *model, quatf value, float3 pivot_pos, quatf pivot_rot)
+    npMeshData *model, quatf value, float3 pivot_pos, quatf pivot_rot, int mask)
 {
     float3 axis;
     float angle;
@@ -594,14 +597,14 @@ npAPI void npRotatePivotVertices(
     auto rotation = to_pivot_space * to_mat4x4(value) * to_local_space;
 
     for (int vi = 0; vi < num_vertices; ++vi) {
-        float s = selection[vi];
+        float s = mask ? selection[vi] : 1.0f;
         if (s == 0.0f) continue;
         vertices[vi] = lerp(vertices[vi], mul_p(rotation, vertices[vi]), s);
     }
 }
 
 npAPI void npScaleVertices(
-    npMeshData *model, float3 value, float3 pivot_pos, quatf pivot_rot)
+    npMeshData *model, float3 value, float3 pivot_pos, quatf pivot_rot, int mask)
 {
     auto num_vertices = model->num_vertices;
     auto vertices = model->vertices;
@@ -617,7 +620,7 @@ npAPI void npScaleVertices(
     auto scale = to_pivot_space * scale44(value) * to_local_space;
 
     for (int vi = 0; vi < num_vertices; ++vi) {
-        float s = selection[vi];
+        float s = mask ? selection[vi] : 1.0f;
         if (s == 0.0f) continue;
         vertices[vi] = lerp(vertices[vi], mul_p(scale, vertices[vi]), s);
     }
