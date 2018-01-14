@@ -194,6 +194,7 @@ namespace UTJ.VertexTweaker
             "Single [1]",
             "Rect [2]",
             "Lasso [3]",
+            "Brush [4]",
         };
         static readonly string[] strCoodinate = new string[] {
             "World",
@@ -456,6 +457,10 @@ namespace UTJ.VertexTweaker
 
         void DrawSelectPanel()
         {
+            var settings = m_target.settings;
+            if (settings.softOp)
+                return;
+
             EditorGUILayout.BeginHorizontal();
             EditorGUILayout.BeginVertical(GUILayout.Width(indentSize));
             EditorGUILayout.Space();
@@ -471,8 +476,7 @@ namespace UTJ.VertexTweaker
 
             EditorGUILayout.BeginVertical();
 
-            var settings = m_target.settings;
-            settings.selectMode = (SelectMode)GUILayout.SelectionGrid((int)settings.selectMode, strSelectMode, 3);
+            settings.selectMode = (SelectMode)GUILayout.SelectionGrid((int)settings.selectMode, strSelectMode, 4);
             if (settings.selectMode == SelectMode.Brush)
             {
                 DrawBrushPanel();

@@ -1360,9 +1360,15 @@ void npProjectVerticesImpl(
             }
         }
         if (hit) {
-            if (PNT & 1) vertices[vi] = rvertex;
-            if (normals && (PNT & 2)) normals[vi] = rnormal;
-            if (tangents && (PNT & 4)) tangents[vi] = rtangents;
+            if (PNT & 1) {
+                vertices[vi] = lerp(vertices[vi], rvertex, s);
+            }
+            if (normals && (PNT & 2)) {
+                normals[vi] = normalize(lerp(normals[vi], rnormal, s));
+            }
+            if (tangents && (PNT & 4)) {
+                (float3&)tangents[vi] = normalize(lerp((float3&)tangents[vi], (float3&)rtangents, s));
+            }
         }
     });
 }

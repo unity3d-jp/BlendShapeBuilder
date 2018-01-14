@@ -484,8 +484,11 @@ namespace UTJ.VertexTweaker
                 }
             };
 
-
-            if (editMode == EditMode.Move)
+            if (m_toolState == ToolState.Selection)
+            {
+                searchNearestVertex();
+            }
+            else if (editMode == EditMode.Move)
             {
                 if ((m_toolState == ToolState.Neutral && (mouseMove || mouseDrag)) ||
                     (m_toolState == ToolState.FreeMove && !m_settings.softOp))
@@ -557,8 +560,7 @@ namespace UTJ.VertexTweaker
             }
             else if (editMode == EditMode.Rotate)
             {
-                if (m_toolState == ToolState.Neutral && m_settings.softOp && (mouseMove || mouseDrag) &&
-                    (!VertexHandles.rotationHandleNear))
+                if (m_toolState == ToolState.Neutral && m_settings.softOp && (mouseMove || mouseDrag) && !VertexHandles.rotationHandleNear)
                 {
                     searchNearestVertex();
                 }
@@ -608,8 +610,7 @@ namespace UTJ.VertexTweaker
             }
             else if (editMode == EditMode.Scale)
             {
-                if (m_toolState == ToolState.Neutral && m_settings.softOp && (mouseMove || mouseDrag) &&
-                    (!VertexHandles.scaleHandleNear))
+                if (m_toolState == ToolState.Neutral && m_settings.softOp && (mouseMove || mouseDrag) && !VertexHandles.scaleHandleNear)
                 {
                     searchNearestVertex();
                 }
@@ -659,8 +660,7 @@ namespace UTJ.VertexTweaker
             }
             else if (editMode == EditMode.Projection)
             {
-                if (m_toolState == ToolState.Neutral && (mouseMove || mouseDrag) &&
-                    (!VertexHandles.rotationHandleNear))
+                if (m_toolState == ToolState.Neutral && (mouseMove || mouseDrag) && !VertexHandles.rotationHandleNear)
                 {
                     searchNearestVertex();
                 }
@@ -668,7 +668,7 @@ namespace UTJ.VertexTweaker
                 if (m_settings.projRayDir == ProjectionRayDirection.Radial)
                 {
                     EditorGUI.BeginChangeCheck();
-                    var center = Handles.PositionHandle(m_settings.projRadialCenter, t.rotation);
+                    var center = VertexHandles.AxisMoveHandle(m_settings.projRadialCenter, t.rotation);
                     if (EditorGUI.EndChangeCheck())
                     {
                         handled = true;
@@ -714,11 +714,14 @@ namespace UTJ.VertexTweaker
         }
 
 
-        static readonly int selectCID = "VertexTweakerSelectHash".GetHashCode();
+        static readonly int s_selectID = 0x7fe8710;
 
         int HandleSelectTools()
         {
-            int cid = selectCID;
+            if (m_toolState != ToolState.Neutral && m_toolState != ToolState.Selection)
+                return 0;
+
+            int cid = s_selectID;
             Event e = Event.current;
             var et = e.GetTypeForControl(cid);
             if (et == EventType.Ignore)
@@ -837,6 +840,13 @@ namespace UTJ.VertexTweaker
                 }
                 else if (selectMode == SelectMode.Brush)
                 {
+                    if (mouseDown || mouseDrag || mouseMove)
+                    {
+                        bool prevRayHit = m_rayHit;
+                        m_rayHit = Raycast(e, ref m_rayPos, ref m_rayHitTriangle);
+                        if (m_rayHit || prevRayHit)
+                            handled = true;
+                    }
                     if (mouseDown)
                     {
                         m_toolState = ToolState.Selection;
@@ -848,8 +858,7 @@ namespace UTJ.VertexTweaker
                         if (mouseDown || mouseDrag)
                         {
                             var bd = m_settings.activeBrush;
-                            if (m_rayHit && SelectBrush(m_rayPos, bd.radius, bd.strength * selectSign, bd.samples))
-                                handled = true;
+                            SelectBrush(m_rayPos, bd.radius, bd.strength * selectSign, bd.samples);
                         }
                         else if (mouseUp)
                         {
