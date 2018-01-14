@@ -164,7 +164,9 @@ namespace UTJ.BlendShapeBuilder
                 imesh.tangents = tmpTangents;
                 imesh.name = target.name + ":" + name + "[" + fi + "]";
                 var pos = new Vector3(width * (fi + 1), 0.0f, 0.0f);
-                return Utils.MeshToGameObject(imesh, pos, materials);
+                var go = Utils.MeshToGameObject(imesh, pos, materials);
+                Undo.RegisterCreatedObjectUndo(go, "BlendShapeBuilder");
+                return go;
             };
 
             if (frameIndex < 0)
@@ -247,6 +249,7 @@ namespace UTJ.BlendShapeBuilder
                     weight += step;
                 }
             }
+            Undo.RegisterCreatedObjectUndo(baseGO, "BlendShapeBuilder");
 
             Selection.activeObject = baseGO;
             BlendShapeBuilderWindow.Open();

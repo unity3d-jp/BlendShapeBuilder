@@ -657,11 +657,14 @@ namespace UTJ.BlendShapeBuilder
 
             var go = frame.mesh as GameObject;
             if (go == null)
+            {
                 go = Utils.MeshToGameObject(mesh, Vector3.zero, Utils.ExtractMaterials(m_target));
-            
+                Undo.RegisterCreatedObjectUndo(go, "BlendShapeBuilder");
+            }
+
             var vt = go.GetComponent<UTJ.VertexTweaker.VertexTweaker>();
             if (vt == null)
-                vt = go.AddComponent<UTJ.VertexTweaker.VertexTweaker>();
+                vt = Undo.AddComponent<UTJ.VertexTweaker.VertexTweaker>(go);
 
             Selection.activeObject = go;
             VertexTweakerWindow.Open();
@@ -670,6 +673,7 @@ namespace UTJ.BlendShapeBuilder
 
         void OnAddFrame(BlendShapeData bsd)
         {
+            Undo.RecordObject(this, "BlendShapeBuilder");
             var frame = new BlendShapeFrameData();
             bsd.frames.Add(frame);
             bsd.NormalizeWeights();
@@ -681,6 +685,8 @@ namespace UTJ.BlendShapeBuilder
             var meshNew = Instantiate(meshBase);
             meshNew.name = meshNew.name.Replace("(Clone)", ":" + bsd.name + "[" + (bsd.frames.Count-1) + "]");
             frame.mesh = Utils.MeshToGameObject(meshNew, m_target.gameObject);
+
+            Undo.RegisterCreatedObjectUndo(frame.mesh, "BlendShapeBuilder");
         }
 
         private static void ZeroClear(Vector3[] dst)

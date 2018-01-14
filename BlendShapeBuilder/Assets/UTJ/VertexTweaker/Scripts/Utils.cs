@@ -7,7 +7,7 @@ namespace UTJ.VertexTweaker
 {
     public static class Utils
     {
-        public static GameObject MeshToGameObject(Mesh mesh, Vector3 pos, Material[] materials = null)
+        public static GameObject MeshToGameObject(Mesh mesh, Vector3 pos, Material[] materials)
         {
             if (materials == null)
                 materials = new Material[1] { AssetDatabase.GetBuiltinExtraResource<Material>("Default-Diffuse.mat") };
