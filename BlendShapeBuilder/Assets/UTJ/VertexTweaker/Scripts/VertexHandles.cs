@@ -7,10 +7,22 @@ namespace UTJ.VertexTweaker
     public static class VertexHandles
     {
         // "immutable" control ids
-        static readonly int axisMoveHandleFCID = "AxisMoveVertexHandleFHash".GetHashCode();
-        static readonly int axisMoveHandleXCID = "AxisMoveVertexHandleXHash".GetHashCode();
-        static readonly int axisMoveHandleYCID = "AxisMoveVertexHandleYHash".GetHashCode();
-        static readonly int axisMoveHandleZCID = "AxisMoveVertexHandleZHash".GetHashCode();
+        static readonly int s_positionXHandleID = 0x7fe8700;
+        static readonly int s_positionYHandleID = 0x7fe8701;
+        static readonly int s_positionZHandleID = 0x7fe8702;
+        static readonly int s_positionXYHandleID= 0x7fe8703;
+        static readonly int s_positionXZHandleID= 0x7fe8704;
+        static readonly int s_positionYZHandleID= 0x7fe8705;
+        static readonly int s_positionFHandleID = 0x7fe8706;
+        static readonly int s_freeMoveHandleID  = 0x7fe8707;
+        static readonly int s_rotationXHandleID = 0x7fe8708;
+        static readonly int s_rotationYHandleID = 0x7fe8709;
+        static readonly int s_rotationZHandleID = 0x7fe870a;
+        static readonly int s_rotationCamHandleID = 0x7fe870b;
+        static readonly int s_rotationXYZHandleID = 0x7fe870c;
+
+        static object s_positionHandleIds;
+        static MethodInfo s_DoPositionHandle;
 
         public static bool axisMoveHandleGainedControl;
         public static bool axisMoveHandleLostControl;
@@ -18,21 +30,31 @@ namespace UTJ.VertexTweaker
         public static bool axisMoveHandleNear;
         public static Vector3 AxisMoveHandle(Vector3 pos, Quaternion rot)
         {
-            var size = HandleUtility.GetHandleSize(pos);
-            var snap = 0.0f;
-            var snap3 = Vector3.zero;
+            // try to call Handles.DoPositionHandle() to assign immutable ids
+            if (s_positionHandleIds == null)
+            {
+                var PositionHandleIds_t = typeof(UnityEditor.Handles).GetNestedType("PositionHandleIds", BindingFlags.NonPublic);
+                if (PositionHandleIds_t != null)
+                {
+                    var ctor = PositionHandleIds_t.GetConstructor(new System.Type[] { typeof(int), typeof(int), typeof(int), typeof(int), typeof(int), typeof(int), typeof(int) });
+                    s_positionHandleIds = ctor.Invoke(new object[] {
+                        s_positionXHandleID, s_positionYHandleID, s_positionZHandleID,
+                        s_positionXYHandleID, s_positionXZHandleID, s_positionYZHandleID,
+                        s_positionFHandleID
+                    });
+                }
+                s_DoPositionHandle = typeof(UnityEditor.Handles).GetMethod("DoPositionHandle", BindingFlags.NonPublic | BindingFlags.Static);
+            }
+
 
             var et = Event.current.rawType;
             int hcOld = GUIUtility.hotControl;
             int ncOld = HandleUtility.nearestControl;
 
-            pos = Handles.FreeMoveHandle(axisMoveHandleFCID, pos, Quaternion.identity, size * 0.2f, snap3, Handles.RectangleHandleCap);
-            Handles.color = Handles.xAxisColor;
-            pos = Handles.Slider(axisMoveHandleXCID, pos, rot * Vector3.right, size, Handles.ArrowHandleCap, snap);
-            Handles.color = Handles.yAxisColor;
-            pos = Handles.Slider(axisMoveHandleYCID, pos, rot * Vector3.up, size, Handles.ArrowHandleCap, snap);
-            Handles.color = Handles.zAxisColor;
-            pos = Handles.Slider(axisMoveHandleZCID, pos, rot * Vector3.forward, size, Handles.ArrowHandleCap, snap);
+            if (s_positionHandleIds != null && s_DoPositionHandle != null)
+                pos = (Vector3)s_DoPositionHandle.Invoke(null, new object[] { s_positionHandleIds, pos, rot });
+            else
+                pos = Handles.PositionHandle(pos, rot);
 
             // check handle has control
             axisMoveHandleGainedControl = axisMoveHandleLostControl = false;
@@ -58,7 +80,6 @@ namespace UTJ.VertexTweaker
         }
 
 
-        static readonly int freeMoveHandleCID = "FreeMoveVertexHandleHash".GetHashCode();
         public static bool freeMoveHandleGainedControl;
         public static bool freeMoveHandleLostControl;
         public static bool freeMoveHandleHasControl;
@@ -73,7 +94,7 @@ namespace UTJ.VertexTweaker
             int hcOld = GUIUtility.hotControl;
             int ncOld = HandleUtility.nearestControl;
 
-            pos = Handles.FreeMoveHandle(freeMoveHandleCID, pos, Quaternion.identity, size, snap, Handles.RectangleHandleCap);
+            pos = Handles.FreeMoveHandle(s_freeMoveHandleID, pos, Quaternion.identity, size, snap, Handles.RectangleHandleCap);
 
             // check handle has control
             freeMoveHandleGainedControl = freeMoveHandleLostControl = false;
@@ -98,14 +119,9 @@ namespace UTJ.VertexTweaker
         }
 
 
-        static object s_RotationHandleIds;
-        static object s_RotationHandleParam;
+        static object s_rotationHandleIds;
+        static object s_rotationHandleParam;
         static MethodInfo s_DoRotationHandle;
-        static int s_XRotationHandleID = 0x7fe8700;
-        static int s_YRotationHandleID = 0x7fe8701;
-        static int s_ZRotationHandleID = 0x7fe8702;
-        static int s_CamRotationHandleID = 0x7fe8703;
-        static int s_XYZRotationHandleID = 0x7fe8704;
 
         public static bool rotationHandleGainedControl;
         public static bool rotationHandleLostControl;
@@ -115,15 +131,15 @@ namespace UTJ.VertexTweaker
 
         public static Quaternion RotationHandle(Quaternion rot, Vector3 pos)
         {
-            // try to call Handles.DoRotationHandle() to distinct free rotation or axis rotation
-            if (s_RotationHandleIds == null)
+            // try to call Handles.DoRotationHandle() to distinguish free rotation or axis rotation
+            if (s_rotationHandleIds == null)
             {
                 var RotationHandleIds_t = typeof(UnityEditor.Handles).GetNestedType("RotationHandleIds", BindingFlags.NonPublic);
                 if (RotationHandleIds_t != null)
                 {
                     var ctor = RotationHandleIds_t.GetConstructor(new System.Type[] { typeof(int), typeof(int), typeof(int), typeof(int), typeof(int) });
-                    s_RotationHandleIds = ctor.Invoke(new object[] {
-                        s_XRotationHandleID, s_YRotationHandleID, s_ZRotationHandleID, s_CamRotationHandleID, s_XYZRotationHandleID });
+                    s_rotationHandleIds = ctor.Invoke(new object[] {
+                        s_rotationXHandleID, s_rotationYHandleID, s_rotationZHandleID, s_rotationCamHandleID, s_rotationXYZHandleID });
                 }
 
                 var RotationHandleParam_t = typeof(UnityEditor.Handles).GetNestedType("RotationHandleParam", BindingFlags.NonPublic);
@@ -132,7 +148,7 @@ namespace UTJ.VertexTweaker
                     var pDefault = RotationHandleParam_t.GetProperty("Default", BindingFlags.Public | BindingFlags.Static);
                     if (pDefault != null)
                     {
-                        s_RotationHandleParam = pDefault.GetGetMethod().Invoke(null, null);
+                        s_rotationHandleParam = pDefault.GetGetMethod().Invoke(null, null);
                     }
                 }
 
@@ -143,8 +159,8 @@ namespace UTJ.VertexTweaker
             int hcOld = GUIUtility.hotControl;
             int ncOld = HandleUtility.nearestControl;
 
-            if (s_RotationHandleIds != null && s_RotationHandleParam != null && s_DoRotationHandle != null)
-                rot = (Quaternion)s_DoRotationHandle.Invoke(null, new object[] { s_RotationHandleIds, rot, pos, s_RotationHandleParam });
+            if (s_rotationHandleIds != null && s_rotationHandleParam != null && s_DoRotationHandle != null)
+                rot = (Quaternion)s_DoRotationHandle.Invoke(null, new object[] { s_rotationHandleIds, rot, pos, s_rotationHandleParam });
             else
                 rot = Handles.RotationHandle(rot, pos);
 
@@ -156,7 +172,7 @@ namespace UTJ.VertexTweaker
                     if (Event.current.button == 0 && GUIUtility.hotControl != hcOld)
                     {
                         rotationHandleHasControl = rotationHandleGainedControl = true;
-                        freeRotating = GUIUtility.hotControl == s_XYZRotationHandleID;
+                        freeRotating = GUIUtility.hotControl == s_rotationXYZHandleID;
                     }
                     break;
                 case EventType.MouseUp:
