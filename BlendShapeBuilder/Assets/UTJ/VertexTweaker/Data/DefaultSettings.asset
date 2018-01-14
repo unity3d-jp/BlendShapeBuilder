@@ -11,11 +11,11 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 322113ad21ec853419f1b961f63c1d62, type: 3}
   m_Name: DefaultSettings
   m_EditorClassIdentifier: 
-  normalMode: 0
-  tangentsMode: 0
+  normalMode: 2
+  tangentsMode: 1
   tangentsPrecision: 0
   editMode: 0
-  selectMode: 2
+  selectMode: 1
   mirrorMode: 0
   mirrorEpsilon: 0.0001
   selectFrontSideOnly: 1
@@ -31,14 +31,14 @@ MonoBehaviour:
       - serializedVersion: 2
         time: 0
         value: 0
-        inSlope: 1
-        outSlope: 1
+        inSlope: 0
+        outSlope: 0
         tangentMode: 0
       - serializedVersion: 2
         time: 1
         value: 1
-        inSlope: 1
-        outSlope: 1
+        inSlope: 0
+        outSlope: 0
         tangentMode: 0
       m_PreInfinity: 2
       m_PostInfinity: 2
@@ -94,14 +94,14 @@ MonoBehaviour:
       - serializedVersion: 2
         time: 0
         value: 0
-        inSlope: 0
-        outSlope: 0
+        inSlope: 1
+        outSlope: 1
         tangentMode: 0
       - serializedVersion: 2
         time: 1
         value: 1
-        inSlope: 0
-        outSlope: 0
+        inSlope: 1
+        outSlope: 1
         tangentMode: 0
       m_PreInfinity: 2
       m_PostInfinity: 2

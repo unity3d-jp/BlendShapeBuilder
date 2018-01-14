@@ -162,7 +162,7 @@ namespace UTJ.BlendShapeBuilder
                 imesh.vertices = tmpVertices;
                 imesh.normals = tmpNormals;
                 imesh.tangents = tmpTangents;
-                imesh.name = name + " [" + fi + "]";
+                imesh.name = target.name + ":" + name + "[" + fi + "]";
                 var pos = new Vector3(width * (fi + 1), 0.0f, 0.0f);
                 return Utils.MeshToGameObject(imesh, pos, materials);
             };
@@ -211,8 +211,8 @@ namespace UTJ.BlendShapeBuilder
             if (targetMesh == null) { return; }
             var materials = Utils.ExtractMaterials(targetObject);
 
-            int numShapes = targetMesh.blendShapeCount;
-            if(numShapes == 0)
+            int numBS = targetMesh.blendShapeCount;
+            if(numBS == 0)
             {
                 Debug.Log("BlendShapeInspector: This mesh has no BlendShape.");
                 return;
@@ -223,12 +223,15 @@ namespace UTJ.BlendShapeBuilder
             baseMesh.ClearBlendShapes();
             var baseGO = Utils.MeshToGameObject(baseMesh, Vector3.zero, materials);
 
-            var data = new List<BlendShapeData>();
-            for (int si = 0; si < numShapes; ++si)
+            var builder = baseGO.AddComponent<BlendShapeBuilder>();
+            var data = builder.data.blendShapeData;
+            data.Clear();
+
+            for (int bi = 0; bi < numBS; ++bi)
             {
-                var name = targetMesh.GetBlendShapeName(si);
-                int numFrames = targetMesh.GetBlendShapeFrameCount(si);
-                var gos = ExtractBlendShapeFrames(targetMesh, si, -1, materials);
+                var name = targetMesh.GetBlendShapeName(bi);
+                int numFrames = targetMesh.GetBlendShapeFrameCount(bi);
+                var gos = ExtractBlendShapeFrames(targetMesh, bi, -1, materials);
 
                 float step = 100.0f / numFrames;
                 float weight = step;
@@ -245,12 +248,8 @@ namespace UTJ.BlendShapeBuilder
                 }
             }
 
+            Selection.activeObject = baseGO;
             BlendShapeBuilderWindow.Open();
-            var window = EditorWindow.GetWindow<BlendShapeBuilderWindow>();
-            window.ModifyBlendShapeData(d => {
-                d.baseMesh = baseGO;
-                d.blendShapeData = data;
-            });
         }
 
         #endregion

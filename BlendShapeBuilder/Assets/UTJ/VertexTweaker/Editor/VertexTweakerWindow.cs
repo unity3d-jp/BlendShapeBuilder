@@ -631,7 +631,7 @@ namespace UTJ.VertexTweaker
 
             EditorGUILayout.Space();
             if (GUILayout.Button("Save Settings"))
-                m_target.ExportSettings("Assets/UTJ/BlendShapeBuilder/Data/DefaultSettings.asset");
+                m_target.ExportSettings("Assets/UTJ/VertexTweaker/Data/DefaultSettings.asset");
 
             EditorGUILayout.EndVertical();
             EditorGUILayout.EndHorizontal();

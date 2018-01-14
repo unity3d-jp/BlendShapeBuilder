@@ -548,7 +548,8 @@ namespace UTJ.VertexTweaker
                 {
                     var diff = move - m_prevMove;
                     m_prevMove = move;
-                    ApplyMove(diff * 1.0f, Coordinate.World, false);
+                    if (m_numSelected > 0)
+                        ApplyMove(diff * 1.0f, Coordinate.World, false);
                 }
                 if (m_toolState != ToolState.Neutral && (!VertexHandles.axisMoveHandleHasControl && !VertexHandles.freeMoveHandleHasControl))
                 {
@@ -585,7 +586,8 @@ namespace UTJ.VertexTweaker
                         handled = true;
                         var diff = VertexHandles.freeRotating ? rot : (Quaternion.Inverse(m_prevRot) * rot);
                         m_prevRot = rot;
-                        ApplyRotatePivot(Quaternion.Inverse(diff), handlePos, pivotRot, Coordinate.Pivot, false);
+                        if (m_numSelected > 0)
+                            ApplyRotatePivot(Quaternion.Inverse(diff), handlePos, pivotRot, Coordinate.Pivot, false);
                     }
                     if (VertexHandles.rotationHandleGainedControl)
                     {
@@ -635,7 +637,8 @@ namespace UTJ.VertexTweaker
                         handled = true;
                         var diff = scale - m_prevScale;
                         m_prevScale = scale;
-                        ApplyScale(Vector3.one + diff, handlePos, pivotRot, Coordinate.Pivot, false);
+                        if (m_numSelected > 0)
+                            ApplyScale(Vector3.one + diff, handlePos, pivotRot, Coordinate.Pivot, false);
                     }
                     if (VertexHandles.scaleHandleGainedControl)
                     {
@@ -679,7 +682,7 @@ namespace UTJ.VertexTweaker
                     var rot = VertexHandles.RotationHandle(Quaternion.identity, m_rayVertexPos);
                     if (EditorGUI.EndChangeCheck())
                     {
-                        var diff = (Quaternion.Inverse(m_prevRot) * rot);
+                        var diff = VertexHandles.freeRotating ? rot : (Quaternion.Inverse(m_prevRot) * rot);
                         m_prevRot = rot;
                         m_settings.projDirection = (diff * m_settings.projDirection).normalized;
                         handled = true;

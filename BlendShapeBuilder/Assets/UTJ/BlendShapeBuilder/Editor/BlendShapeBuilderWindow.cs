@@ -118,18 +118,6 @@ namespace UTJ.BlendShapeBuilder
 
 
         #region impl
-
-        public void ModifyBlendShapeData(Action<BlendShapeBuilderData> op)
-        {
-            if (m_target == null) { return; }
-            var m_data = m_target.data;
-            if (m_data != null)
-            {
-                Undo.RecordObject(m_target, "BlendShapeBuilder");
-                op(m_data);
-            }
-        }
-
         bool IsValidTarget(UnityEngine.Object obj)
         {
             if (obj == null)
@@ -691,7 +679,7 @@ namespace UTJ.BlendShapeBuilder
                 return;
 
             var meshNew = Instantiate(meshBase);
-            meshNew.name = meshNew.name.Replace("(Clone)", "(BlendShape Frame)");
+            meshNew.name = meshNew.name.Replace("(Clone)", ":" + bsd.name + "[" + (bsd.frames.Count-1) + "]");
             frame.mesh = Utils.MeshToGameObject(meshNew, m_target.gameObject);
         }
 
