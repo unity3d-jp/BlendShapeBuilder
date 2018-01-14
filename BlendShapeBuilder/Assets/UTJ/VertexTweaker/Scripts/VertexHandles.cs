@@ -1,8 +1,6 @@
+using System.Reflection;
 using UnityEngine;
 using UnityEditor;
-using System;
-using System.Collections.Generic;
-using System.Runtime.InteropServices;
 
 namespace UTJ.VertexTweaker
 {
@@ -100,17 +98,55 @@ namespace UTJ.VertexTweaker
         }
 
 
+        static object s_RotationHandleIds;
+        static object s_RotationHandleParam;
+        static MethodInfo s_DoRotationHandle;
+        static int s_XRotationHandleID = 0x7fe8700;
+        static int s_YRotationHandleID = 0x7fe8701;
+        static int s_ZRotationHandleID = 0x7fe8702;
+        static int s_CamRotationHandleID = 0x7fe8703;
+        static int s_XYZRotationHandleID = 0x7fe8704;
+
         public static bool rotationHandleGainedControl;
         public static bool rotationHandleLostControl;
         public static bool rotationHandleHasControl;
         public static bool rotationHandleNear;
+        public static bool freeRotating;
+
         public static Quaternion RotationHandle(Quaternion rot, Vector3 pos)
         {
+            // try to call Handles.DoRotationHandle() to distinct free rotation or axis rotation
+            if (s_RotationHandleIds == null)
+            {
+                var RotationHandleIds_t = typeof(UnityEditor.Handles).GetNestedType("RotationHandleIds", BindingFlags.NonPublic);
+                if (RotationHandleIds_t != null)
+                {
+                    var ctor = RotationHandleIds_t.GetConstructor(new System.Type[] { typeof(int), typeof(int), typeof(int), typeof(int), typeof(int) });
+                    s_RotationHandleIds = ctor.Invoke(new object[] {
+                        s_XRotationHandleID, s_YRotationHandleID, s_ZRotationHandleID, s_CamRotationHandleID, s_XYZRotationHandleID });
+                }
+
+                var RotationHandleParam_t = typeof(UnityEditor.Handles).GetNestedType("RotationHandleParam", BindingFlags.NonPublic);
+                if (RotationHandleParam_t != null)
+                {
+                    var pDefault = RotationHandleParam_t.GetProperty("Default", BindingFlags.Public | BindingFlags.Static);
+                    if (pDefault != null)
+                    {
+                        s_RotationHandleParam = pDefault.GetGetMethod().Invoke(null, null);
+                    }
+                }
+
+                s_DoRotationHandle = typeof(UnityEditor.Handles).GetMethod("DoRotationHandle", BindingFlags.NonPublic | BindingFlags.Static);
+            }
+
             var et = Event.current.rawType;
             int hcOld = GUIUtility.hotControl;
             int ncOld = HandleUtility.nearestControl;
 
-            rot = Handles.RotationHandle(rot, pos);
+            if (s_RotationHandleIds != null && s_RotationHandleParam != null && s_DoRotationHandle != null)
+                rot = (Quaternion)s_DoRotationHandle.Invoke(null, new object[] { s_RotationHandleIds, rot, pos, s_RotationHandleParam });
+            else
+                rot = Handles.RotationHandle(rot, pos);
 
             // check handle has control
             rotationHandleGainedControl = rotationHandleLostControl = false;
@@ -118,13 +154,17 @@ namespace UTJ.VertexTweaker
             {
                 case EventType.MouseDown:
                     if (Event.current.button == 0 && GUIUtility.hotControl != hcOld)
+                    {
                         rotationHandleHasControl = rotationHandleGainedControl = true;
+                        freeRotating = GUIUtility.hotControl == s_XYZRotationHandleID;
+                    }
                     break;
                 case EventType.MouseUp:
                     if (Event.current.button == 0 && rotationHandleHasControl)
                     {
                         rotationHandleLostControl = true;
                         rotationHandleHasControl = false;
+                        freeRotating = false;
                     }
                     break;
                 case EventType.Layout:

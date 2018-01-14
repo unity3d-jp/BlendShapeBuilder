@@ -583,7 +583,7 @@ namespace UTJ.VertexTweaker
                     if (EditorGUI.EndChangeCheck())
                     {
                         handled = true;
-                        var diff = (Quaternion.Inverse(m_prevRot) * rot);
+                        var diff = VertexHandles.freeRotating ? rot : (Quaternion.Inverse(m_prevRot) * rot);
                         m_prevRot = rot;
                         ApplyRotatePivot(Quaternion.Inverse(diff), handlePos, pivotRot, Coordinate.Pivot, false);
                     }
