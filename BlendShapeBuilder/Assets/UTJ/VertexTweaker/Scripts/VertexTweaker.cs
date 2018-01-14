@@ -425,7 +425,9 @@ namespace UTJ.VertexTweaker
             }
             else if (!e.isMouse && et != EventType.Layout && et != EventType.Repaint)
                 return 0;
-            if (e.isMouse && (e.shift || e.control || e.alt || m_toolState == ToolState.Selection))
+            if (e.isMouse && m_toolState == ToolState.Neutral && (e.shift || e.control || e.alt))
+                return 0;
+            if (m_toolState == ToolState.Selection)
                 return 0;
 
             // check if model has been changed
@@ -484,11 +486,7 @@ namespace UTJ.VertexTweaker
                 }
             };
 
-            if (m_toolState == ToolState.Selection)
-            {
-                searchNearestVertex();
-            }
-            else if (editMode == EditMode.Move)
+            if (editMode == EditMode.Move)
             {
                 if ((m_toolState == ToolState.Neutral && (mouseMove || mouseDrag)) ||
                     (m_toolState == ToolState.FreeMove && !m_settings.softOp))
@@ -552,7 +550,7 @@ namespace UTJ.VertexTweaker
                     m_prevMove = move;
                     ApplyMove(diff * 1.0f, Coordinate.World, false);
                 }
-                if (m_toolState != ToolState.Neutral && (VertexHandles.freeMoveHandleLostControl || VertexHandles.axisMoveHandleLostControl))
+                if (m_toolState != ToolState.Neutral && (!VertexHandles.axisMoveHandleHasControl && !VertexHandles.freeMoveHandleHasControl))
                 {
                     m_toolState = ToolState.Neutral;
                     PushUndo();
@@ -602,7 +600,7 @@ namespace UTJ.VertexTweaker
                         }
                     }
                 }
-                if (m_toolState != ToolState.Neutral && VertexHandles.rotationHandleLostControl)
+                if (m_toolState != ToolState.Neutral && !VertexHandles.rotationHandleHasControl)
                 {
                     PushUndo();
                     m_toolState = ToolState.Neutral;
@@ -652,7 +650,7 @@ namespace UTJ.VertexTweaker
                         }
                     }
                 }
-                if (m_toolState != ToolState.Neutral && VertexHandles.scaleHandleLostControl)
+                if (m_toolState != ToolState.Neutral && !VertexHandles.scaleHandleHasControl)
                 {
                     PushUndo();
                     m_toolState = ToolState.Neutral;

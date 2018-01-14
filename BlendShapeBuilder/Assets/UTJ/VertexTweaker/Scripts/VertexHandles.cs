@@ -25,7 +25,6 @@ namespace UTJ.VertexTweaker
         static MethodInfo s_DoPositionHandle;
 
         public static bool axisMoveHandleGainedControl;
-        public static bool axisMoveHandleLostControl;
         public static bool axisMoveHandleHasControl;
         public static bool axisMoveHandleNear;
         public static Vector3 AxisMoveHandle(Vector3 pos, Quaternion rot)
@@ -57,7 +56,7 @@ namespace UTJ.VertexTweaker
                 pos = Handles.PositionHandle(pos, rot);
 
             // check handle has control
-            axisMoveHandleGainedControl = axisMoveHandleLostControl = false;
+            axisMoveHandleGainedControl = false;
             switch (et)
             {
                 case EventType.MouseDown:
@@ -66,10 +65,7 @@ namespace UTJ.VertexTweaker
                     break;
                 case EventType.MouseUp:
                     if (Event.current.button == 0 && axisMoveHandleHasControl)
-                    {
-                        axisMoveHandleLostControl = true;
                         axisMoveHandleHasControl = false;
-                    }
                     break;
                 case EventType.Layout:
                     axisMoveHandleNear = HandleUtility.nearestControl != ncOld;
@@ -81,7 +77,6 @@ namespace UTJ.VertexTweaker
 
 
         public static bool freeMoveHandleGainedControl;
-        public static bool freeMoveHandleLostControl;
         public static bool freeMoveHandleHasControl;
         public static bool freeMoveHandleNear;
 
@@ -97,7 +92,7 @@ namespace UTJ.VertexTweaker
             pos = Handles.FreeMoveHandle(s_freeMoveHandleID, pos, Quaternion.identity, size, snap, Handles.RectangleHandleCap);
 
             // check handle has control
-            freeMoveHandleGainedControl = freeMoveHandleLostControl = false;
+            freeMoveHandleGainedControl = false;
             switch (et)
             {
                 case EventType.MouseDown:
@@ -106,10 +101,7 @@ namespace UTJ.VertexTweaker
                     break;
                 case EventType.MouseUp:
                     if (Event.current.button == 0 && freeMoveHandleHasControl)
-                    {
-                        freeMoveHandleLostControl = true;
                         freeMoveHandleHasControl = false;
-                    }
                     break;
                 case EventType.Layout:
                     freeMoveHandleNear = HandleUtility.nearestControl != ncOld;
@@ -124,7 +116,6 @@ namespace UTJ.VertexTweaker
         static MethodInfo s_DoRotationHandle;
 
         public static bool rotationHandleGainedControl;
-        public static bool rotationHandleLostControl;
         public static bool rotationHandleHasControl;
         public static bool rotationHandleNear;
         public static bool freeRotating;
@@ -165,7 +156,7 @@ namespace UTJ.VertexTweaker
                 rot = Handles.RotationHandle(rot, pos);
 
             // check handle has control
-            rotationHandleGainedControl = rotationHandleLostControl = false;
+            rotationHandleGainedControl = false;
             switch (et)
             {
                 case EventType.MouseDown:
@@ -178,7 +169,6 @@ namespace UTJ.VertexTweaker
                 case EventType.MouseUp:
                     if (Event.current.button == 0 && rotationHandleHasControl)
                     {
-                        rotationHandleLostControl = true;
                         rotationHandleHasControl = false;
                         freeRotating = false;
                     }
@@ -192,7 +182,6 @@ namespace UTJ.VertexTweaker
 
 
         public static bool scaleHandleGainedControl;
-        public static bool scaleHandleLostControl;
         public static bool scaleHandleHasControl;
         public static bool scaleHandleNear;
         public static Vector3 ScaleHandle(Vector3 scale, Vector3 pos, Quaternion rot)
@@ -206,7 +195,7 @@ namespace UTJ.VertexTweaker
             scale = Handles.ScaleHandle(scale, pos, rot, size);
 
             // check handle has control
-            scaleHandleGainedControl = scaleHandleLostControl = false;
+            scaleHandleGainedControl = false;
             switch (et)
             {
                 case EventType.MouseDown:
@@ -215,10 +204,7 @@ namespace UTJ.VertexTweaker
                     break;
                 case EventType.MouseUp:
                     if (Event.current.button == 0 && scaleHandleHasControl)
-                    {
-                        scaleHandleLostControl = true;
                         scaleHandleHasControl = false;
-                    }
                     break;
                 case EventType.Layout:
                     scaleHandleNear = HandleUtility.nearestControl != ncOld;
