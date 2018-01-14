@@ -934,7 +934,7 @@ namespace UTJ.VertexTweaker
 
             if (m_matVisualize == null || m_meshCube == null || m_meshLine == null)
             {
-                Debug.LogWarning("NormalEditor: Some resources are missing.\n");
+                Debug.LogWarning("Some resources are missing.\n");
                 return;
             }
 
@@ -995,7 +995,7 @@ namespace UTJ.VertexTweaker
             if (m_cmdDraw == null)
             {
                 m_cmdDraw = new CommandBuffer();
-                m_cmdDraw.name = "NormalEditor";
+                m_cmdDraw.name = "VertexTweaker";
             }
             m_cmdDraw.Clear();
 

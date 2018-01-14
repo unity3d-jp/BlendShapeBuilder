@@ -1,4 +1,4 @@
-﻿Shader "Hidden/NormalPainter/Visualizer" {
+﻿Shader "Hidden/VertexTweaker/Visualizer" {
 
 CGINCLUDE
 #include "UnityCG.cginc"

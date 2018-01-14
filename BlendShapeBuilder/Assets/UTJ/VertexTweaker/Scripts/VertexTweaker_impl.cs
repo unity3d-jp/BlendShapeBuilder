@@ -789,7 +789,7 @@ namespace UTJ.VertexTweaker
             }
 
             if (pushUndo)
-                Undo.RecordObjects(bones, "NormalPainter: ResetToBindpose");
+                Undo.RecordObjects(bones, "VertexTweaker");
 
             foreach (var kvp in bindposeMap)
             {
