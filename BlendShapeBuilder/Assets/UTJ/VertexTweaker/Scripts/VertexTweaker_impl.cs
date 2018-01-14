@@ -343,11 +343,7 @@ namespace UTJ.VertexTweaker
                     IntPtr.Zero, m_normalsBasePredeformed, m_tangentsBasePredeformed,
                     IntPtr.Zero, m_normalsBase, m_tangentsBase);
 
-                if (m_cbPoints != null) m_cbPoints.SetData(m_points);
-                if (m_cbNormals != null) m_cbNormals.SetData(m_normals);
-                if (m_cbBaseNormals != null) m_cbBaseNormals.SetData(m_normalsBase);
-                if (m_cbTangents != null) m_cbTangents.SetData(m_tangents);
-                if (m_cbBaseTangents != null) m_cbBaseTangents.SetData(m_tangentsBase);
+                m_cbPointsDirty = m_cbNormalsDirty = m_cbBaseNormalsDirty = m_cbTangentsDirty = m_cbBaseTangentsDirty = true;
             }
         }
 
@@ -375,22 +371,19 @@ namespace UTJ.VertexTweaker
                 ApplyMirroringInternal();
 
             m_meshTarget.SetVertices(m_pointsPredeformed);
-            if (m_cbPoints != null)
-                m_cbPoints.SetData(m_points);
+            m_cbPointsDirty = true;
             if (flushAll)
             {
                 if (m_normals.Count == m_points.Count)
                 {
                     m_meshTarget.SetNormals(m_normalsPredeformed);
-                    if (m_cbNormals != null)
-                        m_cbNormals.SetData(m_normals);
+                    m_cbNormalsDirty = true;
 
                 }
                 if (m_tangents.Count == m_points.Count)
                 {
                     m_meshTarget.SetTangents(m_tangentsPredeformed);
-                    if (m_cbTangents != null)
-                        m_cbTangents.SetData(m_tangents);
+                    m_cbTangentsDirty = true;
                 }
             }
             else
@@ -446,7 +439,7 @@ namespace UTJ.VertexTweaker
             }
             else
             {
-                m_cbSelection.SetData(m_selection);
+                m_cbSelectionDirty = true;
             }
         }
 
@@ -469,9 +462,7 @@ namespace UTJ.VertexTweaker
 
             if (updateMesh)
                 m_meshTarget.SetNormals(m_normalsPredeformed);
-
-            if (m_cbNormals != null)
-                m_cbNormals.SetData(m_normals);
+            m_cbNormalsDirty = true;
         }
 
         public void RecalculateTangents(bool updateMesh = true)
@@ -513,9 +504,7 @@ namespace UTJ.VertexTweaker
 
             if(updateMesh)
                 m_meshTarget.SetTangents(m_tangentsPredeformed);
-
-            if (m_cbTangents != null)
-                m_cbTangents.SetData(m_tangents);
+            m_cbTangentsDirty = true;
         }
 
 

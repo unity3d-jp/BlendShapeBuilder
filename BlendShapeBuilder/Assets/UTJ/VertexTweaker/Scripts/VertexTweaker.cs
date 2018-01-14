@@ -36,13 +36,15 @@ namespace UTJ.VertexTweaker
 
         ComputeBuffer m_cbArg;
         ComputeBuffer m_cbPoints;
-        ComputeBuffer m_cbNormals;
-        ComputeBuffer m_cbTangents;
+        ComputeBuffer m_cbNormals, m_cbBaseNormals;
+        ComputeBuffer m_cbTangents, m_cbBaseTangents;
         ComputeBuffer m_cbSelection;
-        ComputeBuffer m_cbBaseNormals;
-        ComputeBuffer m_cbBaseTangents;
         ComputeBuffer m_cbBrushSamples;
         CommandBuffer m_cmdDraw;
+        bool m_cbPointsDirty = true;
+        bool m_cbNormalsDirty = true, m_cbBaseNormalsDirty = true;
+        bool m_cbTangentsDirty = true, m_cbBaseTangentsDirty = true;
+        bool m_cbSelectionDirty = true;
 
         bool m_skinned;
         PinnedList<Vector3> m_points, m_pointsPredeformed, m_pointsBase, m_pointsBasePredeformed;
@@ -288,38 +290,6 @@ namespace UTJ.VertexTweaker
                     m_npSkinData.bindposes = m_bindposes;
                     m_npSkinData.bones = m_boneMatrices;
                 }
-
-            }
-
-            if (m_cbPoints == null && m_points != null && m_points.Count > 0)
-            {
-                m_cbPoints = new ComputeBuffer(m_points.Count, 12);
-                m_cbPoints.SetData(m_points);
-            }
-            if (m_cbNormals == null && m_normals != null && m_normals.Count > 0)
-            {
-                m_cbNormals = new ComputeBuffer(m_normals.Count, 12);
-                m_cbNormals.SetData(m_normals);
-                m_cbBaseNormals = new ComputeBuffer(m_normalsBase.Count, 12);
-                m_cbBaseNormals.SetData(m_normalsBase);
-            }
-            if (m_cbTangents == null && m_tangents != null && m_tangents.Count > 0)
-            {
-                m_cbTangents = new ComputeBuffer(m_tangents.Count, 16);
-                m_cbTangents.SetData(m_tangents);
-                m_cbBaseTangents = new ComputeBuffer(m_tangentsBase.Count, 16);
-                m_cbBaseTangents.SetData(m_tangentsBase);
-            }
-            if (m_cbSelection == null && m_selection != null && m_selection.Count > 0)
-            {
-                m_cbSelection = new ComputeBuffer(m_selection.Count, 4);
-                m_cbSelection.SetData(m_selection);
-            }
-
-            if (m_cbArg == null && m_points != null && m_points.Count > 0)
-            {
-                m_cbArg = new ComputeBuffer(1, 5 * sizeof(uint), ComputeBufferType.IndirectArguments);
-                m_cbArg.SetData(new uint[5] { m_meshCube.GetIndexCount(0), (uint)m_points.Count, 0, 0, 0 });
             }
 
             m_settings.InitializeBrushData();
@@ -350,6 +320,70 @@ namespace UTJ.VertexTweaker
             if (m_cbBaseTangents != null) { m_cbBaseTangents.Release(); m_cbBaseTangents = null; }
             if (m_cbBrushSamples != null) { m_cbBrushSamples.Release(); m_cbBrushSamples = null; }
             if (m_cmdDraw != null) { m_cmdDraw.Release(); m_cmdDraw = null; }
+        }
+
+        void UpdateComputeBuffers()
+        {
+            if (!SystemInfo.supportsComputeShaders)
+                return;
+
+            if (m_cbPoints == null && m_points != null && m_points.Count > 0)
+            {
+                m_cbPoints = new ComputeBuffer(m_points.Count, 12);
+            }
+            if(m_cbPointsDirty)
+            {
+                m_cbPoints.SetData(m_points);
+                m_cbPointsDirty = false;
+            }
+
+            if (m_cbNormals == null && m_normals != null && m_normals.Count > 0)
+            {
+                m_cbNormals = new ComputeBuffer(m_normals.Count, 12);
+                m_cbBaseNormals = new ComputeBuffer(m_normalsBase.Count, 12);
+            }
+            if (m_cbNormalsDirty)
+            {
+                m_cbNormals.SetData(m_normals);
+                m_cbNormalsDirty = false;
+            }
+            if (m_cbBaseNormalsDirty)
+            {
+                m_cbBaseNormals.SetData(m_normalsBase);
+                m_cbBaseNormalsDirty = false;
+            }
+
+            if (m_cbTangents == null && m_tangents != null && m_tangents.Count > 0)
+            {
+                m_cbTangents = new ComputeBuffer(m_tangents.Count, 16);
+                m_cbBaseTangents = new ComputeBuffer(m_tangentsBase.Count, 16);
+            }
+            if (m_cbTangentsDirty)
+            {
+                m_cbTangents.SetData(m_tangents);
+                m_cbTangentsDirty = false;
+            }
+            if (m_cbBaseTangentsDirty)
+            {
+                m_cbBaseTangents.SetData(m_tangentsBase);
+                m_cbBaseTangentsDirty = false;
+            }
+
+            if (m_cbSelection == null && m_selection != null && m_selection.Count > 0)
+            {
+                m_cbSelection = new ComputeBuffer(m_selection.Count, 4);
+            }
+            if(m_cbSelectionDirty)
+            {
+                m_cbSelection.SetData(m_selection);
+                m_cbSelectionDirty = false;
+            }
+
+            if (m_cbArg == null && m_points != null && m_points.Count > 0)
+            {
+                m_cbArg = new ComputeBuffer(1, 5 * sizeof(uint), ComputeBufferType.IndirectArguments);
+                m_cbArg.SetData(new uint[5] { m_meshCube.GetIndexCount(0), (uint)m_points.Count, 0, 0, 0 });
+            }
         }
 
         void Start()
@@ -912,6 +946,8 @@ namespace UTJ.VertexTweaker
             var matrix = trans.localToWorldMatrix;
             var renderer = GetComponent<Renderer>();
 
+            UpdateComputeBuffers();
+
             m_matVisualize.SetMatrix("_Transform", matrix);
             m_matVisualize.SetFloat("_VertexSize", m_settings.vertexSize);
             m_matVisualize.SetFloat("_NormalSize", m_settings.normalSize);
@@ -1046,11 +1082,12 @@ namespace UTJ.VertexTweaker
         void PushUndo()
         {
             if (m_settings.normalMode == NormalsUpdateMode.Auto)
-            {
                 RecalculateNormals();
-                if (m_settings.tangentsMode == TangentsUpdateMode.Auto)
-                    RecalculateTangents();
-            }
+
+            // recalculating tangents require normals. so recalculate only when normals are updated
+            if (m_settings.tangentsMode == TangentsUpdateMode.Auto &&
+                (m_settings.normalMode == NormalsUpdateMode.Auto || m_settings.normalMode == NormalsUpdateMode.Realtime))
+                RecalculateTangents();
 
             Undo.IncrementCurrentGroup();
             Undo.RecordObject(this, "VertexTweaker [" + m_history.index + "]");
