@@ -269,16 +269,21 @@ namespace UTJ.VertexTweaker
                 return;
             }
 
+            int PNT = 0;
+            if (m_settings.projP) { PNT |= 1; }
+            if (m_settings.projN) { PNT |= 2; }
+            if (m_settings.projT) { PNT |= 4; }
+
             bool mask = m_numSelected > 0;
             var targetNP = (npMeshData)targetData;
             if(m_settings.projRayDir == ProjectionRayDirection.CurrentNormals)
-                npProjectVertices(ref m_npModelData, ref targetNP, m_normals, m_settings.projMode, m_settings.projMaxRayDistance, mask);
+                npProjectVertices(ref m_npModelData, ref targetNP, m_normals, m_settings.projMode, m_settings.projMaxRayDistance, PNT, mask);
             else if (m_settings.projRayDir == ProjectionRayDirection.BaseNomals)
-                npProjectVertices(ref m_npModelData, ref targetNP, m_normalsBase, m_settings.projMode, m_settings.projMaxRayDistance, mask);
+                npProjectVertices(ref m_npModelData, ref targetNP, m_normalsBase, m_settings.projMode, m_settings.projMaxRayDistance, PNT, mask);
             else if (m_settings.projRayDir == ProjectionRayDirection.Radial)
-                npProjectVerticesRadial(ref m_npModelData, ref targetNP, m_settings.projRadialCenter, m_settings.projMode, m_settings.projMaxRayDistance, mask);
+                npProjectVerticesRadial(ref m_npModelData, ref targetNP, m_settings.projRadialCenter, m_settings.projMode, m_settings.projMaxRayDistance, PNT, mask);
             else if (m_settings.projRayDir == ProjectionRayDirection.Directional)
-                npProjectVerticesDirectional(ref m_npModelData, ref targetNP, m_settings.projDirection.normalized, m_settings.projMode, m_settings.projMaxRayDistance, mask);
+                npProjectVerticesDirectional(ref m_npModelData, ref targetNP, m_settings.projDirection.normalized, m_settings.projMode, m_settings.projMaxRayDistance, PNT, mask);
 
             UpdateVertices(false, true);
             if (pushUndo) PushUndo();
@@ -370,12 +375,23 @@ namespace UTJ.VertexTweaker
                 ApplyMirroringInternal();
 
             m_meshTarget.SetVertices(m_pointsPredeformed);
+            if (m_cbPoints != null)
+                m_cbPoints.SetData(m_points);
             if (flushAll)
             {
                 if (m_normals.Count == m_points.Count)
+                {
                     m_meshTarget.SetNormals(m_normalsPredeformed);
+                    if (m_cbNormals != null)
+                        m_cbNormals.SetData(m_normals);
+
+                }
                 if (m_tangents.Count == m_points.Count)
+                {
                     m_meshTarget.SetTangents(m_tangentsPredeformed);
+                    if (m_cbTangents != null)
+                        m_cbTangents.SetData(m_tangents);
+                }
             }
             else
             {
@@ -393,16 +409,6 @@ namespace UTJ.VertexTweaker
             { // force recalculate
                 smr.enabled = false;
                 smr.enabled = true;
-            }
-
-            if (m_cbPoints != null)
-                m_cbPoints.SetData(m_points);
-            if (flushAll)
-            {
-                if (m_cbNormals != null)
-                    m_cbNormals.SetData(m_normals);
-                if (m_cbTangents != null)
-                    m_cbTangents.SetData(m_normals);
             }
 
             UpdateSelectionPos();
@@ -878,11 +884,11 @@ namespace UTJ.VertexTweaker
             ref npMeshData model, IntPtr relation, Vector3 plane_normal);
 
         [DllImport("VertexTweakerCore")] static extern void npProjectVertices(
-            ref npMeshData model, ref npMeshData target, IntPtr ray_dirs, npProjectVerticesMode mode, float max_distance, bool mask);
+            ref npMeshData model, ref npMeshData target, IntPtr ray_dirs, npProjectVerticesMode mode, float max_distance, int PNT, bool mask);
         [DllImport("VertexTweakerCore")] static extern void npProjectVerticesRadial(
-            ref npMeshData model, ref npMeshData target, Vector3 center, npProjectVerticesMode mode, float max_distance, bool mask);
+            ref npMeshData model, ref npMeshData target, Vector3 center, npProjectVerticesMode mode, float max_distance, int PNT, bool mask);
         [DllImport("VertexTweakerCore")] static extern void npProjectVerticesDirectional(
-            ref npMeshData model, ref npMeshData target, Vector3 ray_dir, npProjectVerticesMode mode, float max_distance, bool mask);
+            ref npMeshData model, ref npMeshData target, Vector3 ray_dir, npProjectVerticesMode mode, float max_distance, int PNT, bool mask);
 
         [DllImport("VertexTweakerCore")] static extern void npApplySkinning(
             ref npSkinData skin,

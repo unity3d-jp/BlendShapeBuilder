@@ -1249,7 +1249,7 @@ enum class npProjectVerticesMode
 
 template<class RayDirs>
 void npProjectVerticesImpl(
-    npMeshData *model, npMeshData *target, const RayDirs& ray_dirs, npProjectVerticesMode mode, float max_distance, bool mask)
+    npMeshData *model, npMeshData *target, const RayDirs& ray_dirs, npProjectVerticesMode mode, float max_distance, int PNT, bool mask)
 {
     auto num_vertices = model->num_vertices;
     auto vertices = model->vertices;
@@ -1360,21 +1360,21 @@ void npProjectVerticesImpl(
             }
         }
         if (hit) {
-            vertices[vi] = rvertex;
-            if (normals) normals[vi] = rnormal;
-            if (tangents) tangents[vi] = rtangents;
+            if (PNT & 1) vertices[vi] = rvertex;
+            if (normals && (PNT & 2)) normals[vi] = rnormal;
+            if (tangents && (PNT & 4)) tangents[vi] = rtangents;
         }
     });
 }
 
 npAPI void npProjectVertices(
-    npMeshData *model, npMeshData *target, const float3 ray_dirs[], npProjectVerticesMode mode, float max_distance, int mask)
+    npMeshData *model, npMeshData *target, const float3 ray_dirs[], npProjectVerticesMode mode, float max_distance, int PNT, int mask)
 {
-    npProjectVerticesImpl(model, target, ray_dirs, mode, max_distance, mask);
+    npProjectVerticesImpl(model, target, ray_dirs, mode, max_distance, PNT, mask);
 }
 
 npAPI void npProjectVerticesRadial(
-    npMeshData *model, npMeshData *target, const float3 center, npProjectVerticesMode mode, float max_distance, int mask)
+    npMeshData *model, npMeshData *target, const float3 center, npProjectVerticesMode mode, float max_distance, int PNT, int mask)
 {
     auto to_local = target->transform * invert(model->transform);
 
@@ -1387,18 +1387,18 @@ npAPI void npProjectVerticesRadial(
             return normalize(vertices[vi] - center);
         }
     } ray_dirs = { model->vertices, mul_p(to_local, center) };
-    npProjectVerticesImpl(model, target, ray_dirs, mode, max_distance, mask);
+    npProjectVerticesImpl(model, target, ray_dirs, mode, max_distance, PNT, mask);
 }
 
 npAPI void npProjectVerticesDirectional(
-    npMeshData *model, npMeshData *target, const float3 ray_dir, npProjectVerticesMode mode, float max_distance, int mask)
+    npMeshData *model, npMeshData *target, const float3 ray_dir, npProjectVerticesMode mode, float max_distance, int PNT, int mask)
 {
     struct RayDir
     {
         float3 ray_dir;
         const float3& operator[](int) const { return ray_dir; }
     } ray_dirs = { ray_dir };
-    npProjectVerticesImpl(model, target, ray_dirs, mode, max_distance, mask);
+    npProjectVerticesImpl(model, target, ray_dirs, mode, max_distance, PNT, mask);
 }
 
 template<int NumInfluence>

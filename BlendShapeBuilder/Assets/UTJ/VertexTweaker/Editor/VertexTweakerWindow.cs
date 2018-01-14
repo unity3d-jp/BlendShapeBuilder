@@ -427,6 +427,10 @@ namespace UTJ.VertexTweaker
                 }
                 settings.projMaxRayDistance = EditorGUILayout.FloatField("Max Ray Distance", settings.projMaxRayDistance);
                 EditorGUILayout.Space();
+                settings.projP = EditorGUILayout.Toggle("Vertices", settings.projP);
+                settings.projN = EditorGUILayout.Toggle("Normals", settings.projN);
+                settings.projT = EditorGUILayout.Toggle("Tangents", settings.projT);
+                EditorGUILayout.Space();
 
                 if (GUILayout.Button("Apply Projection"))
                 {

@@ -1061,7 +1061,7 @@ namespace UTJ.VertexTweaker
             m_history.mesh = m_meshTarget;
 
             Undo.FlushUndoRecordObjects();
-            Debug.Log("PushUndo " + m_historyIndex);
+            //Debug.Log("PushUndo " + m_historyIndex);
         }
 
         public void OnUndoRedo()
