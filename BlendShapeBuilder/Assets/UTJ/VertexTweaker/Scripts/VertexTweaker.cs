@@ -34,7 +34,8 @@ namespace UTJ.VertexTweaker
         [SerializeField] Mesh m_meshLasso;
         [SerializeField] Material m_matVisualize;
 
-        ComputeBuffer m_cbArg;
+        ComputeBuffer m_cbArgPoints;
+        ComputeBuffer m_cbArgVectors;
         ComputeBuffer m_cbPoints;
         ComputeBuffer m_cbNormals, m_cbBaseNormals;
         ComputeBuffer m_cbTangents, m_cbBaseTangents;
@@ -311,7 +312,8 @@ namespace UTJ.VertexTweaker
 
         void ReleaseComputeBuffers()
         {
-            if (m_cbArg != null) { m_cbArg.Release(); m_cbArg = null; }
+            if (m_cbArgPoints != null) { m_cbArgPoints.Release(); m_cbArgPoints = null; }
+            if (m_cbArgVectors != null) { m_cbArgVectors.Release(); m_cbArgVectors = null; }
             if (m_cbPoints != null) { m_cbPoints.Release(); m_cbPoints = null; }
             if (m_cbNormals != null) { m_cbNormals.Release(); m_cbNormals = null; }
             if (m_cbTangents != null) { m_cbTangents.Release(); m_cbTangents = null; }
@@ -379,10 +381,13 @@ namespace UTJ.VertexTweaker
                 m_cbSelectionDirty = false;
             }
 
-            if (m_cbArg == null && m_points != null && m_points.Count > 0)
+            if (m_cbArgPoints == null && m_points != null && m_points.Count > 0)
             {
-                m_cbArg = new ComputeBuffer(1, 5 * sizeof(uint), ComputeBufferType.IndirectArguments);
-                m_cbArg.SetData(new uint[5] { m_meshCube.GetIndexCount(0), (uint)m_points.Count, 0, 0, 0 });
+                m_cbArgPoints = new ComputeBuffer(1, 5 * sizeof(uint), ComputeBufferType.IndirectArguments);
+                m_cbArgPoints.SetData(new uint[5] { m_meshCube.GetIndexCount(0), (uint)m_points.Count, 0, 0, 0 });
+
+                m_cbArgVectors = new ComputeBuffer(1, 5 * sizeof(uint), ComputeBufferType.IndirectArguments);
+                m_cbArgVectors.SetData(new uint[5] { m_meshLine.GetIndexCount(0), (uint)m_points.Count, 0, 0, 0 });
             }
         }
 
@@ -1024,19 +1029,19 @@ namespace UTJ.VertexTweaker
             {
                 // visualize vertices
                 if (m_settings.showVertices && m_points != null)
-                    m_cmdDraw.DrawMeshInstancedIndirect(m_meshCube, 0, m_matVisualize, (int)VisualizeType.Vertices, m_cbArg);
+                    m_cmdDraw.DrawMeshInstancedIndirect(m_meshCube, 0, m_matVisualize, (int)VisualizeType.Vertices, m_cbArgPoints);
 
                 // visualize binormals
                 if (m_settings.showBinormals && m_tangents != null)
-                    m_cmdDraw.DrawMeshInstancedIndirect(m_meshLine, 0, m_matVisualize, (int)VisualizeType.Binormals, m_cbArg);
+                    m_cmdDraw.DrawMeshInstancedIndirect(m_meshLine, 0, m_matVisualize, (int)VisualizeType.Binormals, m_cbArgVectors);
 
                 // visualize tangents
                 if (m_settings.showTangents && m_tangents != null)
-                    m_cmdDraw.DrawMeshInstancedIndirect(m_meshLine, 0, m_matVisualize, (int)VisualizeType.Tangents, m_cbArg);
+                    m_cmdDraw.DrawMeshInstancedIndirect(m_meshLine, 0, m_matVisualize, (int)VisualizeType.Tangents, m_cbArgVectors);
 
                 // visualize normals
                 if (m_settings.showNormals && m_normals != null)
-                    m_cmdDraw.DrawMeshInstancedIndirect(m_meshLine, 0, m_matVisualize, (int)VisualizeType.Normals, m_cbArg);
+                    m_cmdDraw.DrawMeshInstancedIndirect(m_meshLine, 0, m_matVisualize, (int)VisualizeType.Normals, m_cbArgVectors);
             }
 
             if (m_settings.showBrushRange && m_rayHit)
