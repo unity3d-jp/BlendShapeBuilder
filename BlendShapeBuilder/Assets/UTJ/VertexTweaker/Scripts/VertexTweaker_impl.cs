@@ -293,20 +293,27 @@ namespace UTJ.VertexTweaker
         {
             if (!useSelection)
             {
-                Array.Copy(m_pointsBase, m_points, m_points.Count);
-                Array.Copy(m_normalsBase, m_normals, m_normals.Count);
-                Array.Copy(m_tangentsBase, m_tangents, m_tangents.Count);
+                Array.Copy(m_pointsBasePredeformed, m_pointsPredeformed, m_points.Count);
+                Array.Copy(m_normalsBasePredeformed, m_normalsPredeformed, m_normals.Count);
+                Array.Copy(m_tangentsBasePredeformed, m_tangentsPredeformed, m_tangents.Count);
             }
             else
             {
                 for (int i = 0; i < m_points.Count; ++i)
                 {
                     float s = m_selection[i];
-                    m_points[i] = Vector3.Lerp(m_points[i], m_pointsBase[i], s);
-                    m_normals[i] = Vector3.Lerp(m_normals[i], m_normalsBase[i], s);
-                    m_tangents[i] = Vector4.Lerp(m_tangents[i], m_tangentsBase[i], s);
+                    m_pointsPredeformed[i] = Vector3.Lerp(m_pointsPredeformed[i], m_pointsBasePredeformed[i], s);
+                    m_normalsPredeformed[i] = Vector3.Lerp(m_normalsPredeformed[i], m_normalsBasePredeformed[i], s);
+                    m_tangentsPredeformed[i] = Vector4.Lerp(m_tangentsPredeformed[i], m_tangentsBasePredeformed[i], s);
                 }
             }
+            if (m_skinned)
+            {
+                npApplySkinning(ref m_npSkinData,
+                    m_pointsPredeformed, m_normalsPredeformed, m_tangentsPredeformed,
+                    m_points, m_normals, m_tangents);
+            }
+
             UpdateVertices(true);
             if (pushUndo) PushUndo();
         }

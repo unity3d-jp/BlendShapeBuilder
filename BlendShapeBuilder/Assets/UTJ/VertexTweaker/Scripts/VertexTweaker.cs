@@ -1070,15 +1070,15 @@ namespace UTJ.VertexTweaker
 
             if(m_history.points == null || m_history.points.Length != m_points.Count)
             {
-                m_history.points = (Vector3[])m_points.Clone();
-                m_history.normals = (Vector3[])m_normals.Clone();
-                m_history.tangents = (Vector4[])m_tangents.Clone();
+                m_history.points = m_pointsPredeformed.Clone();
+                m_history.normals = m_normalsPredeformed.Clone();
+                m_history.tangents = m_tangentsPredeformed.Clone();
             }
             else
             {
-                Array.Copy(m_points, m_history.points, m_points.Count);
-                Array.Copy(m_normals, m_history.normals, m_normals.Count);
-                Array.Copy(m_tangents, m_history.tangents, m_tangents.Count);
+                Array.Copy(m_pointsPredeformed, m_history.points, m_points.Count);
+                Array.Copy(m_normalsPredeformed, m_history.normals, m_normals.Count);
+                Array.Copy(m_tangentsPredeformed, m_history.tangents, m_tangents.Count);
             }
             m_history.mesh = m_meshTarget;
 
@@ -1102,11 +1102,17 @@ namespace UTJ.VertexTweaker
                 UpdateTransform();
 
                 if (m_history.points != null && m_points != null && m_history.points.Length == m_points.Count)
-                    Array.Copy(m_history.points, m_points, m_points.Count);
+                    Array.Copy(m_history.points, m_pointsPredeformed, m_points.Count);
                 if (m_history.normals != null && m_normals != null && m_history.normals.Length == m_normals.Count)
-                    Array.Copy(m_history.normals, m_normals, m_normals.Count);
+                    Array.Copy(m_history.normals, m_normalsPredeformed, m_normals.Count);
                 if (m_history.tangents != null && m_tangents != null && m_history.tangents.Length == m_tangents.Count)
-                    Array.Copy(m_history.tangents, m_tangents, m_tangents.Count);
+                    Array.Copy(m_history.tangents, m_tangentsPredeformed, m_tangents.Count);
+                if (m_skinned)
+                {
+                    npApplySkinning(ref m_npSkinData,
+                        m_pointsPredeformed, m_normalsPredeformed, m_tangentsPredeformed,
+                        m_points, m_normals, m_tangents);
+                }
                 UpdateVertices(true);
             }
         }
