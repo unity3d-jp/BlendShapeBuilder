@@ -186,6 +186,7 @@ namespace UTJ.VertexTweaker
                     19, 17, 16, 19, 18, 17,
                     23, 21, 20, 23, 22, 21,
                 }, MeshTopology.Triangles, 0);
+                m_meshCube.UploadMeshData(false);
             }
 
             if (m_meshLine == null)
@@ -194,6 +195,7 @@ namespace UTJ.VertexTweaker
                 m_meshLine.vertices = new Vector3[2] { Vector3.zero, Vector3.zero };
                 m_meshLine.uv = new Vector2[2] { Vector2.zero, Vector2.one };
                 m_meshLine.SetIndices(new int[2] { 0, 1 }, MeshTopology.Lines, 0);
+                m_meshLine.UploadMeshData(false);
             }
 
             if (m_meshLasso == null)
@@ -863,6 +865,7 @@ namespace UTJ.VertexTweaker
                                 }
                                 m_meshLasso.vertices = vertices;
                                 m_meshLasso.SetIndices(indices, MeshTopology.Lines, 0);
+                                m_meshLasso.UploadMeshData(false);
                             }
                         }
                     }
@@ -1028,19 +1031,19 @@ namespace UTJ.VertexTweaker
             if (m_settings.visualize)
             {
                 // visualize vertices
-                if (m_settings.showVertices && m_points != null)
+                if (m_settings.showVertices && m_cbPoints != null)
                     m_cmdDraw.DrawMeshInstancedIndirect(m_meshCube, 0, m_matVisualize, (int)VisualizeType.Vertices, m_cbArgPoints);
 
                 // visualize binormals
-                if (m_settings.showBinormals && m_tangents != null)
+                if (m_settings.showBinormals && m_cbNormals != null && m_cbTangents != null)
                     m_cmdDraw.DrawMeshInstancedIndirect(m_meshLine, 0, m_matVisualize, (int)VisualizeType.Binormals, m_cbArgVectors);
 
                 // visualize tangents
-                if (m_settings.showTangents && m_tangents != null)
+                if (m_settings.showTangents && m_cbTangents != null)
                     m_cmdDraw.DrawMeshInstancedIndirect(m_meshLine, 0, m_matVisualize, (int)VisualizeType.Tangents, m_cbArgVectors);
 
                 // visualize normals
-                if (m_settings.showNormals && m_normals != null)
+                if (m_settings.showNormals && m_cbNormals != null)
                     m_cmdDraw.DrawMeshInstancedIndirect(m_meshLine, 0, m_matVisualize, (int)VisualizeType.Normals, m_cbArgVectors);
             }
 
