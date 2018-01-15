@@ -26,6 +26,7 @@ Temp/
 
 TestLocal/
 TestLocal.meta
+BlendShapeBuilder/Assets/UTJ/NormalPainter*
 
 BlendShapeBuilder/*.csproj
 BlendShapeBuilder/*.sln

@@ -214,10 +214,9 @@ namespace UTJ.VertexTweaker
                 (m_points != null && m_meshTarget.vertexCount != m_points.Count))
             {
                 m_meshTarget = tmesh;
-                m_points = null;
-                m_normals = null;
-                m_normalsBase = null;
-                m_tangents = null;
+                m_points = m_pointsBase = m_pointsPredeformed = m_pointsBasePredeformed = null;
+                m_normals = m_normalsBase = m_normalsPredeformed = m_normalsBasePredeformed = null;
+                m_tangents = m_tangentsBase = m_tangentsPredeformed = m_tangentsBasePredeformed = null;
                 m_indices = null;
                 m_mirrorRelation = null;
                 m_selection = null;
@@ -228,7 +227,7 @@ namespace UTJ.VertexTweaker
             if (m_meshTarget != null)
             {
                 m_points = m_pointsPredeformed = new PinnedList<Vector3>(m_meshTarget.vertices);
-                m_pointsBase = m_pointsBasePredeformed = new PinnedList<Vector3>(m_meshTarget.vertices);
+                m_pointsBase = m_pointsBasePredeformed = m_points.Clone();
 
                 m_uv = new PinnedList<Vector2>(m_meshTarget.uv);
 
@@ -236,31 +235,19 @@ namespace UTJ.VertexTweaker
                 if (m_normals.Count == 0)
                 {
                     m_meshTarget.RecalculateNormals();
-                    m_normalsBase = m_normals = new PinnedList<Vector3>(m_meshTarget.normals);
-                }
-                else
-                {
-                    m_meshTarget.RecalculateNormals();
-                    m_normalsBase = new PinnedList<Vector3>(m_meshTarget.normals);
-                    m_meshTarget.normals = m_normals;
+                    m_normals = new PinnedList<Vector3>(m_meshTarget.normals);
                 }
                 m_normalsPredeformed = m_normals;
-                m_normalsBasePredeformed = m_normalsBase;
+                m_normalsBase = m_normalsBasePredeformed = m_normals.Clone();
 
                 m_tangents = new PinnedList<Vector4>(m_meshTarget.tangents);
                 if (m_tangents.Count == 0)
                 {
                     m_meshTarget.RecalculateTangents();
-                    m_tangentsBase = m_tangents = new PinnedList<Vector4>(m_meshTarget.tangents);
-                }
-                else
-                {
-                    m_meshTarget.RecalculateTangents();
-                    m_tangentsBase = new PinnedList<Vector4>(m_meshTarget.tangents);
-                    m_meshTarget.tangents = m_tangents;
+                    m_tangents = new PinnedList<Vector4>(m_meshTarget.tangents);
                 }
                 m_tangentsPredeformed = m_tangents;
-                m_tangentsBasePredeformed = m_tangentsBase;
+                m_tangentsBase = m_tangentsBasePredeformed = m_tangents.Clone();
 
                 m_indices = new PinnedList<int>(m_meshTarget.triangles);
                 m_selection = new PinnedList<float>(m_points.Count);
@@ -329,9 +316,6 @@ namespace UTJ.VertexTweaker
 
         void UpdateComputeBuffers()
         {
-            if (!SystemInfo.supportsComputeShaders)
-                return;
-
             if (m_cbPoints == null && m_points != null && m_points.Count > 0)
             {
                 m_cbPoints = new ComputeBuffer(m_points.Count, 12);
