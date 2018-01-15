@@ -35,13 +35,7 @@ namespace UTJ.VertexTweaker
         DownToUp,
     }
 
-    public enum NormalsUpdateMode
-    {
-        Manual,
-        Auto,
-        Realtime,
-    }
-    public enum TangentsUpdateMode
+    public enum RecalculateMode
     {
         Manual,
         Auto,
@@ -170,8 +164,8 @@ namespace UTJ.VertexTweaker
             public float[] selection;
         }
 
-        public NormalsUpdateMode normalMode = NormalsUpdateMode.Realtime;
-        public TangentsUpdateMode tangentsMode = TangentsUpdateMode.Auto;
+        public RecalculateMode normalMode = RecalculateMode.Realtime;
+        public RecalculateMode tangentsMode = RecalculateMode.Auto;
         public TangentsPrecision tangentsPrecision = TangentsPrecision.Fast;
 
         // edit options

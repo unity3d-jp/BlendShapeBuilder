@@ -1056,12 +1056,12 @@ namespace UTJ.VertexTweaker
 
         void PushUndo()
         {
-            if (m_settings.normalMode == NormalsUpdateMode.Auto)
+            if (m_settings.normalMode == RecalculateMode.Auto)
                 RecalculateNormals();
 
             // recalculating tangents require normals. so recalculate only when normals are updated
-            if (m_settings.tangentsMode == TangentsUpdateMode.Auto &&
-                (m_settings.normalMode == NormalsUpdateMode.Auto || m_settings.normalMode == NormalsUpdateMode.Realtime))
+            if (m_settings.tangentsMode == RecalculateMode.Auto &&
+                (m_settings.normalMode == RecalculateMode.Auto || m_settings.normalMode == RecalculateMode.Realtime))
                 RecalculateTangents();
 
             Undo.IncrementCurrentGroup();
@@ -1107,7 +1107,7 @@ namespace UTJ.VertexTweaker
                     Array.Copy(m_history.normals, m_normals, m_normals.Count);
                 if (m_history.tangents != null && m_tangents != null && m_history.tangents.Length == m_tangents.Count)
                     Array.Copy(m_history.tangents, m_tangents, m_tangents.Count);
-                UpdateVertices(false, true);
+                UpdateVertices(true);
             }
         }
 #endif

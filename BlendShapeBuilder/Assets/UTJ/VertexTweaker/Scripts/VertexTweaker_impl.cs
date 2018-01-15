@@ -285,7 +285,7 @@ namespace UTJ.VertexTweaker
             else if (m_settings.projRayDir == ProjectionRayDirection.Directional)
                 npProjectVerticesDirectional(ref m_npModelData, ref targetNP, m_settings.projDirection.normalized, m_settings.projMode, m_settings.projMaxRayDistance, PNT, mask);
 
-            UpdateVertices(false, true);
+            UpdateVertices(true);
             if (pushUndo) PushUndo();
         }
 
@@ -307,7 +307,7 @@ namespace UTJ.VertexTweaker
                     m_tangents[i] = Vector4.Lerp(m_tangents[i], m_tangentsBase[i], s);
                 }
             }
-            UpdateVertices(false, true);
+            UpdateVertices(true);
             if (pushUndo) PushUndo();
         }
 
@@ -349,59 +349,53 @@ namespace UTJ.VertexTweaker
                 npApplySkinning(ref m_npSkinData,
                     m_pointsBasePredeformed, m_normalsBasePredeformed, m_tangentsBasePredeformed,
                     m_pointsBase, m_normalsBase, m_tangentsBase);
-
-                m_cbPointsDirty = m_cbNormalsDirty = m_cbTangentsDirty = true;
             }
         }
 
-        public void UpdateVertices(bool mirror = true, bool flushAll = false)
+        public void UpdateVertices(bool flushAll = false)
         {
             if (m_meshTarget == null) return;
 
             if (m_skinned)
             {
                 UpdateBoneMatrices();
-                if (flushAll)
+                npApplyReverseSkinning(ref m_npSkinData,
+                    m_points, IntPtr.Zero, IntPtr.Zero,
+                    m_pointsPredeformed, IntPtr.Zero, IntPtr.Zero);
+            }
+            if (m_settings.mirrorMode != MirrorMode.None)
+            {
+                PrepareMirror();
+                npApplyMirroring(ref m_npModelData, m_mirrorRelation, GetMirrorPlane(m_settings.mirrorMode),
+                    m_pointsPredeformed, IntPtr.Zero, IntPtr.Zero);
+                if (m_skinned)
                 {
-                    npApplyReverseSkinning(ref m_npSkinData,
-                        m_points, m_normals, m_tangents,
-                        m_pointsPredeformed, m_normalsPredeformed, m_tangentsPredeformed);
-                }
-                else
-                {
-                    npApplyReverseSkinning(ref m_npSkinData,
-                        m_points, IntPtr.Zero, IntPtr.Zero,
-                        m_pointsPredeformed, IntPtr.Zero, IntPtr.Zero);
+                    npApplySkinning(ref m_npSkinData,
+                        m_pointsPredeformed, IntPtr.Zero, IntPtr.Zero,
+                        m_points, IntPtr.Zero, IntPtr.Zero);
                 }
             }
-            if (mirror)
-                ApplyMirroringInternal();
-
             m_meshTarget.SetVertices(m_pointsPredeformed);
             m_cbPointsDirty = true;
+
             if (flushAll)
             {
-                if (m_normals.Count == m_points.Count)
-                {
-                    m_meshTarget.SetNormals(m_normalsPredeformed);
-                    m_cbNormalsDirty = true;
+                m_meshTarget.SetNormals(m_normalsPredeformed);
+                m_cbNormalsDirty = true;
 
-                }
-                if (m_tangents.Count == m_points.Count)
-                {
-                    m_meshTarget.SetTangents(m_tangentsPredeformed);
-                    m_cbTangentsDirty = true;
-                }
+                m_meshTarget.SetTangents(m_tangentsPredeformed);
+                m_cbTangentsDirty = true;
             }
             else
             {
-                if (m_settings.normalMode == NormalsUpdateMode.Realtime)
+                if (m_settings.normalMode == RecalculateMode.Realtime)
                 {
                     RecalculateNormals();
-                    if (m_settings.tangentsMode == TangentsUpdateMode.Realtime)
+                    if (m_settings.tangentsMode == RecalculateMode.Realtime)
                         RecalculateTangents();
                 }
             }
+
             m_meshTarget.UploadMeshData(false);
 
             var smr = GetComponent<SkinnedMeshRenderer>();
@@ -450,21 +444,18 @@ namespace UTJ.VertexTweaker
             }
         }
 
+
         public void RecalculateNormals(bool updateMesh = true)
         {
+            npMeshData tmp = m_npModelData;
+            tmp.vertices = m_pointsPredeformed;
+            npGenerateNormals(ref tmp, m_normalsPredeformed);
+
             if (m_skinned)
             {
-                npMeshData tmp = m_npModelData;
-                tmp.vertices = m_pointsPredeformed;
-                tmp.normals = m_normalsPredeformed;
-                npGenerateNormals(ref tmp, m_normalsPredeformed);
                 npApplySkinning(ref m_npSkinData,
                     IntPtr.Zero, m_normalsPredeformed, IntPtr.Zero,
                     IntPtr.Zero, m_normals, IntPtr.Zero);
-            }
-            else
-            {
-                npGenerateNormals(ref m_npModelData, m_normals);
             }
 
             if (updateMesh)
@@ -476,7 +467,7 @@ namespace UTJ.VertexTweaker
         {
             RecalculateTangents(m_settings.tangentsPrecision);
         }
-        public void RecalculateTangents(TangentsPrecision precision, bool updateMesh = true)
+        void RecalculateTangents(TangentsPrecision precision, bool updateMesh = true)
         {
             if (precision == TangentsPrecision.Precise)
             {
@@ -485,31 +476,23 @@ namespace UTJ.VertexTweaker
                 {
                     m_meshTarget.GetTangents(l);
                 });
-
-                if (m_skinned)
-                    npApplySkinning(ref m_npSkinData,
-                        IntPtr.Zero, IntPtr.Zero, m_tangentsPredeformed,
-                        IntPtr.Zero, IntPtr.Zero, m_tangents);
             }
             else
             {
-                if (m_skinned)
-                {
-                    npMeshData tmp = m_npModelData;
-                    tmp.vertices = m_pointsPredeformed;
-                    tmp.normals = m_normalsPredeformed;
-                    npGenerateTangents(ref tmp, m_tangentsPredeformed);
-                    npApplySkinning(ref m_npSkinData,
-                        IntPtr.Zero, IntPtr.Zero, m_tangentsPredeformed,
-                        IntPtr.Zero, IntPtr.Zero, m_tangents);
-                }
-                else
-                {
-                    npGenerateTangents(ref m_npModelData, m_tangents);
-                }
+                npMeshData tmp = m_npModelData;
+                tmp.vertices = m_pointsPredeformed;
+                tmp.normals = m_normalsPredeformed;
+                npGenerateTangents(ref tmp, m_tangentsPredeformed);
             }
 
-            if(updateMesh)
+            if (m_skinned)
+            {
+                npApplySkinning(ref m_npSkinData,
+                    IntPtr.Zero, IntPtr.Zero, m_tangentsPredeformed,
+                    IntPtr.Zero, IntPtr.Zero, m_tangents);
+            }
+
+            if (updateMesh)
                 m_meshTarget.SetTangents(m_tangentsPredeformed);
             m_cbTangentsDirty = true;
         }
@@ -705,10 +688,9 @@ namespace UTJ.VertexTweaker
         }
 
         MirrorMode m_prevMirrorMode;
-
-        bool ApplyMirroringInternal()
+        void PrepareMirror()
         {
-            if (m_settings.mirrorMode == MirrorMode.None) return false;
+            if (m_settings.mirrorMode == MirrorMode.None) return;
 
             bool needsSetup = false;
             if (m_mirrorRelation == null || m_mirrorRelation.Count != m_points.Count)
@@ -716,7 +698,7 @@ namespace UTJ.VertexTweaker
                 m_mirrorRelation = new PinnedList<int>(m_points.Count);
                 needsSetup = true;
             }
-            else if (m_prevMirrorMode != m_settings.mirrorMode)
+            if (m_prevMirrorMode != m_settings.mirrorMode)
             {
                 m_prevMirrorMode = m_settings.mirrorMode;
                 needsSetup = true;
@@ -733,30 +715,12 @@ namespace UTJ.VertexTweaker
                     Debug.LogWarning("This mesh seems not symmetric");
                     m_mirrorRelation = null;
                     m_settings.mirrorMode = MirrorMode.None;
-                    return false;
                 }
             }
-
-            if(m_skinned)
-            {
-                npMeshData tmp = m_npModelData;
-                tmp.vertices = m_pointsPredeformed;
-                tmp.normals = m_normalsPredeformed;
-                tmp.tangents = m_tangentsPredeformed;
-                npApplyMirroring(ref tmp, m_mirrorRelation, planeNormal);
-                npApplySkinning(ref m_npSkinData,
-                    m_pointsPredeformed, m_normalsPredeformed, m_tangentsPredeformed,
-                    m_points, m_normals, m_tangents);
-            }
-            else
-            {
-                npApplyMirroring(ref m_npModelData, m_mirrorRelation, planeNormal);
-            }
-            return true;
         }
+
         public bool ApplyMirroring(bool pushUndo)
         {
-            ApplyMirroringInternal();
             UpdateVertices();
             if (pushUndo) PushUndo();
             return true;
@@ -877,7 +841,8 @@ namespace UTJ.VertexTweaker
             ref npMeshData model, Vector3 plane_normal, float epsilon, IntPtr relation);
 
         [DllImport("VertexTweakerCore")] static extern void npApplyMirroring(
-            ref npMeshData model, IntPtr relation, Vector3 plane_normal);
+            ref npMeshData model, IntPtr relation, Vector3 plane_normal,
+            IntPtr iopoints, IntPtr ionormals, IntPtr iotangents);
 
         [DllImport("VertexTweakerCore")] static extern void npProjectVertices(
             ref npMeshData model, ref npMeshData target, IntPtr ray_dirs, npProjectVerticesMode mode, float max_distance, int PNT, bool mask);

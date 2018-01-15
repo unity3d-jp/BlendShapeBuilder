@@ -592,8 +592,8 @@ namespace UTJ.VertexTweaker
                 if (settings.foldNormals)
                 {
                     EditorGUI.indentLevel++;
-                    settings.normalMode = (NormalsUpdateMode)EditorGUILayout.EnumPopup("Update Mode", settings.normalMode);
-                    if (settings.normalMode == NormalsUpdateMode.Manual)
+                    settings.normalMode = (RecalculateMode)EditorGUILayout.EnumPopup("Update Mode", settings.normalMode);
+                    if (settings.normalMode == RecalculateMode.Manual)
                     {
                         EditorGUILayout.BeginHorizontal();
                         EditorGUILayout.LabelField("", GUILayout.Width(indentSize));
@@ -609,8 +609,8 @@ namespace UTJ.VertexTweaker
                 {
                     EditorGUI.indentLevel++;
                     settings.tangentsPrecision = (TangentsPrecision)EditorGUILayout.EnumPopup("Precision", settings.tangentsPrecision);
-                    settings.tangentsMode = (TangentsUpdateMode)EditorGUILayout.EnumPopup("Update Mode", settings.tangentsMode);
-                    if (settings.tangentsMode == TangentsUpdateMode.Manual)
+                    settings.tangentsMode = (RecalculateMode)EditorGUILayout.EnumPopup("Update Mode", settings.tangentsMode);
+                    if (settings.tangentsMode == RecalculateMode.Manual)
                     {
                         EditorGUILayout.BeginHorizontal();
                         EditorGUILayout.LabelField("", GUILayout.Width(indentSize));

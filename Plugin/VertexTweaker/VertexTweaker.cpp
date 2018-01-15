@@ -1054,27 +1054,37 @@ npAPI int npBuildMirroringRelation(
 }
 
 npAPI void npApplyMirroring(
-    npMeshData *model, const int relation[], float3 mirror_plane)
+    npMeshData *model, const int relation[], float3 mirror_plane, float3 *vertices, float3 *normals, float4 *tangents)
 {
     auto num_vertices = model->num_vertices;
-    auto vertices = model->vertices;
-    auto normals = model->normals;
-    auto tangents = model->tangents;
-
-    parallel_for(0, num_vertices, [&](int vi) {
-        int ri = relation[vi];
-        if (ri >= 0) {
-            vertices[ri] = plane_mirror(vertices[vi], mirror_plane);
-            normals[ri] = plane_mirror(normals[vi], mirror_plane);
-            (float3&)tangents[ri] = plane_mirror((float3&)tangents[vi], mirror_plane);
+    if (vertices) {
+        for (int vi = 0; vi < num_vertices; ++vi) {
+            int ri = relation[vi];
+            if (ri >= 0) {
+                vertices[ri] = plane_mirror(vertices[vi], mirror_plane);
+            }
+            else if (ri == -2) {
+                // project to mirror plane
+                float3 v = vertices[vi];
+                float d = plane_distance(v, mirror_plane);
+                vertices[vi] = v - (mirror_plane * d);
+            }
         }
-        else if (ri == -2) {
-            // project to mirror plane
-            float3 v = vertices[vi];
-            float d = plane_distance(v, mirror_plane);
-            vertices[vi] = v - (mirror_plane * d);
+    }
+    if (normals) {
+        for (int vi = 0; vi < num_vertices; ++vi) {
+            int ri = relation[vi];
+            if (ri >= 0)
+                normals[ri] = plane_mirror(normals[vi], mirror_plane);
         }
-    });
+    }
+    if (tangents) {
+        for (int vi = 0; vi < num_vertices; ++vi) {
+            int ri = relation[vi];
+            if (ri >= 0)
+                (float3&)tangents[ri] = plane_mirror((float3&)tangents[vi], mirror_plane);
+        }
+    }
 }
 
 
