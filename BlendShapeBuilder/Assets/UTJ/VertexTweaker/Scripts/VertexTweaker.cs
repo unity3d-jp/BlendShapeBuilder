@@ -41,7 +41,7 @@ namespace UTJ.VertexTweaker
         ComputeBuffer m_cbNormals;
         ComputeBuffer m_cbTangents;
         ComputeBuffer m_cbSelection;
-        ComputeBuffer m_cbBrushSamples;
+        Texture2D m_texBrushSamples;
         CommandBuffer m_cmdDraw;
         bool m_cbPointsDirty = true;
         bool m_cbNormalsDirty = true;
@@ -323,7 +323,7 @@ namespace UTJ.VertexTweaker
             if (m_cbNormals != null) { m_cbNormals.Release(); m_cbNormals = null; }
             if (m_cbTangents != null) { m_cbTangents.Release(); m_cbTangents = null; }
             if (m_cbSelection != null) { m_cbSelection.Release(); m_cbSelection = null; }
-            if (m_cbBrushSamples != null) { m_cbBrushSamples.Release(); m_cbBrushSamples = null; }
+            if (m_texBrushSamples != null) { DestroyImmediate(m_texBrushSamples); m_texBrushSamples = null; }
             if (m_cmdDraw != null) { m_cmdDraw.Release(); m_cmdDraw = null; }
         }
 
@@ -963,14 +963,14 @@ namespace UTJ.VertexTweaker
                 if (brushMode)
                 {
                     var bd = m_settings.activeBrush;
-                    if (m_cbBrushSamples == null)
+                    if (m_texBrushSamples == null)
                     {
-                        m_cbBrushSamples = new ComputeBuffer(bd.samples.Length, 4);
+                        m_texBrushSamples = new Texture2D(bd.samples.Length, 1, TextureFormat.RFloat, false);
                     }
-                    m_cbBrushSamples.SetData(bd.samples);
+                    m_texBrushSamples.LoadRawTextureData(bd.samples, bd.samples.Length * 4);
+                    m_texBrushSamples.Apply();
                     m_matVisualize.SetVector("_BrushPos", new Vector4(brushPos.x, brushPos.y, brushPos.z, bd.radius));
-                    m_matVisualize.SetInt("_NumBrushSamples", bd.samples.Length);
-                    m_matVisualize.SetBuffer("_BrushSamples", m_cbBrushSamples);
+                    m_matVisualize.SetTexture("_BrushSamples", m_texBrushSamples);
                 }
                 else
                 {

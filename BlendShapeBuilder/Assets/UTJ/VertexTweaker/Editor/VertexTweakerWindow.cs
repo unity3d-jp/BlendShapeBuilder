@@ -744,7 +744,7 @@ namespace UTJ.VertexTweaker
             EditorGUILayout.BeginVertical();
             if (settings.displayIndex == 0)
             {
-                settings.visualize = EditorGUILayout.Toggle("Vidualize [Tab]", settings.visualize);
+                settings.visualize = EditorGUILayout.Toggle("Visualize [Tab]", settings.visualize);
                 if (settings.visualize)
                 {
                     EditorGUI.indentLevel++;

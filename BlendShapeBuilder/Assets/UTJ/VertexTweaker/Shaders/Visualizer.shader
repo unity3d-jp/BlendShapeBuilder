@@ -23,10 +23,7 @@ StructuredBuffer<float3> _Points;
 StructuredBuffer<float3> _Normals;
 StructuredBuffer<float4> _Tangents;
 StructuredBuffer<float> _Selection;
-
-int _NumBrushSamples;
-StructuredBuffer<float> _BrushSamples;
-
+sampler2D _BrushSamples;
 
 
 struct ia_out
@@ -60,12 +57,9 @@ vs_out vert_vertices(ia_out v)
     vs_out o;
     o.vertex = vertex;
     o.color = lerp(_VertexColor, _VertexColor2, s);
-
-
-    float d = length(pos - _BrushPos.xyz);
-    if (d < _BrushPos.w) {
-        int bsi = clamp(1.0f - d / _BrushPos.w, 0, 1) * (_NumBrushSamples - 1);
-        o.color.rgb += _VertexColor3.rgb * _BrushSamples[bsi];
+    float d = length(pos - _BrushPos.xyz) / _BrushPos.w;
+    if (d < 1) {
+        o.color.rgb += _VertexColor3.rgb * tex2Dlod(_BrushSamples, float4(1 - d, 0, 0, 0)).r;
     }
     return o;
 }
