@@ -56,12 +56,13 @@ namespace UTJ.VertexTweaker
     public enum ModelOverlay
     {
         None,
-        LocalSpaceNormals,
-        TangentSpaceNormals,
-        Tangents,
-        Binormals,
-        UV,
-        VertexColor,
+        Normals = 1,
+        //LocalSpaceNormals = 1,
+        //TangentSpaceNormals = 2,
+        Tangents = 3,
+        Binormals = 4,
+        UV = 5,
+        VertexColor = 6,
     }
 
     public enum Coordinate
@@ -91,12 +92,6 @@ namespace UTJ.VertexTweaker
         Normals,
         Tangents,
         Binormals,
-        LocalSpaceNormalsOverlay,
-        TangentSpaceNormalsOverlay,
-        TangentsOverlay,
-        BinormalsOverlay,
-        UVOverlay,
-        VertexColorOverlay,
         Lasso,
         BrushRange,
         RayPosition,

@@ -343,7 +343,7 @@ namespace UTJ.VertexTweaker
                     IntPtr.Zero, m_normalsBasePredeformed, m_tangentsBasePredeformed,
                     IntPtr.Zero, m_normalsBase, m_tangentsBase);
 
-                m_cbPointsDirty = m_cbNormalsDirty = m_cbBaseNormalsDirty = m_cbTangentsDirty = m_cbBaseTangentsDirty = true;
+                m_cbPointsDirty = m_cbNormalsDirty = m_cbTangentsDirty = true;
             }
         }
 

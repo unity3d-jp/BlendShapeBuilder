@@ -29,22 +29,23 @@ namespace UTJ.VertexTweaker
 
         // internal resources
         [SerializeField] Mesh m_meshTarget;
-        [SerializeField] Mesh m_meshCube;
-        [SerializeField] Mesh m_meshLine;
+        [SerializeField] Mesh m_meshPoint;
+        [SerializeField] Mesh m_meshVector;
         [SerializeField] Mesh m_meshLasso;
         [SerializeField] Material m_matVisualize;
+        [SerializeField] Material m_matOverlay;
 
         ComputeBuffer m_cbArgPoints;
         ComputeBuffer m_cbArgVectors;
         ComputeBuffer m_cbPoints;
-        ComputeBuffer m_cbNormals, m_cbBaseNormals;
-        ComputeBuffer m_cbTangents, m_cbBaseTangents;
+        ComputeBuffer m_cbNormals;
+        ComputeBuffer m_cbTangents;
         ComputeBuffer m_cbSelection;
         ComputeBuffer m_cbBrushSamples;
         CommandBuffer m_cmdDraw;
         bool m_cbPointsDirty = true;
-        bool m_cbNormalsDirty = true, m_cbBaseNormalsDirty = true;
-        bool m_cbTangentsDirty = true, m_cbBaseTangentsDirty = true;
+        bool m_cbNormalsDirty = true;
+        bool m_cbTangentsDirty = true;
         bool m_cbSelectionDirty = true;
 
         bool m_skinned;
@@ -154,7 +155,7 @@ namespace UTJ.VertexTweaker
                 }
             }
 
-            if (m_meshCube == null)
+            if (m_meshPoint == null)
             {
                 float l = 0.5f;
                 var p = new Vector3[] {
@@ -169,8 +170,8 @@ namespace UTJ.VertexTweaker
                     new Vector3(-l, l,-l),
                 };
 
-                m_meshCube = new Mesh();
-                m_meshCube.vertices = new Vector3[] {
+                m_meshPoint = new Mesh();
+                m_meshPoint.vertices = new Vector3[] {
                     p[0], p[1], p[2], p[3],
                     p[7], p[4], p[0], p[3],
                     p[4], p[5], p[1], p[0],
@@ -178,7 +179,7 @@ namespace UTJ.VertexTweaker
                     p[5], p[6], p[2], p[1],
                     p[7], p[6], p[5], p[4],
                 };
-                m_meshCube.SetIndices(new int[] {
+                m_meshPoint.SetIndices(new int[] {
                     3, 1, 0, 3, 2, 1,
                     7, 5, 4, 7, 6, 5,
                     11, 9, 8, 11, 10, 9,
@@ -186,16 +187,16 @@ namespace UTJ.VertexTweaker
                     19, 17, 16, 19, 18, 17,
                     23, 21, 20, 23, 22, 21,
                 }, MeshTopology.Triangles, 0);
-                m_meshCube.UploadMeshData(false);
+                m_meshPoint.UploadMeshData(false);
             }
 
-            if (m_meshLine == null)
+            if (m_meshVector == null)
             {
-                m_meshLine = new Mesh();
-                m_meshLine.vertices = new Vector3[2] { Vector3.zero, Vector3.zero };
-                m_meshLine.uv = new Vector2[2] { Vector2.zero, Vector2.one };
-                m_meshLine.SetIndices(new int[2] { 0, 1 }, MeshTopology.Lines, 0);
-                m_meshLine.UploadMeshData(false);
+                m_meshVector = new Mesh();
+                m_meshVector.vertices = new Vector3[2] { Vector3.zero, Vector3.zero };
+                m_meshVector.uv = new Vector2[2] { Vector2.zero, Vector2.one };
+                m_meshVector.SetIndices(new int[2] { 0, 1 }, MeshTopology.Lines, 0);
+                m_meshVector.UploadMeshData(false);
             }
 
             if (m_meshLasso == null)
@@ -205,6 +206,8 @@ namespace UTJ.VertexTweaker
 
             if (m_matVisualize == null)
                 m_matVisualize = new Material(AssetDatabase.LoadAssetAtPath<Shader>(AssetDatabase.GUIDToAssetPath("5786f144ee220ce4ea056f3f5ef4af19")));
+            if (m_matOverlay == null)
+                m_matOverlay = new Material(AssetDatabase.LoadAssetAtPath<Shader>(AssetDatabase.GUIDToAssetPath("dada189530d1c844588658636810ae94")));
 
             if (m_meshTarget == null ||
                 m_meshTarget != tmesh ||
@@ -320,8 +323,6 @@ namespace UTJ.VertexTweaker
             if (m_cbNormals != null) { m_cbNormals.Release(); m_cbNormals = null; }
             if (m_cbTangents != null) { m_cbTangents.Release(); m_cbTangents = null; }
             if (m_cbSelection != null) { m_cbSelection.Release(); m_cbSelection = null; }
-            if (m_cbBaseNormals != null) { m_cbBaseNormals.Release(); m_cbBaseNormals = null; }
-            if (m_cbBaseTangents != null) { m_cbBaseTangents.Release(); m_cbBaseTangents = null; }
             if (m_cbBrushSamples != null) { m_cbBrushSamples.Release(); m_cbBrushSamples = null; }
             if (m_cmdDraw != null) { m_cmdDraw.Release(); m_cmdDraw = null; }
         }
@@ -344,33 +345,21 @@ namespace UTJ.VertexTweaker
             if (m_cbNormals == null && m_normals != null && m_normals.Count > 0)
             {
                 m_cbNormals = new ComputeBuffer(m_normals.Count, 12);
-                m_cbBaseNormals = new ComputeBuffer(m_normalsBase.Count, 12);
             }
             if (m_cbNormalsDirty)
             {
                 m_cbNormals.SetData(m_normals);
                 m_cbNormalsDirty = false;
             }
-            if (m_cbBaseNormalsDirty)
-            {
-                m_cbBaseNormals.SetData(m_normalsBase);
-                m_cbBaseNormalsDirty = false;
-            }
 
             if (m_cbTangents == null && m_tangents != null && m_tangents.Count > 0)
             {
                 m_cbTangents = new ComputeBuffer(m_tangents.Count, 16);
-                m_cbBaseTangents = new ComputeBuffer(m_tangentsBase.Count, 16);
             }
             if (m_cbTangentsDirty)
             {
                 m_cbTangents.SetData(m_tangents);
                 m_cbTangentsDirty = false;
-            }
-            if (m_cbBaseTangentsDirty)
-            {
-                m_cbBaseTangents.SetData(m_tangentsBase);
-                m_cbBaseTangentsDirty = false;
             }
 
             if (m_cbSelection == null && m_selection != null && m_selection.Count > 0)
@@ -386,10 +375,10 @@ namespace UTJ.VertexTweaker
             if (m_cbArgPoints == null && m_points != null && m_points.Count > 0)
             {
                 m_cbArgPoints = new ComputeBuffer(1, 5 * sizeof(uint), ComputeBufferType.IndirectArguments);
-                m_cbArgPoints.SetData(new uint[5] { m_meshCube.GetIndexCount(0), (uint)m_points.Count, 0, 0, 0 });
+                m_cbArgPoints.SetData(new uint[5] { m_meshPoint.GetIndexCount(0), (uint)m_points.Count, 0, 0, 0 });
 
                 m_cbArgVectors = new ComputeBuffer(1, 5 * sizeof(uint), ComputeBufferType.IndirectArguments);
-                m_cbArgVectors.SetData(new uint[5] { m_meshLine.GetIndexCount(0), (uint)m_points.Count, 0, 0, 0 });
+                m_cbArgVectors.SetData(new uint[5] { m_meshVector.GetIndexCount(0), (uint)m_points.Count, 0, 0, 0 });
             }
         }
 
@@ -940,7 +929,7 @@ namespace UTJ.VertexTweaker
         {
             if (!m_editing) { return; }
 
-            if (m_matVisualize == null || m_meshCube == null || m_meshLine == null)
+            if (m_matVisualize == null || m_meshPoint == null || m_meshVector == null)
             {
                 Debug.LogWarning("Some resources are missing.\n");
                 return;
@@ -997,8 +986,6 @@ namespace UTJ.VertexTweaker
             if (m_cbNormals != null) m_matVisualize.SetBuffer("_Normals", m_cbNormals);
             if (m_cbTangents != null) m_matVisualize.SetBuffer("_Tangents", m_cbTangents);
             if (m_cbSelection != null) m_matVisualize.SetBuffer("_Selection", m_cbSelection);
-            if (m_cbBaseNormals != null) m_matVisualize.SetBuffer("_BaseNormals", m_cbBaseNormals);
-            if (m_cbBaseTangents != null) m_matVisualize.SetBuffer("_BaseTangents", m_cbBaseTangents);
 
             if (m_cmdDraw == null)
             {
@@ -1010,18 +997,14 @@ namespace UTJ.VertexTweaker
             // overlay
             if (m_settings.modelOverlay != ModelOverlay.None)
             {
-                int pass = 0;
-                switch (m_settings.modelOverlay)
-                {
-                    case ModelOverlay.LocalSpaceNormals: pass = (int)VisualizeType.LocalSpaceNormalsOverlay; break;
-                    case ModelOverlay.TangentSpaceNormals: pass = (int)VisualizeType.TangentSpaceNormalsOverlay; break;
-                    case ModelOverlay.Tangents: pass = (int)VisualizeType.TangentsOverlay; break;
-                    case ModelOverlay.Binormals: pass = (int)VisualizeType.BinormalsOverlay; break;
-                    case ModelOverlay.UV: pass = (int)VisualizeType.UVOverlay; break;
-                    case ModelOverlay.VertexColor: pass = (int)VisualizeType.VertexColorOverlay; break;
-                }
+                if (m_cbPoints != null) m_matOverlay.SetBuffer("_Points", m_cbPoints);
+                if (m_cbNormals != null) m_matOverlay.SetBuffer("_Normals", m_cbNormals);
+                if (m_cbTangents != null) m_matOverlay.SetBuffer("_Tangents", m_cbTangents);
+                if (m_cbSelection != null) m_matOverlay.SetBuffer("_Selection", m_cbSelection);
+
+                int pass = (int)m_settings.modelOverlay - 1;
                 for (int si = 0; si < m_meshTarget.subMeshCount; ++si)
-                    m_cmdDraw.DrawRenderer(renderer, m_matVisualize, si, pass);
+                    m_cmdDraw.DrawRenderer(renderer, m_matOverlay, si, pass);
             }
 
             // visualize brush range
@@ -1032,26 +1015,26 @@ namespace UTJ.VertexTweaker
             {
                 // visualize vertices
                 if (m_settings.showVertices && m_cbPoints != null)
-                    m_cmdDraw.DrawMeshInstancedIndirect(m_meshCube, 0, m_matVisualize, (int)VisualizeType.Vertices, m_cbArgPoints);
+                    m_cmdDraw.DrawMeshInstancedIndirect(m_meshPoint, 0, m_matVisualize, (int)VisualizeType.Vertices, m_cbArgPoints);
 
                 // visualize binormals
                 if (m_settings.showBinormals && m_cbNormals != null && m_cbTangents != null)
-                    m_cmdDraw.DrawMeshInstancedIndirect(m_meshLine, 0, m_matVisualize, (int)VisualizeType.Binormals, m_cbArgVectors);
+                    m_cmdDraw.DrawMeshInstancedIndirect(m_meshVector, 0, m_matVisualize, (int)VisualizeType.Binormals, m_cbArgVectors);
 
                 // visualize tangents
                 if (m_settings.showTangents && m_cbTangents != null)
-                    m_cmdDraw.DrawMeshInstancedIndirect(m_meshLine, 0, m_matVisualize, (int)VisualizeType.Tangents, m_cbArgVectors);
+                    m_cmdDraw.DrawMeshInstancedIndirect(m_meshVector, 0, m_matVisualize, (int)VisualizeType.Tangents, m_cbArgVectors);
 
                 // visualize normals
                 if (m_settings.showNormals && m_cbNormals != null)
-                    m_cmdDraw.DrawMeshInstancedIndirect(m_meshLine, 0, m_matVisualize, (int)VisualizeType.Normals, m_cbArgVectors);
+                    m_cmdDraw.DrawMeshInstancedIndirect(m_meshVector, 0, m_matVisualize, (int)VisualizeType.Normals, m_cbArgVectors);
             }
 
             if (m_settings.showBrushRange && m_rayHit)
             {
                 // ray pos
                 if (brushMode)
-                    m_cmdDraw.DrawMesh(m_meshCube, Matrix4x4.identity, m_matVisualize, 0, (int)VisualizeType.RayPosition);
+                    m_cmdDraw.DrawMesh(m_meshPoint, Matrix4x4.identity, m_matVisualize, 0, (int)VisualizeType.RayPosition);
             }
             if(m_settings.editMode == EditMode.Projection)
             {
@@ -1059,8 +1042,8 @@ namespace UTJ.VertexTweaker
                 {
                     m_matVisualize.SetVector("_BrushPos", m_rayVertexPos);
                     m_matVisualize.SetVector("_Direction", m_settings.projDirection);
-                    m_cmdDraw.DrawMesh(m_meshCube, Matrix4x4.identity, m_matVisualize, 0, (int)VisualizeType.RayPosition);
-                    m_cmdDraw.DrawMesh(m_meshLine, Matrix4x4.identity, m_matVisualize, 0, (int)VisualizeType.Direction);
+                    m_cmdDraw.DrawMesh(m_meshPoint, Matrix4x4.identity, m_matVisualize, 0, (int)VisualizeType.RayPosition);
+                    m_cmdDraw.DrawMesh(m_meshVector, Matrix4x4.identity, m_matVisualize, 0, (int)VisualizeType.Direction);
                 }
             }
 
