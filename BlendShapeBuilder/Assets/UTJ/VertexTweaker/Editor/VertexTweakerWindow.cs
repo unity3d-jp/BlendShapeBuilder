@@ -242,6 +242,11 @@ namespace UTJ.VertexTweaker
                 settings.editMode = (EditMode)GUILayout.SelectionGrid((int)settings.editMode, strCommands, 1);
                 if (EditorGUI.EndChangeCheck())
                 {
+                    if (settings.editMode != EditMode.Move &&
+                        settings.editMode != EditMode.Rotate &&
+                        settings.editMode != EditMode.Scale)
+                        settings.softOp = false;
+
                     switch (settings.editMode)
                     {
                         case EditMode.Assign:
@@ -752,9 +757,8 @@ namespace UTJ.VertexTweaker
                     settings.showNormals = EditorGUILayout.Toggle("Normals", settings.showNormals);
                     settings.showTangents = EditorGUILayout.Toggle("Tangents", settings.showTangents);
                     settings.showBinormals = EditorGUILayout.Toggle("Binormals", settings.showBinormals);
-                    EditorGUI.indentLevel++;
-                    settings.showSelectedOnly = EditorGUILayout.Toggle("Selected Only", settings.showSelectedOnly);
-                    EditorGUI.indentLevel--;
+                    EditorGUILayout.Space();
+                    settings.showSelectedOnly = EditorGUILayout.Toggle("Selection Only", settings.showSelectedOnly);
                     EditorGUI.indentLevel--;
                     EditorGUILayout.Space();
                 }

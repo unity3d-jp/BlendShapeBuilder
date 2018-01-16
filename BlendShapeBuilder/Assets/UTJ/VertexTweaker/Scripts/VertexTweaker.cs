@@ -893,8 +893,11 @@ namespace UTJ.VertexTweaker
                     {
                         if (mouseDown || mouseDrag)
                         {
-                            var bd = m_settings.activeBrush;
-                            SelectBrush(m_rayPos, bd.radius, bd.strength * selectSign, bd.samples);
+                            if (m_rayHit)
+                            {
+                                var bd = m_settings.activeBrush;
+                                SelectBrush(m_rayPos, bd.radius, bd.strength * selectSign, bd.samples);
+                            }
                         }
                         else if (mouseUp)
                         {
