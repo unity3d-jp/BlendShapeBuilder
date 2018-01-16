@@ -1402,28 +1402,37 @@ npAPI void npProjectVertices(
 npAPI void npProjectVerticesRadial(
     npMeshData *model, npMeshData *target, const float3 center, npProjectVerticesMode mode, float max_distance, int PNT, int mask)
 {
-    auto to_local = target->transform * invert(model->transform);
+    auto to_local = invert(model->transform);
 
     struct RayDir
     {
         const float3 *vertices;
+        const float3 *normals;
         float3 center;
         float3 operator[](int vi) const
         {
-            return normalize(vertices[vi] - center);
+            float3 ray_dir = normalize(vertices[vi] - center);
+            float3 n = normals[vi];
+            return dot(ray_dir, n) > 0 ? ray_dir : -ray_dir;
         }
-    } ray_dirs = { model->vertices, mul_p(to_local, center) };
+    } ray_dirs = { model->vertices, model->normals, mul_p(to_local, center) };
     npProjectVerticesImpl(model, target, ray_dirs, mode, max_distance, PNT, mask);
 }
 
 npAPI void npProjectVerticesDirectional(
     npMeshData *model, npMeshData *target, const float3 ray_dir, npProjectVerticesMode mode, float max_distance, int PNT, int mask)
 {
+    auto to_local = invert(model->transform);
+
     struct RayDir
     {
+        const float3 *normals;
         float3 ray_dir;
-        const float3& operator[](int) const { return ray_dir; }
-    } ray_dirs = { ray_dir };
+        float3 operator[](int vi) const {
+            float3 n = normals[vi];
+            return dot(ray_dir, n) > 0 ? ray_dir : -ray_dir;
+        }
+    } ray_dirs = { model->normals, normalize(mul_v(to_local, ray_dir)) };
     npProjectVerticesImpl(model, target, ray_dirs, mode, max_distance, PNT, mask);
 }
 
