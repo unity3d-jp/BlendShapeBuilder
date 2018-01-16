@@ -209,15 +209,14 @@ namespace UTJ.VertexTweaker
 
 
         // inspector states
+        public bool foldEdit = true;
+        public bool foldSelect = true;
+        public bool foldMisc = true;
+        public bool foldExport = true;
+        public bool foldDisplay = true;
 
         [NonSerialized] public Vector3 pivotPos;
         [NonSerialized] public Quaternion pivotRot = Quaternion.identity;
-
-        [NonSerialized] public bool foldSelect = true;
-        [NonSerialized] public bool foldEdit = true;
-        [NonSerialized] public bool foldMisc = true;
-        [NonSerialized] public bool foldExport = false;
-        [NonSerialized] public bool foldDisplay = true;
         [NonSerialized] public int displayIndex;
         [NonSerialized] public int inexportIndex;
         [NonSerialized] public bool foldMirror = true;

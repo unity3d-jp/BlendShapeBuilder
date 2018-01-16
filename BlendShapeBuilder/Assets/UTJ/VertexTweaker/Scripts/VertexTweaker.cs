@@ -43,10 +43,10 @@ namespace UTJ.VertexTweaker
         ComputeBuffer m_cbSelection;
         Texture2D m_texBrushSamples;
         CommandBuffer m_cmdDraw;
-        bool m_cbPointsDirty = true;
-        bool m_cbNormalsDirty = true;
-        bool m_cbTangentsDirty = true;
-        bool m_cbSelectionDirty = true;
+        bool m_cbPointsDirty;
+        bool m_cbNormalsDirty;
+        bool m_cbTangentsDirty;
+        bool m_cbSelectionDirty;
 
         bool m_skinned;
         PinnedList<Vector3> m_points, m_pointsPredeformed, m_pointsBase, m_pointsBasePredeformed;
@@ -252,6 +252,11 @@ namespace UTJ.VertexTweaker
                 m_indices = new PinnedList<int>(m_meshTarget.triangles);
                 m_selection = new PinnedList<float>(m_points.Count);
 
+                m_cbPointsDirty = true;
+                m_cbNormalsDirty = true;
+                m_cbTangentsDirty = true;
+                m_cbSelectionDirty = true;
+
                 m_npModelData.num_vertices = m_points.Count;
                 m_npModelData.num_triangles = m_indices.Count / 3;
                 m_npModelData.indices = m_indices;
@@ -287,9 +292,12 @@ namespace UTJ.VertexTweaker
 
             m_settings.InitializeBrushData();
 
+            m_forceDisableRecalculation = true;
             UpdateTransform();
             UpdateVertices();
             PushUndo();
+            m_forceDisableRecalculation = false;
+
             Tools.current = Tool.None;
             m_editing = true;
         }
@@ -1057,12 +1065,12 @@ namespace UTJ.VertexTweaker
         void PushUndo()
         {
             if (m_settings.normalMode == RecalculateMode.Auto)
-                RecalculateNormals();
+                RecalculateNormalsInternal();
 
             // recalculating tangents require normals. so recalculate only when normals are updated
             if (m_settings.tangentsMode == RecalculateMode.Auto &&
                 (m_settings.normalMode == RecalculateMode.Auto || m_settings.normalMode == RecalculateMode.Realtime))
-                RecalculateTangents();
+                RecalculateTangentsInternal();
 
             Undo.IncrementCurrentGroup();
             Undo.RecordObject(this, "VertexTweaker [" + m_history.index + "]");

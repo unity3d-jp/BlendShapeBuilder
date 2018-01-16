@@ -151,3 +151,8 @@ MonoBehaviour:
   normalColor: {r: 1, g: 0.92156863, b: 0.015686275, a: 1}
   tangentColor: {r: 0, g: 1, b: 1, a: 1}
   binormalColor: {r: 0, g: 1, b: 0, a: 1}
+  foldEdit: 1
+  foldSelect: 1
+  foldMisc: 1
+  foldExport: 1
+  foldDisplay: 1

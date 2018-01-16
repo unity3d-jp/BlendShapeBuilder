@@ -397,9 +397,9 @@ namespace UTJ.VertexTweaker
             {
                 if (m_settings.normalMode == RecalculateMode.Realtime)
                 {
-                    RecalculateNormals();
+                    RecalculateNormalsInternal();
                     if (m_settings.tangentsMode == RecalculateMode.Realtime)
-                        RecalculateTangents();
+                        RecalculateTangentsInternal();
                 }
             }
 
@@ -452,8 +452,17 @@ namespace UTJ.VertexTweaker
         }
 
 
-        public void RecalculateNormals(bool updateMesh = true)
+        bool m_forceDisableRecalculation = false;
+
+        public void RecalculateNormals(bool pushUndo)
         {
+            RecalculateNormalsInternal();
+            if (pushUndo) PushUndo();
+        }
+        void RecalculateNormalsInternal(bool updateMesh = true)
+        {
+            if(m_forceDisableRecalculation) { return; }
+
             npMeshData tmp = m_npModelData;
             tmp.vertices = m_pointsPredeformed;
             npGenerateNormals(ref tmp, m_normalsPredeformed);
@@ -470,12 +479,19 @@ namespace UTJ.VertexTweaker
             m_cbNormalsDirty = true;
         }
 
-        public void RecalculateTangents(bool updateMesh = true)
+        public void RecalculateTangents(bool pushUndo)
         {
-            RecalculateTangents(m_settings.tangentsPrecision);
+            RecalculateTangentsInternal();
+            if (pushUndo) PushUndo();
         }
-        void RecalculateTangents(TangentsPrecision precision, bool updateMesh = true)
+        void RecalculateTangentsInternal(bool updateMesh = true)
         {
+            RecalculateTangentsInternal(m_settings.tangentsPrecision);
+        }
+        void RecalculateTangentsInternal(TangentsPrecision precision, bool updateMesh = true)
+        {
+            if (m_forceDisableRecalculation) { return; }
+
             if (precision == TangentsPrecision.Precise)
             {
                 m_meshTarget.RecalculateTangents();

@@ -598,7 +598,7 @@ namespace UTJ.VertexTweaker
                         EditorGUILayout.BeginHorizontal();
                         EditorGUILayout.LabelField("", GUILayout.Width(indentSize));
                         if (GUILayout.Button("Recalculate [N]", GUILayout.Width(120)))
-                            m_target.RecalculateNormals();
+                            m_target.RecalculateNormals(true);
                         EditorGUILayout.EndHorizontal();
                     }
                     EditorGUI.indentLevel--;
@@ -615,7 +615,7 @@ namespace UTJ.VertexTweaker
                         EditorGUILayout.BeginHorizontal();
                         EditorGUILayout.LabelField("", GUILayout.Width(indentSize));
                         if (GUILayout.Button("Recalculate [T]", GUILayout.Width(120)))
-                            m_target.RecalculateTangents();
+                            m_target.RecalculateTangents(true);
                         EditorGUILayout.EndHorizontal();
                     }
                     EditorGUI.indentLevel--;
@@ -933,13 +933,13 @@ namespace UTJ.VertexTweaker
                 {
                     handled = true;
                     tips = "Recalculate Normals";
-                    m_target.RecalculateNormals();
+                    m_target.RecalculateNormals(true);
                 }
                 else if (e.keyCode == KeyCode.T)
                 {
                     handled = true;
                     tips = "Recalculate Tangents";
-                    m_target.RecalculateTangents();
+                    m_target.RecalculateTangents(true);
                 }
             }
 
