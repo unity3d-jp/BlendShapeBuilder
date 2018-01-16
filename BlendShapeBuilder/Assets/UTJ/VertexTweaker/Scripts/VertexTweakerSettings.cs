@@ -235,7 +235,7 @@ namespace UTJ.VertexTweaker
         [NonSerialized] public GameObject projTarget = null;
         [NonSerialized] public npProjectVerticesMode projMode = npProjectVerticesMode.ForwardAndBackward;
         [NonSerialized] public ProjectionRayDirection projRayDir = ProjectionRayDirection.CurrentNormals;
-        [NonSerialized] public float projMaxRayDistance = 10.0f;
+        [NonSerialized] public float projMaxRayDistance = 1000.0f;
         [NonSerialized] public Vector3 projRadialCenter;
         [NonSerialized] public Vector3 projDirection = Vector3.down;
         [NonSerialized] public bool projP = true;
