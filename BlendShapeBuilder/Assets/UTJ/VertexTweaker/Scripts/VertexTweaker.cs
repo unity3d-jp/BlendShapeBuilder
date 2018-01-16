@@ -773,17 +773,29 @@ namespace UTJ.VertexTweaker
                 float selectSign = e.control ? -1.0f : 1.0f;
                 if (selectMode == SelectMode.Single)
                 {
-                    if (mouseDrag)
+                    if (mouseDown)
                     {
-                        if (!e.shift && !e.control)
-                            ClearSelection();
+                        m_toolState = ToolState.Selection;
+                    }
+                    if (m_toolState == ToolState.Selection)
+                    {
+                        if (mouseDown || mouseDrag)
+                        {
+                            if (!e.shift && !e.control)
+                                ClearSelection();
 
-                        if (settings.selectVertex && SelectVertex(e, selectSign, settings.selectFrontSideOnly))
+                            if (settings.selectVertex && SelectVertex(e, selectSign, settings.selectFrontSideOnly))
+                                handled = true;
+                            else if (settings.selectTriangle && SelectTriangle(e, selectSign))
+                                handled = true;
+                            else if (m_rayHit)
+                                handled = true;
+                        }
+                        else if (mouseUp)
+                        {
+                            m_toolState = ToolState.Neutral;
                             handled = true;
-                        else if (settings.selectTriangle && SelectTriangle(e, selectSign))
-                            handled = true;
-                        else if (m_rayHit)
-                            handled = true;
+                        }
                     }
                 }
                 else if (selectMode == SelectMode.Rect)
@@ -816,15 +828,15 @@ namespace UTJ.VertexTweaker
                 }
                 else if (selectMode == SelectMode.Lasso)
                 {
-                    if (mouseDown || mouseDrag)
+                    if (mouseDown)
                     {
-                        if (mouseDown)
-                        {
-                            m_lassoPoints.Clear();
-                            m_meshLasso.Clear();
-                            m_toolState = ToolState.Selection;
-                        }
-                        if (m_toolState == ToolState.Selection)
+                        m_lassoPoints.Clear();
+                        m_meshLasso.Clear();
+                        m_toolState = ToolState.Selection;
+                    }
+                    if (m_toolState == ToolState.Selection)
+                    {
+                        if (mouseDown || mouseDrag)
                         {
                             m_lassoPoints.Add(ScreenCoord11(e.mousePosition));
                             handled = true;
@@ -849,17 +861,17 @@ namespace UTJ.VertexTweaker
                                 m_meshLasso.UploadMeshData(false);
                             }
                         }
-                    }
-                    else if (mouseUp || (mouseMove && m_toolState == ToolState.Selection))
-                    {
-                        m_toolState = ToolState.Neutral;
-                        if (!e.shift && !e.control)
-                            ClearSelection();
+                        else if (mouseUp)
+                        {
+                            m_toolState = ToolState.Neutral;
+                            if (!e.shift && !e.control)
+                                ClearSelection();
 
-                        SelectLasso(m_lassoPoints.ToArray(), selectSign, settings.selectFrontSideOnly);
-                        m_lassoPoints.Clear();
-                        m_meshLasso.Clear();
-                        handled = true;
+                            SelectLasso(m_lassoPoints.ToArray(), selectSign, settings.selectFrontSideOnly);
+                            m_lassoPoints.Clear();
+                            m_meshLasso.Clear();
+                            handled = true;
+                        }
                     }
                 }
                 else if (selectMode == SelectMode.Brush)
