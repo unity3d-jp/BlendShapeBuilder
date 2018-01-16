@@ -4,7 +4,10 @@
 
 Unity 上で blend shape を作成するツールです。既存のモデルの合成はもちろん、Unity 上で頂点を編集してそれを blend shape 化することもできます。  
 また、頂点の位置だけ、法線だけの合成といった特殊な blend shape ターゲットも生成でき、既存の blend shape をターゲットごとに別個の Mesh として書き出す機能なども備えています。  
-Unity 2017.1 系以上で動作を確認しています。
+
+Unity 2017.1 系以上、Windows (64bit) or Mac、**D3D11 世代以降の Graphics API** の環境で動作します。
+(ターゲットプラットフォームが Standalone ではない場合、D3D9 世代に機能が限定されて正常動作しなくなることがあるのでご注意ください)
+
 
 ## 使い方
 - [BlendShapeBuilder.unitypackage](https://github.com/unity3d-jp/BlendShapeBuilder/releases/download/20180116/BlendShapeBuilder.unitypackage) をプロジェクトにインポート
