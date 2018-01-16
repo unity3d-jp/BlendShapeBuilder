@@ -1017,7 +1017,6 @@ npAPI int npBuildMirroringRelation(
 {
     if (!relation) { return 0; }
 
-#if 0
     // per-vertex detection
     auto num_vertices = model->num_vertices;
     auto vertices = model->vertices;
@@ -1054,8 +1053,8 @@ npAPI int npBuildMirroringRelation(
         }
         relation[vi] = rel;
     });
-#endif
 
+#if 0
     // per-triangle detection
     auto num_triangles = model->num_triangles;
     auto indices = model->indices;
@@ -1138,6 +1137,8 @@ npAPI int npBuildMirroringRelation(
         relation[i1] = ri1;
         relation[i2] = ri2;
     }
+#endif
+
     return ret;
 }
 
