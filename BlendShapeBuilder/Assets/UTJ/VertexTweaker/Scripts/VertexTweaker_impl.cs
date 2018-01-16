@@ -181,10 +181,11 @@ namespace UTJ.VertexTweaker
 
         public void ApplyAssign(Vector3 v, Coordinate c, int xyz, bool pushUndo)
         {
+            Matrix4x4 trans = Matrix4x4.identity;
             if (c == Coordinate.World)
-                v = GetComponent<Transform>().worldToLocalMatrix.MultiplyPoint(v);
+                trans = GetComponent<Transform>().localToWorldMatrix;
 
-            npAssignVertices(ref m_npModelData, v, xyz, m_numSelected > 0);
+            npAssignVertices(ref m_npModelData, v, trans, xyz, m_numSelected > 0);
             UpdateVertices();
             if (pushUndo) PushUndo();
         }
@@ -849,7 +850,7 @@ namespace UTJ.VertexTweaker
             ref Vector3 selection_pos, ref Vector3 selection_normal);
 
         [DllImport("VertexTweakerCore")] static extern int npAssignVertices(
-            ref npMeshData model, Vector3 value, int xyz, bool mask);
+            ref npMeshData model, Vector3 value, Matrix4x4 transform, int xyz, bool mask);
         
         [DllImport("VertexTweakerCore")] static extern int npMoveVertices(
             ref npMeshData model, Vector3 amount, bool mask);

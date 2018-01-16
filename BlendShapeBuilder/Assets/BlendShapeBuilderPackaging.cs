@@ -11,6 +11,7 @@ public class BlendShapeBuilderPackaging
         string[] files = new string[]
         {
             "Assets/UTJ/BlendShapeBuilder",
+            "Assets/UTJ/VertexTweaker",
         };
         AssetDatabase.ExportPackage(files, "BlendShapeBuilder.unitypackage", ExportPackageOptions.Recurse);
     }

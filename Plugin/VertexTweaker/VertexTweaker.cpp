@@ -539,21 +539,23 @@ npAPI int npUpdateSelection(
 
 
 npAPI void npAssignVertices(
-    npMeshData *model, float3 value, int xyz, int mask)
+    npMeshData *model, float3 value, float4x4 trans, int xyz, int mask)
 {
     auto num_vertices = model->num_vertices;
     auto vertices = model->vertices;
     auto selection = model->selection;
+    auto itrans = invert(trans);
 
-    value = mul_v(invert(model->transform), value);
     for (int vi = 0; vi < num_vertices; ++vi) {
         float s = mask ? selection[vi] : 1.0f;
         if (s == 0.0f) continue;
 
-        float3 v = lerp(vertices[vi], value, s);
-        if (xyz & 1) vertices[vi].x = v.x;
-        if (xyz & 2) vertices[vi].y = v.y;
-        if (xyz & 4) vertices[vi].z = v.z;
+        float3 v1 = mul_p(trans, vertices[vi]);
+        float3 v2 = v1;
+        if (xyz & 1) v2.x = value.x;
+        if (xyz & 2) v2.y = value.y;
+        if (xyz & 4) v2.z = value.z;
+        vertices[vi] = mul_p(itrans, lerp(v1, v2, s));
     }
 }
 
