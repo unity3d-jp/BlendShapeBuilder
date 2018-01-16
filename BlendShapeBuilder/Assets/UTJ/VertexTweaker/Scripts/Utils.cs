@@ -1,3 +1,4 @@
+#if UNITY_EDITOR
 using UnityEngine;
 using UnityEditor;
 using System.Text.RegularExpressions;
@@ -88,3 +89,4 @@ namespace UTJ.VertexTweaker
         }
     }
 }
+#endif

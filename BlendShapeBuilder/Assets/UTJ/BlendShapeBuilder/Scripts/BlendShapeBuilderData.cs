@@ -1,9 +1,5 @@
-using UnityEngine;
-using UnityEditor;
 using System;
 using System.Collections.Generic;
-using System.Runtime.InteropServices;
-using UTJ.VertexTweaker;
 
 #if UNITY_EDITOR
 namespace UTJ.BlendShapeBuilder
