@@ -1,12 +1,13 @@
 # Blend Shape Builder & Vertex Tweaker
 [English](https://translate.google.com/translate?sl=ja&tl=en&u=https://github.com/unity3d-jp/BlendShapeBuilder) (by Google Translate)  
+![demo](https://user-images.githubusercontent.com/1488611/34981308-76511248-faea-11e7-8985-b8fe0e957035.gif)
 
 Unity 上で blend shape を作成するツールです。既存のモデルの合成はもちろん、Unity 上で頂点を編集してそれを blend shape 化することもできます。  
 また、頂点の位置だけ、法線だけの合成といった特殊な blend shape ターゲットも生成でき、既存の blend shape をターゲットごとに別個の Mesh として書き出す機能なども備えています。  
 Unity 2017.1 系以上で動作を確認しています。
 
 ## 使い方
-- [BlendShapeBuilder.unitypackage](https://github.com/unity3d-jp/BlendShapeBuilder/releases/download/20171228/BlendShapeBuilder.unitypackage) をプロジェクトにインポート
+- [BlendShapeBuilder.unitypackage](https://github.com/unity3d-jp/BlendShapeBuilder/releases/download/20180116/BlendShapeBuilder.unitypackage) をプロジェクトにインポート
 - Window メニューに "Blend Shape Builder" と "Blend Shape Inspector" と "Vertex Tweaker" が追加されます。  
 Blend Shape Builder が blend shape をオーサリングするツール、Vertex Tweaker が頂点の編集を行うツール、Blend Shape Inspector は既存の blend shape を調べたりデータを抽出したりするツールです。 
 
@@ -14,7 +15,7 @@ Blend Shape Builder が blend shape をオーサリングするツール、Verte
 
 ## Blend Shape Builder
 Blend Shape Builder のウィンドウを開いた状態で MeshRenderer もしくは SkinnedMeshRenderer を持つオブジェクトを選択すると "Add BlendShapeBuilder" というボタンが出てくるので、それでコンポーネントを追加します。  
-
+![BlendShapeBuilder](https://user-images.githubusercontent.com/1488611/34981508-05fb5fb6-faeb-11e7-9204-4aabd4c58543.png)
 
 blend shape のターゲットとなるオブジェクトは、Mesh アセットもしくは MeshRenderer か SkinnedMeshRenderer を持つ GameObject を設定します。(頂点数が同じである必要があります)
 - "Find Targets" ボタンを押すと、現在のシーン内にある Base Mesh と同じ頂点数のモデルを探して選択状態にします。
@@ -22,7 +23,7 @@ blend shape のターゲットとなるオブジェクトは、Mesh アセット
 - "BlendShapes" にモーフターゲットとなるオブジェクトを指定していきます。
   - 既存の Mesh をターゲットに登録したい場合、それらを Drag & Drop します。
 "▼ BlendShapes" の部分にオブジェクトを Drag & Drop すると、放り込んだオブジェクト毎に BlendShape が生成されます。  
-各 BlendShape のフォールド部分 ("▼ NewBlendShape0" など) にオブジェクトを Drag & Drop するとその BlendShape のフレームとして登録されます。
+各 BlendShape のフォールド部分 (上図の "▼ NewBlendShape0" など) にオブジェクトを Drag & Drop するとその BlendShape のフレームとして登録されます。
 
   - "+" ボタンでフレームを追加すると、フレームが追加されると共にそれに対応する Mesh が生成されます。
 
