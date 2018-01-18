@@ -2,4 +2,4 @@ for /f "usebackq tokens=*" %%i in (`"%ProgramFiles(x86)%\Microsoft Visual Studio
   set VSDIR=%%i
 )
 call "%VSDIR%\Common7\Tools\VsDevCmd.bat"
-cd %~dp0
+cd /d %~dp0
