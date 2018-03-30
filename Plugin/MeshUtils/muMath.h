@@ -1005,22 +1005,28 @@ template<class T> inline void compute_triangle_tangent(
     auto s = tvec2<T>{ uv[1].x - uv[0].x, uv[2].x - uv[0].x };
     auto t = tvec2<T>{ uv[1].y - uv[0].y, uv[2].y - uv[0].y };
 
+    tvec3<T> tangent, binormal;
     T div = s.x * t.y - s.y * t.x;
-    T area = std::abs(div);
-    T rdiv = T(1.0) / div;
-    s *= rdiv;
-    t *= rdiv;
+    T area = abs(div);
+    if (area > 1e-8f) {
+        T rdiv = T(1.0) / div;
+        s *= rdiv;
+        t *= rdiv;
 
-    auto tangent = normalize(tvec3<T>{
-        t.y * p.x - t.x * q.x,
-        t.y * p.y - t.x * q.y,
-        t.y * p.z - t.x * q.z
-    }) * area;
-    auto binormal = normalize(tvec3<T>{
-        s.x * q.x - s.y * p.x,
-        s.x * q.y - s.y * p.y,
-        s.x * q.z - s.y * p.z
-    }) * area;
+        tangent = normalize(tvec3<T>{
+            t.y * p.x - t.x * q.x,
+                t.y * p.y - t.x * q.y,
+                t.y * p.z - t.x * q.z
+        }) * area;
+        binormal = normalize(tvec3<T>{
+            s.x * q.x - s.y * p.x,
+                s.x * q.y - s.y * p.y,
+                s.x * q.z - s.y * p.z
+        }) * area;
+    }
+    else {
+        tangent = binormal = tvec3<T>::zero();
+    }
 
     T angles[3] = {
         angle_between2(vertices[2], vertices[1], vertices[0]),
@@ -1048,15 +1054,14 @@ template<class T> inline tvec4<T> orthogonalize_tangent(
     auto magB = length(binormal);
     binormal = binormal / magB;
 
-#if 0
     const auto epsilon = 1e-6f;
     if (magT <= epsilon || magB <= epsilon)
     {
         tvec3<T> axis1, axis2;
 
-        auto dpXN = std::abs(dot({ T(1.0), T(0.0), T(0.0) }, normal));
-        auto dpYN = std::abs(dot({ T(0.0), T(1.0), T(0.0) }, normal));
-        auto dpZN = std::abs(dot({ T(0.0), T(0.0), T(1.0) }, normal));
+        auto dpXN = abs(dot({ T(1.0), T(0.0), T(0.0) }, normal));
+        auto dpYN = abs(dot({ T(0.0), T(1.0), T(0.0) }, normal));
+        auto dpZN = abs(dot({ T(0.0), T(0.0), T(1.0) }, normal));
 
         if (dpXN <= dpYN && dpXN <= dpZN)
         {
@@ -1081,11 +1086,10 @@ template<class T> inline tvec4<T> orthogonalize_tangent(
                 axis2 = { T(1.0), T(0.0), T(0.0) };
             else
                 axis2 = { T(0.0), T(1.0), T(0.0) };
-        }
+}
         tangent = normalize(axis1 - normal * dot(normal, axis1));
         binormal = normalize(axis2 - normal * dot(normal, axis2) - normalize(tangent) * dot(tangent, axis2));
     }
-#endif
 
     return { tangent.x, tangent.y, tangent.z,
         dot(cross(normal, tangent), binormal) > T(0.0) ? T(1.0) : -T(1.0) };
