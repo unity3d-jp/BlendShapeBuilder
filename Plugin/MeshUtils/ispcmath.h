@@ -359,8 +359,8 @@ static inline uniform float ray_point_distance(uniform float3 pos, uniform float
 
 
 static inline void compute_triangle_tangents(
-    const float3 (&vertices)[3], const float2 (&uv)[3],
-    float3 (&dst_tangent)[3], float3 (&dst_binormal)[3])
+    const float3(&vertices)[3], const float2(&uv)[3],
+    float3(&dst_tangent)[3], float3(&dst_binormal)[3])
 {
     float3 p = vertices[1] - vertices[0];
     float3 q = vertices[2] - vertices[0];
@@ -387,7 +387,7 @@ static inline void compute_triangle_tangents(
         )) * area;
     }
     else {
-        tangent = binormal = float3_(0,0,0);
+        tangent = binormal = float3_(0, 0, 0);
     }
 
 
