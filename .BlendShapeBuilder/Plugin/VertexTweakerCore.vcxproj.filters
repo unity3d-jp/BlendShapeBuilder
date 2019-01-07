@@ -9,19 +9,11 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="BlendShapeBuilder\BlendShapeBuilder.cpp">
-      <Filter>BlendShapeBuilder</Filter>
-    </ClCompile>
-    <ClCompile Include="BlendShapeBuilder\pch.cpp">
-      <Filter>BlendShapeBuilder</Filter>
-    </ClCompile>
+    <ClCompile Include="VertexTweaker\VertexTweaker.cpp" />
+    <ClCompile Include="VertexTweaker\pch.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="BlendShapeBuilder\pch.h">
-      <Filter>BlendShapeBuilder</Filter>
-    </ClInclude>
-    <ClInclude Include="BlendShapeBuilder\BlendShapeBuilder.h">
-      <Filter>BlendShapeBuilder</Filter>
-    </ClInclude>
+    <ClInclude Include="VertexTweaker\VertexTweaker.h" />
+    <ClInclude Include="VertexTweaker\pch.h" />
   </ItemGroup>
 </Project>
