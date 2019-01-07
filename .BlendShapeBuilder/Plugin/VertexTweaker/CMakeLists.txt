@@ -1,5 +1,5 @@
 file(GLOB sources *.cpp *.h)
-set(plugins_dir "${CMAKE_SOURCE_DIR}/../BlendShapeBuilder/Assets/UTJ/VertexTweaker/Plugins/x86_64")
+set(plugins_dir "${CMAKE_SOURCE_DIR}/../Assets/UTJ/VertexTweaker/Runtime/Plugins/x86_64")
 add_plugin(VertexTweakerCore SOURCES ${sources} PLUGINS_DIR ${plugins_dir})
 
 add_dependencies(VertexTweakerCore MeshUtils)
