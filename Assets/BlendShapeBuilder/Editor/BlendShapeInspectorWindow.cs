@@ -3,8 +3,10 @@ using UnityEditor;
 using System;
 using System.Collections.Generic;
 using UTJ.VertexTweaker;
+using UTJ.BlendShapeBuilder;
 
-namespace UTJ.BlendShapeBuilder
+
+namespace UTJ.BlendShapeBuilderEditor
 {
     public class BlendShapeInspectorWindow : EditorWindow
     {
@@ -225,7 +227,7 @@ namespace UTJ.BlendShapeBuilder
             baseMesh.ClearBlendShapes();
             var baseGO = Utils.MeshToGameObject(baseMesh, Vector3.zero, materials);
 
-            var builder = baseGO.AddComponent<BlendShapeBuilder>();
+            var builder = baseGO.AddComponent<UTJ.BlendShapeBuilder.BlendShapeBuilder>();
             var data = builder.data.blendShapeData;
             data.Clear();
 

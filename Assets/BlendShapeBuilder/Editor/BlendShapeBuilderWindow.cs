@@ -3,15 +3,16 @@ using UnityEditor;
 using System;
 using System.Collections.Generic;
 using UTJ.VertexTweaker;
+using UTJ.BlendShapeBuilder;
 
-namespace UTJ.BlendShapeBuilder
+namespace UTJ.BlendShapeBuilderEditor
 {
     public class BlendShapeBuilderWindow : EditorWindow
     {
         #region fields
         public static bool isOpen;
 
-        BlendShapeBuilder m_target;
+        UTJ.BlendShapeBuilder.BlendShapeBuilder m_target;
         GameObject m_active;
 
         Vector2 m_scrollPos;
@@ -55,7 +56,7 @@ namespace UTJ.BlendShapeBuilder
             m_target = null;
             if (Selection.activeGameObject != null)
             {
-                m_target = Selection.activeGameObject.GetComponent<BlendShapeBuilder>();
+                m_target = Selection.activeGameObject.GetComponent<UTJ.BlendShapeBuilder.BlendShapeBuilder>();
                 if (m_target)
                 {
                 }
@@ -103,7 +104,7 @@ namespace UTJ.BlendShapeBuilder
             {
                 if (GUILayout.Button("Add BlendShapeBuilder to " + m_active.name))
                 {
-                    m_active.AddComponent<BlendShapeBuilder>();
+                    m_active.AddComponent<UTJ.BlendShapeBuilder.BlendShapeBuilder>();
                     OnSelectionChange();
                 }
             }
@@ -667,7 +668,7 @@ namespace UTJ.BlendShapeBuilder
                 vt = Undo.AddComponent<UTJ.VertexTweaker.VertexTweaker>(go);
 
             Selection.activeObject = go;
-            VertexTweakerWindow.Open();
+            UTJ.VertexTweakerEditor.VertexTweakerWindow.Open();
             vt.editing = true;
         }
 

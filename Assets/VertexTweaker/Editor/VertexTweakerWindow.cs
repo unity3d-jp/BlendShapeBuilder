@@ -6,16 +6,17 @@ using UnityEngine.Rendering;
 #if UNITY_EDITOR
 using UnityEditor;
 #endif
+using UTJ.VertexTweaker;
 
 
-namespace UTJ.VertexTweaker
+namespace UTJ.VertexTweakerEditor
 {
     public class VertexTweakerWindow : EditorWindow
     {
         public static bool isOpen;
 
         Vector2 m_scrollPos;
-        VertexTweaker m_target;
+        UTJ.VertexTweaker.VertexTweaker m_target;
         GameObject m_active;
 
         bool m_shift;
@@ -128,7 +129,7 @@ namespace UTJ.VertexTweaker
             {
                 if (GUILayout.Button("Add Vertex Tweaker to " + m_active.name))
                 {
-                    m_active.AddComponent<VertexTweaker>();
+                    m_active.AddComponent<UTJ.VertexTweaker.VertexTweaker>();
                     OnSelectionChange();
                 }
             }
@@ -146,7 +147,7 @@ namespace UTJ.VertexTweaker
             m_active = null;
             if (Selection.activeGameObject != null)
             {
-                m_target = Selection.activeGameObject.GetComponent<VertexTweaker>();
+                m_target = Selection.activeGameObject.GetComponent<UTJ.VertexTweaker.VertexTweaker>();
                 if (m_target)
                 {
                     m_target.editing = m_target.edited;

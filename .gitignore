@@ -1,20 +1,6 @@
-*.ipch
-*.sdf
-*.opendb
-*.db
 *.user
-*.log
-*.tlog
-
-*.exe
-*.dll
-*.bundle
-*.dylib
-*.so
+*.DS_Store
 *.unitypackage
-
-*.fbx
-*.obj
 
 .vs/
 _out/
@@ -22,11 +8,11 @@ _tmp/
 _build_*/
 external/
 Library/
+obj/
 Temp/
-
+Build/
 TestLocal/
 TestLocal.meta
-BlendShapeBuilder/Assets/UTJ/NormalPainter*
 
-BlendShapeBuilder/*.csproj
-BlendShapeBuilder/*.sln
+.BlendShapeBuilder/*.csproj
+.BlendShapeBuilder/*.sln

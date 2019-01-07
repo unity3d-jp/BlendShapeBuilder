@@ -1,10 +1,11 @@
 using UnityEngine;
 using UnityEditor;
 using System.Collections;
+using UTJ.VertexTweaker;
 
-namespace UTJ.VertexTweaker
+namespace UTJ.VertexTweakerEditor
 {
-    [CustomEditor(typeof(VertexTweaker))]
+    [CustomEditor(typeof(UTJ.VertexTweaker.VertexTweaker))]
     public class VertexTweakerEditor : Editor
     {
         public override void OnInspectorGUI()
