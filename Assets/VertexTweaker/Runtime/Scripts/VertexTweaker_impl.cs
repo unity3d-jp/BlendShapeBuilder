@@ -92,10 +92,10 @@ namespace UTJ.VertexTweaker
             if (!mesh || !mesh.isReadable) { return false; }
 
             vertexCount = mesh.vertexCount;
-            mesh.GetVertices(vertices);
-            mesh.GetNormals(normals);
-            mesh.GetUVs(0, uv);
-            mesh.GetTangents(tangents);
+            mesh.GetVertices(vertices.List);
+            mesh.GetNormals(normals.List);
+            mesh.GetUVs(0, uv.List);
+            mesh.GetTangents(tangents.List);
             indices = new PinnedList<int>(mesh.triangles);
             return true;
         }
@@ -294,9 +294,9 @@ namespace UTJ.VertexTweaker
         {
             if (!useSelection)
             {
-                Array.Copy(m_pointsBasePredeformed, m_pointsPredeformed, m_points.Count);
-                Array.Copy(m_normalsBasePredeformed, m_normalsPredeformed, m_normals.Count);
-                Array.Copy(m_tangentsBasePredeformed, m_tangentsPredeformed, m_tangents.Count);
+                Array.Copy(m_pointsBasePredeformed.Array, m_pointsPredeformed.Array, m_points.Count);
+                Array.Copy(m_normalsBasePredeformed.Array, m_normalsPredeformed.Array, m_normals.Count);
+                Array.Copy(m_tangentsBasePredeformed.Array, m_tangentsPredeformed.Array, m_tangents.Count);
             }
             else
             {
@@ -383,15 +383,15 @@ namespace UTJ.VertexTweaker
                         m_points, IntPtr.Zero, IntPtr.Zero);
                 }
             }
-            m_meshTarget.SetVertices(m_pointsPredeformed);
+            m_meshTarget.SetVertices(m_pointsPredeformed.List);
             m_cbPointsDirty = true;
 
             if (flushAll)
             {
-                m_meshTarget.SetNormals(m_normalsPredeformed);
+                m_meshTarget.SetNormals(m_normalsPredeformed.List);
                 m_cbNormalsDirty = true;
 
-                m_meshTarget.SetTangents(m_tangentsPredeformed);
+                m_meshTarget.SetTangents(m_tangentsPredeformed.List);
                 m_cbTangentsDirty = true;
             }
             else
@@ -476,7 +476,7 @@ namespace UTJ.VertexTweaker
             }
 
             if (updateMesh)
-                m_meshTarget.SetNormals(m_normalsPredeformed);
+                m_meshTarget.SetNormals(m_normalsPredeformed.List);
             m_cbNormalsDirty = true;
         }
 
@@ -517,7 +517,7 @@ namespace UTJ.VertexTweaker
             }
 
             if (updateMesh)
-                m_meshTarget.SetTangents(m_tangentsPredeformed);
+                m_meshTarget.SetTangents(m_tangentsPredeformed.List);
             m_cbTangentsDirty = true;
         }
 
@@ -581,7 +581,7 @@ namespace UTJ.VertexTweaker
 
         public bool ClearSelection()
         {
-            System.Array.Clear(m_selection, 0, m_selection.Count);
+            System.Array.Clear(m_selection.Array, 0, m_selection.Count);
             return m_selection.Count > 0;
         }
 

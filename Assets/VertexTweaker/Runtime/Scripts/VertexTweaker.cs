@@ -110,7 +110,7 @@ namespace UTJ.VertexTweaker
             {
                 if (value != null && value.Length == m_selection.Count)
                 {
-                    Array.Copy(value, m_selection, m_selection.Count);
+                    Array.Copy(value, m_selection.Array, m_selection.Count);
                     UpdateSelection();
                 }
             }
@@ -334,7 +334,7 @@ namespace UTJ.VertexTweaker
             }
             if(m_cbPointsDirty)
             {
-                m_cbPoints.SetData(m_points);
+                m_cbPoints.SetData(m_points.List);
                 m_cbPointsDirty = false;
             }
 
@@ -344,7 +344,7 @@ namespace UTJ.VertexTweaker
             }
             if (m_cbNormalsDirty)
             {
-                m_cbNormals.SetData(m_normals);
+                m_cbNormals.SetData(m_normals.List);
                 m_cbNormalsDirty = false;
             }
 
@@ -354,7 +354,7 @@ namespace UTJ.VertexTweaker
             }
             if (m_cbTangentsDirty)
             {
-                m_cbTangents.SetData(m_tangents);
+                m_cbTangents.SetData(m_tangents.List);
                 m_cbTangentsDirty = false;
             }
 
@@ -364,7 +364,7 @@ namespace UTJ.VertexTweaker
             }
             if(m_cbSelectionDirty)
             {
-                m_cbSelection.SetData(m_selection);
+                m_cbSelection.SetData(m_selection.List);
                 m_cbSelectionDirty = false;
             }
 
@@ -1097,15 +1097,15 @@ namespace UTJ.VertexTweaker
 
             if(m_history.points == null || m_history.points.Length != m_points.Count)
             {
-                m_history.points = m_pointsPredeformed.Clone();
-                m_history.normals = m_normalsPredeformed.Clone();
-                m_history.tangents = m_tangentsPredeformed.Clone();
+                m_history.points = m_pointsPredeformed.Clone().Array;
+                m_history.normals = m_normalsPredeformed.Clone().Array;
+                m_history.tangents = m_tangentsPredeformed.Clone().Array;
             }
             else
             {
-                Array.Copy(m_pointsPredeformed, m_history.points, m_points.Count);
-                Array.Copy(m_normalsPredeformed, m_history.normals, m_normals.Count);
-                Array.Copy(m_tangentsPredeformed, m_history.tangents, m_tangents.Count);
+                Array.Copy(m_pointsPredeformed.Array, m_history.points, m_points.Count);
+                Array.Copy(m_normalsPredeformed.Array, m_history.normals, m_normals.Count);
+                Array.Copy(m_tangentsPredeformed.Array, m_history.tangents, m_tangents.Count);
             }
             m_history.mesh = m_meshTarget;
 
@@ -1129,11 +1129,11 @@ namespace UTJ.VertexTweaker
                 UpdateTransform();
 
                 if (m_history.points != null && m_points != null && m_history.points.Length == m_points.Count)
-                    Array.Copy(m_history.points, m_pointsPredeformed, m_points.Count);
+                    Array.Copy(m_history.points, m_pointsPredeformed.Array, m_points.Count);
                 if (m_history.normals != null && m_normals != null && m_history.normals.Length == m_normals.Count)
-                    Array.Copy(m_history.normals, m_normalsPredeformed, m_normals.Count);
+                    Array.Copy(m_history.normals, m_normalsPredeformed.Array, m_normals.Count);
                 if (m_history.tangents != null && m_tangents != null && m_history.tangents.Length == m_tangents.Count)
-                    Array.Copy(m_history.tangents, m_tangentsPredeformed, m_tangents.Count);
+                    Array.Copy(m_history.tangents, m_tangentsPredeformed.Array, m_tangents.Count);
                 if (m_skinned)
                 {
                     npApplySkinning(ref m_npSkinData,
