@@ -1,5 +1,5 @@
 fileFormatVersion: 2
-guid: a42cde6695acb404ebae968b440e1e36
+guid: 7064653f5dffb1b49a27566e933a3301
 PluginImporter:
   externalObjects: {}
   serializedVersion: 2
@@ -11,18 +11,6 @@ PluginImporter:
   isExplicitlyReferenced: 0
   validateReferences: 1
   platformData:
-  - first:
-      '': OSXIntel
-    second:
-      enabled: 0
-      settings:
-        CPU: None
-  - first:
-      '': OSXIntel64
-    second:
-      enabled: 1
-      settings:
-        CPU: AnyCPU
   - first:
       Any: 
     second:
