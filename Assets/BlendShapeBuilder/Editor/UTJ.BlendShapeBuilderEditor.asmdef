@@ -1,0 +1,18 @@
+{
+    "name": "UTJ.BlendShapeBuilderEditor",
+    "references": [
+        "UTJ.BlendShapeBuilder",
+        "UTJ.VertexTweaker",
+        "UTJ.VertexTweakerEditor"
+    ],
+    "optionalUnityReferences": [],
+    "includePlatforms": [
+        "Editor"
+    ],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": []
+}

@@ -1,0 +1,7 @@
+{
+    "name": "com.utj.blendshapebuilder",
+    "description": "This plugin allow you to build / edit blendshapes in scene view.",
+    "version": "1.0.0",
+    "unity": "2018.3",
+    "displayName": "BlendShapeBuilder"
+}
