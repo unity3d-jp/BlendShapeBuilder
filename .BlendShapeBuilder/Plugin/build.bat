@@ -1,3 +1,3 @@
-call buildtools.bat
+call toolchain.bat
 
-msbuild VertexTweakerCore.vcxproj /t:Build /p:Configuration=Master /p:Platform=x64 /m /nologo
+msbuild VertexTweakerCore.vcxproj /t:Build /p:Configuration=Release /p:Platform=x64 /m /nologo
