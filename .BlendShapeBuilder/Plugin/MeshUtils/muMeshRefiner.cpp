@@ -234,7 +234,7 @@ bool MeshRefiner::refineDumb()
         if (!colors.empty() && (int)colors.size() != num_indices) {
             new_colors.resize(num_indices);
             mu::CopyWithIndices(new_colors.data(), colors.data(), indices);
-            colors = colors;
+            colors = new_colors;
         }
         flattened = true;
     }

@@ -9,17 +9,19 @@ function(setup_ispc)
         return()
     endif()
     
-    set(ISPC_VERSION 1.9.2)
+    set(ISPC_VERSION 1.11.0)
     if(CMAKE_SYSTEM_NAME STREQUAL "Linux")
         set(ISPC_DIR "ispc-v${ISPC_VERSION}-linux")
+        set(ISPC_ARCHIVE_FILE "ispc-v${ISPC_VERSION}-linux.tar.gz")
     elseif(CMAKE_SYSTEM_NAME STREQUAL "Darwin")
-        set(ISPC_DIR "ispc-v${ISPC_VERSION}-osx")
+        set(ISPC_DIR "ispc-v${ISPC_VERSION}-macOS")
+        set(ISPC_ARCHIVE_FILE "ispc-v${ISPC_VERSION}-macOS.tar.gz")
     elseif(CMAKE_SYSTEM_NAME STREQUAL "Windows")
-        set(ISPC_DIR "ispc-v${ISPC_VERSION}-windows-vs2015")
+        set(ISPC_DIR "ispc-${ISPC_VERSION}-windows")
+        set(ISPC_ARCHIVE_FILE "ispc-v${ISPC_VERSION}-windows.zip")
     endif()
-    set(ISPC "${CMAKE_BINARY_DIR}/${ISPC_DIR}/ispc" CACHE PATH "" FORCE)
+    set(ISPC "${CMAKE_BINARY_DIR}/${ISPC_DIR}/bin/ispc" CACHE PATH "" FORCE)
 
-    set(ISPC_ARCHIVE_FILE "${ISPC_DIR}.tar.gz")
     set(ISPC_ARCHIVE_URL "http://downloads.sourceforge.net/project/ispcmirror/v${ISPC_VERSION}/${ISPC_ARCHIVE_FILE}")
     set(ISPC_ARCHIVE_PATH "${CMAKE_BINARY_DIR}/${ISPC_ARCHIVE_FILE}")
     if(NOT EXISTS ${ISPC_ARCHIVE_PATH})
@@ -52,7 +54,7 @@ function(add_ispc_targets)
         set(outputs ${header} ${objects})
         add_custom_command(
             OUTPUT ${outputs}
-            COMMAND ${ISPC} ${source} -o ${object} -h ${header} --pic --target=sse4-i32x4,avx1-i32x8,avx512skx-i32x16 --arch=x86-64 --opt=fast-masked-vload --opt=fast-math
+            COMMAND ${ISPC} ${source} -o ${object} -h ${header} --pic --target=sse4-i32x4,avx1-i32x8,avx512skx-i32x16 --arch=x86-64 --opt=fast-masked-vload --opt=fast-math --wno-perf
             DEPENDS ${source} ${arg_HEADERS}
         )
 
