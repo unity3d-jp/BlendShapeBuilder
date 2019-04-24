@@ -10,7 +10,7 @@ Unity 2017.1 系以上、Windows (64bit) or Mac、**D3D11 世代以降の Graphi
 
 
 ## 使い方
-- [BlendShapeBuilder.unitypackage](https://github.com/unity3d-jp/BlendShapeBuilder/releases/download/20180116/BlendShapeBuilder.unitypackage) をプロジェクトにインポート
+- [BlendShapeBuilder.unitypackage](https://github.com/unity3d-jp/BlendShapeBuilder/releases/download/20190425/BlendShapeBuilder.unitypackage) をプロジェクトにインポート
   - Unity 2018.3 以降の場合、このリポジトリを直接インポートすることもできます。プロジェクト内にある Packages/manifest.json をテキストエディタで開き、"dependencies" に以下の行を加えます。
   > "com.utj.blendshapebuilder": "https://github.com/unity3d-jp/BlendShapeBuilder.git",
 
