@@ -25,7 +25,21 @@ namespace UTJ.VertexTweaker
         {
             var go = MeshToGameObject(mesh, Vector3.zero, ExtractMaterials(from));
             if (from != null)
-                go.transform.localScale = from.transform.localScale;
+            {
+                var srctrans = from.GetComponent<Transform>();
+                var dsttrans = go.GetComponent<Transform>();
+                dsttrans.position = srctrans.position;
+                dsttrans.rotation = srctrans.rotation;
+                dsttrans.localScale = srctrans.localScale;
+
+                var srcsmr = from.GetComponent<SkinnedMeshRenderer>();
+                var dstsmr = go.GetComponent<SkinnedMeshRenderer>();
+                if (srcsmr != null && dstsmr != null)
+                {
+                    dstsmr.rootBone = srcsmr.rootBone;
+                    dstsmr.bones = srcsmr.bones;
+                }
+            }
             return go;
         }
 
