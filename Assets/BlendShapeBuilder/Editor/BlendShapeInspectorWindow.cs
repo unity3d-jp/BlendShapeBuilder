@@ -77,9 +77,9 @@ namespace UTJ.BlendShapeBuilderEditor
         public void DrawBlendShapeInspector()
         {
             var targetObject = m_active;
-            var targetMesh = Utils.ExtractMesh(m_active);
+            var targetMesh = Utils.GetMesh(m_active);
             if (targetMesh == null) { return; }
-            var materials = Utils.ExtractMaterials(m_active);
+            var materials = Utils.GetMaterials(m_active);
 
             EditorGUILayout.ObjectField(targetMesh, typeof(Mesh), true);
 
@@ -211,9 +211,9 @@ namespace UTJ.BlendShapeBuilderEditor
 
         public static void ConvertToComposeData(UnityEngine.Object targetObject)
         {
-            var targetMesh = Utils.ExtractMesh(targetObject);
+            var targetMesh = Utils.GetMesh(targetObject);
             if (targetMesh == null) { return; }
-            var materials = Utils.ExtractMaterials(targetObject);
+            var materials = Utils.GetMaterials(targetObject);
 
             int numBS = targetMesh.blendShapeCount;
             if(numBS == 0)

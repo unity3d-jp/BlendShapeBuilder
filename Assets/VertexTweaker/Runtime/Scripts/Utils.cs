@@ -23,7 +23,7 @@ namespace UTJ.VertexTweaker
 
         public static GameObject MeshToGameObject(Mesh mesh, GameObject from)
         {
-            var go = MeshToGameObject(mesh, Vector3.zero, ExtractMaterials(from));
+            var go = MeshToGameObject(mesh, Vector3.zero, GetMaterials(from));
             if (from != null)
             {
                 var srctrans = from.GetComponent<Transform>();
@@ -44,7 +44,7 @@ namespace UTJ.VertexTweaker
         }
 
 
-        public static Mesh ExtractMesh(UnityEngine.Object obj)
+        public static Mesh GetMesh(UnityEngine.Object obj)
         {
             Mesh ret = null;
             var go = obj as GameObject;
@@ -69,7 +69,7 @@ namespace UTJ.VertexTweaker
             return ret;
         }
 
-        public static Material[] ExtractMaterials(UnityEngine.Object obj)
+        public static Material[] GetMaterials(UnityEngine.Object obj)
         {
             Material[] ret = null;
             var go = obj as GameObject;
@@ -96,7 +96,32 @@ namespace UTJ.VertexTweaker
             return ret;
         }
 
-        public static string SanitizeForFileName(string name)
+        public static bool SetMesh(UnityEngine.Object obj, Mesh mesh)
+        {
+            var go = obj as GameObject;
+            if (go != null)
+            {
+                {
+                    var smr = go.GetComponent<SkinnedMeshRenderer>();
+                    if (smr != null)
+                    {
+                        smr.sharedMesh = mesh;
+                        return true;
+                    }
+                }
+                {
+                    var mf = go.GetComponent<MeshFilter>();
+                    if (mf != null)
+                    {
+                        mf.sharedMesh = mesh;
+                        return true;
+                    }
+                }
+            }
+            return false;
+        }
+
+        public static string SanitizeFileName(string name)
         {
             var reg = new Regex("[\\/:\\*\\?<>\\|\\\"]");
             return reg.Replace(name, "_");

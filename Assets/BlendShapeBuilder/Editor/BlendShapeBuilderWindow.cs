@@ -124,13 +124,13 @@ namespace UTJ.BlendShapeBuilderEditor
             if (obj == null)
                 return false;
 
-            var mesh = Utils.ExtractMesh(obj);
+            var mesh = Utils.GetMesh(obj);
             if (mesh == null)
             {
                 Debug.LogWarning(obj.name + " has no mesh");
                 return false;
             }
-            else if (Utils.ExtractMesh(m_target.gameObject).vertexCount != mesh.vertexCount)
+            else if (Utils.GetMesh(m_target.gameObject).vertexCount != mesh.vertexCount)
             {
                 Debug.LogWarning(obj.name + ": vertex count doesn't match");
                 return false;
@@ -435,12 +435,12 @@ namespace UTJ.BlendShapeBuilderEditor
             GUILayout.BeginHorizontal();
             if (GUILayout.Button("Update Mesh", GUILayout.Width(150)))
             {
-                Build(true);
+                BuildMesh(true);
             }
             if (GUILayout.Button("Generate New Asset", GUILayout.Width(150)))
             {
-                var result = Build();
-                string path = EditorUtility.SaveFilePanel("Generate New Asset", "Assets", Utils.SanitizeForFileName(m_data.baseMesh.name), "asset");
+                var result = BuildMesh();
+                string path = EditorUtility.SaveFilePanel("Generate New Asset", "Assets", Utils.SanitizeFileName(m_data.baseMesh.name), "asset");
                 if (path.Length > 0)
                 {
                     var dataPath = Application.dataPath;
@@ -473,7 +473,7 @@ namespace UTJ.BlendShapeBuilderEditor
                 return;
             }
 
-            var baseMesh = Utils.ExtractMesh(m_data.baseMesh);
+            var baseMesh = Utils.GetMesh(m_data.baseMesh);
             if (baseMesh == null)
             {
                 Debug.LogWarning("Base mesh has no valid mesh");
@@ -510,7 +510,7 @@ namespace UTJ.BlendShapeBuilderEditor
         }
 
 
-        public Mesh Build(bool updateExistingMesh = false)
+        public Mesh BuildMesh(bool updateExistingMesh = false)
         {
             var m_data = m_target.data;
             if (m_data.baseMesh == null)
@@ -519,7 +519,7 @@ namespace UTJ.BlendShapeBuilderEditor
                 return null;
             }
 
-            var baseMesh = Utils.ExtractMesh(m_data.baseMesh);
+            var baseMesh = Utils.GetMesh(m_data.baseMesh);
             if(baseMesh == null)
             {
                 Debug.LogError("Base mesh has no valid mesh");
@@ -601,7 +601,7 @@ namespace UTJ.BlendShapeBuilderEditor
 
                 foreach (var frame in shape.frames)
                 {
-                    var mesh = Utils.ExtractMesh(frame.mesh);
+                    var mesh = Utils.GetMesh(frame.mesh);
                     if (mesh == null)
                     {
                         Debug.LogError("Invalid target in " + name + " at weight " + frame.weight);
@@ -649,7 +649,7 @@ namespace UTJ.BlendShapeBuilderEditor
                 return;
             }
 
-            var mesh = Utils.ExtractMesh(frame.mesh);
+            var mesh = Utils.GetMesh(frame.mesh);
             if (mesh == null)
             {
                 Debug.LogWarning("Target object has no mesh");
@@ -659,7 +659,7 @@ namespace UTJ.BlendShapeBuilderEditor
             var go = frame.mesh as GameObject;
             if (go == null)
             {
-                go = Utils.MeshToGameObject(mesh, Vector3.zero, Utils.ExtractMaterials(m_target));
+                go = Utils.MeshToGameObject(mesh, Vector3.zero, Utils.GetMaterials(m_target));
                 Undo.RegisterCreatedObjectUndo(go, "BlendShapeBuilder");
             }
 
@@ -679,7 +679,7 @@ namespace UTJ.BlendShapeBuilderEditor
             bsd.frames.Add(frame);
             bsd.NormalizeWeights();
 
-            var meshBase = Utils.ExtractMesh(m_target.gameObject);
+            var meshBase = Utils.GetMesh(m_target.gameObject);
             if (meshBase == null)
                 return;
 
