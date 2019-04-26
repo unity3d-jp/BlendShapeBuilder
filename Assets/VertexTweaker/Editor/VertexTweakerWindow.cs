@@ -40,12 +40,20 @@ namespace UTJ.VertexTweakerEditor
         private void OnEnable()
         {
             isOpen = true;
+#if UNITY_2019_1_OR_NEWER
+            SceneView.duringSceneGui += OnSceneGUI;
+#else
             SceneView.onSceneGUIDelegate += OnSceneGUI;
+#endif
         }
 
         private void OnDisable()
         {
+#if UNITY_2019_1_OR_NEWER
+            SceneView.duringSceneGui -= OnSceneGUI;
+#else
             SceneView.onSceneGUIDelegate -= OnSceneGUI;
+#endif
             isOpen = false;
         }
 
