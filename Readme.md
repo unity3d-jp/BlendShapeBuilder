@@ -61,8 +61,8 @@ blend shape のターゲットとなるオブジェクトは、Mesh アセット
 ## 注意点
 - インポートした Mesh に対する編集  
   fbx ファイルなどからインポートした Mesh はプロジェクトを開くたびに再生成が行われます。このため、インポートした Mesh に対する編集は、そのままではプロジェクトを開き直すとリセットされてしまいます。  
-  これを回避するには Mesh を独立したアセットに変換する必要があります。
-  Blend Shape Builder の "Generate New Asset"、もしくは Vertex Tweaker の "Export -> Export .asset" はこのためのコマンドで、編集中のモデルを独立したアセットとしてエクスポートします。
+  この対策として、インポートした Mesh を含む GameObject に "Add BlendShapeBuilder" した場合、元の Mesh のコピーを作成して MeshRenderer や SkinnedMeshRenderer の mesh をそれに差し替えます。
+  また、Blend Shape Builder の "Generate New Asset" や Vertex Tweaker の "Export -> Export .asset" は、編集中のモデルを独立したアセットとしてエクスポートします。元の Mesh を変えたくない場合はこのコマンドで一度別アセットとして保存し、そちらを編集するといいでしょう。
 
 - DCC ツール上では一致していた頂点数が Unity 上では一致しない場合  
   Blend Shape のターゲットは頂点の数と順番が元モデルと一致している必要があります。しかし、DCC ツール上では一致していても Unity にインポートする際に変換処理によって変わってしまうことがあります。これは主に以下のような場合に起こりえます：

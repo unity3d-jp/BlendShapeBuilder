@@ -40,12 +40,20 @@ namespace UTJ.VertexTweakerEditor
         private void OnEnable()
         {
             isOpen = true;
+#if UNITY_2019_1_OR_NEWER
+            SceneView.duringSceneGui += OnSceneGUI;
+#else
             SceneView.onSceneGUIDelegate += OnSceneGUI;
+#endif
         }
 
         private void OnDisable()
         {
+#if UNITY_2019_1_OR_NEWER
+            SceneView.duringSceneGui -= OnSceneGUI;
+#else
             SceneView.onSceneGUIDelegate -= OnSceneGUI;
+#endif
             isOpen = false;
         }
 
@@ -674,14 +682,14 @@ namespace UTJ.VertexTweakerEditor
                 if (GUILayout.Button("Duplicate"))
                 {
                     var dup = Instantiate(m_target.mesh);
-                    Utils.MeshToGameObject(dup, Vector3.zero, Utils.ExtractMaterials(m_target.gameObject));
+                    Utils.MeshToGameObject(dup, Vector3.zero, Utils.GetMaterials(m_target.gameObject));
                 }
             }
             if (settings.inexportIndex == 1)
             {
                 if (GUILayout.Button("Export .asset file"))
                 {
-                    string path = EditorUtility.SaveFilePanel("Export .asset file", "Assets", Utils.SanitizeForFileName(m_target.name), "asset");
+                    string path = EditorUtility.SaveFilePanel("Export .asset file", "Assets", Utils.SanitizeFileName(m_target.name), "asset");
                     if (path.Length > 0)
                     {
                         var dataPath = Application.dataPath;
@@ -708,7 +716,7 @@ namespace UTJ.VertexTweakerEditor
             
                 if (GUILayout.Button("Export .obj file"))
                 {
-                    string path = EditorUtility.SaveFilePanel("Export .obj file", "", Utils.SanitizeForFileName(m_target.name), "obj");
+                    string path = EditorUtility.SaveFilePanel("Export .obj file", "", Utils.SanitizeFileName(m_target.name), "obj");
                     ObjExporter.Export(m_target.gameObject, path, new ObjExporter.Settings
                     {
                         flipFaces = settings.objFlipFaces,
