@@ -104,7 +104,18 @@ namespace UTJ.BlendShapeBuilderEditor
             {
                 if (GUILayout.Button("Add BlendShapeBuilder to " + m_active.name))
                 {
-                    m_active.AddComponent<UTJ.BlendShapeBuilder.BlendShapeBuilder>();
+                    Undo.AddComponent<UTJ.BlendShapeBuilder.BlendShapeBuilder>(m_active);
+                    {
+                        var mesh = Utils.GetMesh(m_active);
+                        if (mesh != null && ((int)mesh.hideFlags & (int)HideFlags.NotEditable) != 0)
+                        {
+                            var meshClone = Instantiate(mesh);
+                            Undo.RegisterCreatedObjectUndo(meshClone, "BlendShapeBuilder");
+                            Utils.SetMesh(m_active, meshClone);
+                            EditorUtility.SetDirty(m_active);
+                            Debug.Log("Mesh \"" + mesh.name + "\" is not editable. A clone is assigned to " + m_active.name);
+                        }
+                    }
                     OnSelectionChange();
                 }
             }
