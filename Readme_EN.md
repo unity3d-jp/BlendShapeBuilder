@@ -1,9 +1,9 @@
 # Blend Shape Builder & Vertex Tweaker
-[English](https://translate.google.com/translate?sl=ja&tl=en&u=https://github.com/unity3d-jp/BlendShapeBuilder) (by Google Translate)  
+
 ![demo](https://user-images.githubusercontent.com/1488611/34981308-76511248-faea-11e7-8985-b8fe0e957035.gif)
 
-Unity 上で blend shape を作成するツールです。既存のモデルの合成はもちろん、Unity 上で頂点を編集してそれを blend shape 化することもできます。  
-また、頂点の位置だけ、法線だけの合成といった特殊な blend shape ターゲットも生成でき、既存の blend shape をターゲットごとに別個の Mesh として書き出す機能なども備えています。  
+This is a tool for building blend shapes in Unity. In addition to compositing existing models, it's also possible to edit vertices in Unity to create blend shapes.  
+There are also features for things like creating special blend shape targets made from composites of vertices or vectors, or exporting existing blend shapes as a separate Mesh for each target.   
 
 Unity 2017.1 系以上、Windows (64bit) or Mac、**D3D11 世代以降の Graphics API** の環境で動作します。
 (ターゲットプラットフォームが Standalone ではない場合、D3D9 世代に機能が限定されて正常動作しなくなることがあるのでご注意ください)
