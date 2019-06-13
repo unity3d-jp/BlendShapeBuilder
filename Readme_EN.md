@@ -1,5 +1,6 @@
 # Blend Shape Builder & Vertex Tweaker
 
+
 ![demo](https://user-images.githubusercontent.com/1488611/34981308-76511248-faea-11e7-8985-b8fe0e957035.gif)
 
 This is a tool for building blend shapes in Unity. In addition to compositing existing models, it's also possible to edit vertices in Unity to create blend shapes.  
