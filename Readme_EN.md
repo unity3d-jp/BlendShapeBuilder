@@ -1,80 +1,86 @@
 # Blend Shape Builder & Vertex Tweaker
-[English](https://translate.google.com/translate?sl=ja&tl=en&u=https://github.com/unity3d-jp/BlendShapeBuilder) (by Google Translate)  
+
+
 ![demo](https://user-images.githubusercontent.com/1488611/34981308-76511248-faea-11e7-8985-b8fe0e957035.gif)
 
-Unity 上で blend shape を作成するツールです。既存のモデルの合成はもちろん、Unity 上で頂点を編集してそれを blend shape 化することもできます。  
-また、頂点の位置だけ、法線だけの合成といった特殊な blend shape ターゲットも生成でき、既存の blend shape をターゲットごとに別個の Mesh として書き出す機能なども備えています。  
+This is a tool for building blend shapes in Unity. In addition to compositing existing models, it's also possible to edit vertices in Unity to create blend shapes.  
+There are also features for things like creating special blend shape targets made from composites of vertices or vectors, or exporting existing blend shapes as a separate Mesh for each target.   
 
-Unity 2017.1 系以上、Windows (64bit) or Mac、**D3D11 世代以降の Graphics API** の環境で動作します。
-(ターゲットプラットフォームが Standalone ではない場合、D3D9 世代に機能が限定されて正常動作しなくなることがあるのでご注意ください)
+You will need Unity 2017.1 or later, Windows (64 bit) or Mac (**Graphics API of D3D11 and later**). 
+(Please note that if your target platform is not standalone, D3D9 will limit functions and may not work properly.) 
 
 
-## 使い方
-- [BlendShapeBuilder.unitypackage](https://github.com/unity3d-jp/BlendShapeBuilder/releases/download/20190425/BlendShapeBuilder.unitypackage) をプロジェクトにインポート
-  - Unity 2018.3 以降の場合、このリポジトリを直接インポートすることもできます。プロジェクト内にある Packages/manifest.json をテキストエディタで開き、"dependencies" に以下の行を加えます。
+
+## How to Use 
+
+- Import [[BlendShapeBuilder.unitypackage](https://github.com/unity3d-jp/BlendShapeBuilder/releases/download/20190425/BlendShapeBuilder.unitypackage)to your project.
+- For Unity 2018.3 and later, you can also import this repository directly. Open Packages/manifest.json of your project in the text editor and add it after "dependencies".
   > "com.utj.blendshapebuilder": "https://github.com/unity3d-jp/BlendShapeBuilder.git",
-
-- Window メニューに "Blend Shape Builder" と "Blend Shape Inspector" と "Vertex Tweaker" が追加されます。  
-Blend Shape Builder が blend shape をオーサリングするツール、Vertex Tweaker が頂点の編集を行うツール、Blend Shape Inspector は既存の blend shape を調べたりデータを抽出したりするツールです。 
-
+  
+  -"Blend Shape Builder" and "Blend Shape Inspector", "Vertex Tweaker" will be added to the Window menu. 
+  Blend Shape Builder is a tool to author blend shapes. Vertex Tweaker is for editing vertices. Blend Shape Inspector is for looking up or getting data from existing blend shapes. 
 
 
 ## Blend Shape Builder
-Blend Shape Builder のウィンドウを開いた状態で MeshRenderer もしくは SkinnedMeshRenderer を持つオブジェクトを選択すると "Add BlendShapeBuilder" というボタンが出てくるので、それでコンポーネントを追加します。  
+When you select an object with MeshRenderer or SkinnedMeshRenderer with the Blend Shape Builder window open, the "Add BlendShapeBuilder" button will pop up so you can add it as a component. 
 ![BlendShapeBuilder](https://user-images.githubusercontent.com/1488611/34981508-05fb5fb6-faeb-11e7-9204-4aabd4c58543.png)
 
-blend shape のターゲットとなるオブジェクトは、Mesh アセットもしくは MeshRenderer か SkinnedMeshRenderer を持つ GameObject を設定します。(頂点数が同じである必要があります)
-- "Find Targets" ボタンを押すと、現在のシーン内にある Base Mesh と同じ頂点数のモデルを探して選択状態にします。
+The object targeted by Blend Shape will be set as a GameObject with either MeshRenderer or SkinnedMeshRenderer. (The number of vertices must match)
+-When you push the "Find Targets" button, it will find a model with the same number of vertices as the Base Mesh and select it. 
 
-- "BlendShapes" にモーフターゲットとなるオブジェクトを指定していきます。
-  - 既存の Mesh をターゲットに登録したい場合、それらを Drag & Drop します。
-"▼ BlendShapes" の部分にオブジェクトを Drag & Drop すると、放り込んだオブジェクト毎に BlendShape が生成されます。  
-各 BlendShape のフォールド部分 (上図の "▼ NewBlendShape0" など) にオブジェクトを Drag & Drop するとその BlendShape のフレームとして登録されます。
-
-  - "+" ボタンでフレームを追加すると、フレームが追加されると共にそれに対応する Mesh が生成されます。
-
-  - "Edit" を押すと、そのフレームの Mesh の編集に移行します。(後述の Vertex Tweaker が開きます)
-
-  - V,N,T のチェックは Vertex, Normal, Tangent の略で、その要素を含めるかの指定になります。例えば Normal のみをチェックした場合、頂点の移動はせず法線だけが変わる BlendShape になります。
-
-- "Update Mesh" を押すと現在の Mesh を直接更新します。
-"Generate New Asset" は現在の Mesh には手を加えず、新しいアセットとしてエクスポートします。
-"Preserve Existing BlendShapes" をチェックしておくと、Mesh が既に blend shape を持っていた場合にそれを持ち越しつつ追加します。(同名の BlendShape があった場合新しい方で上書きします)  
+-Select objects that will be the morph target in "BlendShapes". 
+  -If you want to target existing meshes, just drag and drop them. 
+When you drag obejects to "▼ BlendShapes", a BlendShape will be spawned for each object. 
+When you drag and drop and object to each BlendShape's fold (as in "▼ NewBlendShape0" shown above) the BlendShape will be registered as frames. 
+ 
+  -By using the "+" button, a mesh will also be created in additon to the frames. 
+  
+  -If you click "Edit", you can edit the frame's mesh. (It will open the Vertex Tweaker, which we will talk about more below.) 
+  
+  -V,N,T is short for Vertex, Normal, Tangent and you can set whether to include them. For example, if you only select Normal, the vertices will not move and only the normal vectors will be changed for the BlendShape. 
+  
+  
+  -You can update the current Mesh directly by clicking "Update Mesh". 
+  "By clicking "Generate New Asset", you can export the mesh as a new asset without changing the current mesh. 
+  When "Preserve Existing BlendShapes" is selected, it will carry the mesh over while adding blendshapes that were already in the mesh. (If there is already a BlendShape with the same name, it will be replaced with the newer one.) 
+ 
 
 
 ## Vertex Tweaker
-頂点を編集するツールです。Skinning された Mesh の編集もサポートしており、blend shape 用に限らずモデルを微調整したい場合全般に使えます。ただし、できるのはあくまで頂点の移動のみであり、頂点の増減など (いわゆるトポロジーが変化する操作) はできません。
 
-- Edit -> Move, Rotate, Scale はその名の通り頂点の移動、回転、拡縮を行うモードです
+This is a tool for editing vertices. It also supports editing meshes that have been skinned, and making minor changes to models in general (not just blend shapes). However, you can only move the vertices and will not be able to add/reduce the number of them. (In other words, you cannot change the topology) 
 
-- Edit -> Assign はいわゆる数値入力です。XYZ 軸別にマスクをかけられるので、例えば球体の下半分を選択し Y だけチェックして 0 を入力することで半球にする、といった使い方ができます。
+-Edit-> Move, Rotate, Scale is as implied, a mode that allows you to move, rotate, and scale vertices.  
 
-- Edit -> Projection は他のモデルに対して頂点の投影を行うモードです。各頂点からレイを飛ばし、対象モデルに当たった地点に移動させます。頂点数が全く合わないモデルに対するモーフィングを実現できます。
+-Edit-> Assign is for inputting values. You can mask depending on the XYZ axis. For example, you can select the bottom half of a sphere and select only Y and type in 0. This will make it a half sphere. 
 
-- Select は頂点の選択に関するオプションです。矩形選択、投げ縄選択、ブラシ選択といった一般的な選択方法や、選択中の頂点と繋がった頂点郡 (Connected)、ポリゴンの切れ目上にある頂点 (Edge, Hole) の選択なども備えています。
+-Edit-> Projection is a mode that allows you to project vertices on to other models. Project rays from each vertex and move the models accordingly. You can morph models that do not have the same number of vertices. 
 
-- Misc -> Mirroring で方向を選択すると、ミラーリングが有効になります。(対称なモデルである必要があります)
-- Misc -> Normals および Tangents は法線と接線の再計算のオプションです。手動で編集した法線があってそれを維持したい場合、"Manual" に変えて自動計算は行わないようにする必要があるでしょう。そうでない場合はデフォルトで問題ないはずです。
+- Select is for selecting vertices. Rectangle, roping, and brush selection are available, as well as Connected, which allows you to select sets of vertices that are connected. Edge and Hole also allow you to select vertices that are on the edges of polygons. 
 
-- Shift を押しながらの選択は選択の足し算、Ctrl を押しながらだと選択の引き算になります。
+-When you set the direction in Misc-> Mirroring, mirroring will be enabled. (Your model must be symmetric) 
+-Misc-> Normals and Tangents are options to re-calculate the normal vectors and tangents. If there is a vector that you edited manually and you would like to preserve it, you will have to change to "Manual" to disable the automatic calculation. If this is not the case, there will be no problem with leaving it with the default settings. 
 
-## 注意点
-- インポートした Mesh に対する編集  
-  fbx ファイルなどからインポートした Mesh はプロジェクトを開くたびに再生成が行われます。このため、インポートした Mesh に対する編集は、そのままではプロジェクトを開き直すとリセットされてしまいます。  
-  この対策として、インポートした Mesh を含む GameObject に "Add BlendShapeBuilder" した場合、元の Mesh のコピーを作成して MeshRenderer や SkinnedMeshRenderer の mesh をそれに差し替えます。
-  また、Blend Shape Builder の "Generate New Asset" や Vertex Tweaker の "Export -> Export .asset" は、編集中のモデルを独立したアセットとしてエクスポートします。元の Mesh を変えたくない場合はこのコマンドで一度別アセットとして保存し、そちらを編集するといいでしょう。
+-Holding the Shift key while selecting is addition and holding the Ctrl key while selecting is subtraction. 
 
-- DCC ツール上では一致していた頂点数が Unity 上では一致しない場合  
-  Blend Shape のターゲットは頂点の数と順番が元モデルと一致している必要があります。しかし、DCC ツール上では一致していても Unity にインポートする際に変換処理によって変わってしまうことがあります。これは主に以下のような場合に起こりえます：
-  - 不連続な法線 (=ハードエッジ) がある
-  - UV がモデル毎に異なり、かつ不連続な UV がある
-  - 面毎に違うマテリアルを割り当てている
+## Notes
+
+-Editing imported meshes. 
+    Meshes will be re-spawned each time the project is opened if it is imported from a fbx file. Therefore, edits on the imported meshes will not be saved if you reopen the project. 
+    To solve this issue, enable "Add BlendShapeBuilder" for GameObjects with imported meshes, then create a copy of the original mesh and replace it with the MeshRenderer or SkinnedMeshRenderer mesh. 
+    Blend Shape Builder's "Generate New Asset" and Vertex Tweaker's "Export-> Export .asset" commands will also export the model you are editing as an independent asset. If you do not want to change the original mesh, save it as a different asset with these command and edit that version instead. 
+    
+- When the number of vertices on the DCC tool does not match in Unity
+  The Blend Shape target must have the same number of vertices as the original model. However, due to conversion, sometimes the number of vertices will not match on Unity after importing. When this happens, the following may occur: 
+  -Uneven vectors (= hard edeges) 
+  -The UV will be different for each model and there will be uneven UVs. 
+  -Different sides having different material. 
   
-  例えばメタセコイアの場合、これを回避するには、スムージング の 角度 を 180 にしてハードエッジを回避し、全モデルで同じ UV を使用し (そもそも Unity の Blend Shape は UV の変化はサポートしていません)、マテリアルは 1 オブジェクトにつき 1 種のみにする必要があります。
+  For example, to avoid this in Metasequioa, set the smoothing angle to 180 to avoid hard edges, and use the same UV for all models (Unity's Blend Shape does not account for UV changes). You must also only set one type of material per object. 
   
-## 関連ツール
-- [NormalPainter](https://github.com/unity3d-jp/NormalPainter) - 法線を編集するツールです。
-- [FbxExporter](https://github.com/unity3d-jp/FbxExporter) - Mesh を fbx 形式でエクスポートするツールです。skinning や blend shape もサポートしています。
+## Related Tools
+- [NormalPainter](https://github.com/unity3d-jp/NormalPainter) - Edit vectors with this tool. 
+- [FbxExporter](https://github.com/unity3d-jp/FbxExporter) - Export meshes in fbx format. It also supports skinning and blend shapes. 
 
 ## License
 [MIT](LICENSE.txt)
